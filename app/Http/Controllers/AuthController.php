@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class AuthController extends Controller
 {
@@ -31,11 +32,35 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
 
-        if (! Auth::attempt($credentials, $remember)) {
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (! $user) {
             return back()
                 ->withErrors(['email' => 'Email hoặc mật khẩu không đúng.'])
                 ->onlyInput('email');
         }
+
+        $authenticated = false;
+
+        try {
+            $authenticated = Hash::check($credentials['password'], $user->password);
+        } catch (RuntimeException) {
+            $authenticated = hash_equals((string) $user->password, (string) $credentials['password']);
+
+            if ($authenticated) {
+                $user->forceFill([
+                    'password' => Hash::make($credentials['password']),
+                ])->save();
+            }
+        }
+
+        if (! $authenticated) {
+            return back()
+                ->withErrors(['email' => 'Email hoặc mật khẩu không đúng.'])
+                ->onlyInput('email');
+        }
+
+        Auth::login($user, $remember);
 
         $request->session()->regenerate();
 
@@ -51,7 +76,7 @@ class AuthController extends Controller
                 ->onlyInput('email');
         }
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('home'));
     }
 
     public function register(Request $request): RedirectResponse
@@ -75,7 +100,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return redirect()->route('home');
     }
 
     public function logout(Request $request): RedirectResponse

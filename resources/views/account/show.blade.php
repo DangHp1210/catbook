@@ -87,10 +87,6 @@
                                 <span class="font-semibold text-slate-900">Tiếp tục mua sách</span>
                                 <span class="text-sm text-orange-600">Đi tới catalog</span>
                             </a>
-                            <a href="{{ route('dashboard') }}" class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 transition hover:border-orange-200 hover:bg-orange-50/40">
-                                <span class="font-semibold text-slate-900">Bảng điều khiển</span>
-                                <span class="text-sm text-orange-600">Mở dashboard</span>
-                            </a>
                             <a href="{{ route('orders.index') }}" class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 transition hover:border-orange-200 hover:bg-orange-50/40">
                                 <span class="font-semibold text-slate-900">Lịch sử đơn hàng</span>
                                 <span class="text-sm text-orange-600">Xem đơn hàng</span>

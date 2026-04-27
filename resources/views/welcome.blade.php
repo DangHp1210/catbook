@@ -17,6 +17,30 @@
     <x-navbar />
 
     <main class="catbook-container space-y-8 pb-14 pt-6">
+        <section class="cb-card p-4 sm:p-5">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <p class="cb-kicker">Tìm kiếm sách</p>
+                    <h2 class="mt-2 text-xl font-extrabold text-slate-900">Tìm nhanh theo tên sách, tác giả hoặc ISBN</h2>
+                </div>
+            </div>
+
+            <form method="GET" action="{{ route('catalog.categories') }}" class="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <label for="home-search" class="sr-only">Tìm sách</label>
+                <input
+                    id="home-search"
+                    name="q"
+                    type="text"
+                    value="{{ request('q') }}"
+                    placeholder="Ví dụ: Clean Code, Martin Fowler, 978..."
+                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-400"
+                >
+                <button type="submit" class="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600">
+                    Tìm kiếm
+                </button>
+            </form>
+        </section>
+
         <section class="cb-hero">
             <article class="cb-hero-panel">
                 <p class="cb-kicker">
@@ -33,9 +57,6 @@
                 <div class="mt-6 flex flex-wrap gap-3">
                     @auth
                         <a href="{{ route('catalog.categories') }}" class="cb-button-primary">Khám phá sách</a>
-                    @else
-                        <a href="{{ route('register') }}" class="cb-button-primary">Tạo tài khoản</a>
-                        <a href="{{ route('login') }}" class="cb-button-secondary">Đăng nhập</a>
                     @endauth
                 </div>
 

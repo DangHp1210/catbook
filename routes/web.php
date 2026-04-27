@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -39,18 +40,31 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('account.show');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('panel');
 
-    Route::middleware('role:admin')->group(function () {
-        Route::get('/admin', function () {
-            return view('role-panel', [
-                'title' => 'Khu vực Admin',
-                'description' => 'Quản trị toàn hệ thống: người dùng, sách, đơn hàng và cấu hình.',
-                'theme' => 'rose',
-            ]);
-        })->name('admin.panel');
+        Route::get('/users', [AdminDashboardController::class, 'users'])->name('users.index');
+        Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('users.update');
+
+        Route::get('/books', [AdminDashboardController::class, 'books'])->name('books.index');
+        Route::post('/books', [AdminDashboardController::class, 'storeBook'])->name('books.store');
+        Route::patch('/books/{book}', [AdminDashboardController::class, 'updateBook'])->name('books.update');
+        Route::delete('/books/{book}', [AdminDashboardController::class, 'destroyBook'])->name('books.destroy');
+
+        Route::get('/categories', [AdminDashboardController::class, 'categories'])->name('categories.index');
+        Route::post('/categories', [AdminDashboardController::class, 'storeCategory'])->name('categories.store');
+        Route::patch('/categories/{category}', [AdminDashboardController::class, 'updateCategory'])->name('categories.update');
+        Route::delete('/categories/{category}', [AdminDashboardController::class, 'destroyCategory'])->name('categories.destroy');
+
+        Route::get('/publishers', [AdminDashboardController::class, 'publishers'])->name('publishers.index');
+        Route::post('/publishers', [AdminDashboardController::class, 'storePublisher'])->name('publishers.store');
+        Route::patch('/publishers/{publisher}', [AdminDashboardController::class, 'updatePublisher'])->name('publishers.update');
+        Route::delete('/publishers/{publisher}', [AdminDashboardController::class, 'destroyPublisher'])->name('publishers.destroy');
+
+        Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders.index');
+        Route::patch('/orders/{order}', [AdminDashboardController::class, 'updateOrder'])->name('orders.update');
+
+        Route::get('/revenue', [AdminDashboardController::class, 'revenue'])->name('revenue.index');
     });
 
     Route::middleware('role:staff,admin')->group(function () {
@@ -61,16 +75,6 @@ Route::middleware('auth')->group(function () {
                 'theme' => 'cyan',
             ]);
         })->name('staff.panel');
-    });
-
-    Route::middleware('role:customer')->group(function () {
-        Route::get('/customer', function () {
-            return view('role-panel', [
-                'title' => 'Khu vực Customer',
-                'description' => 'Quản lý thông tin cá nhân, lịch sử đơn hàng và trải nghiệm mua sách.',
-                'theme' => 'amber',
-            ]);
-        })->name('customer.panel');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

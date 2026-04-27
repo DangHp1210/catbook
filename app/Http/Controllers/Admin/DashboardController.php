@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Author;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Order;
@@ -23,6 +24,7 @@ class DashboardController extends Controller
         $stats = [
             'users' => User::query()->count(),
             'books' => Book::query()->count(),
+            'authors' => Author::query()->count(),
             'categories' => Category::query()->count(),
             'publishers' => Publisher::query()->count(),
             'orders' => Order::query()->count(),
@@ -83,7 +85,7 @@ class DashboardController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $books = Book::query()
-            ->with(['publisher', 'categories:id'])
+            ->with(['publisher', 'categories:id', 'authors:id,name'])
             ->withCount('categories')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
@@ -97,11 +99,13 @@ class DashboardController extends Controller
 
         $publishers = Publisher::query()->orderBy('name')->get(['id', 'name']);
         $categories = Category::query()->orderBy('name')->get(['id', 'name']);
+        $authors = Author::query()->orderBy('name')->get(['id', 'name']);
 
         return view('admin.books', [
             'books' => $books,
             'publishers' => $publishers,
             'categories' => $categories,
+            'authors' => $authors,
             'q' => $q,
         ]);
     }
@@ -123,6 +127,8 @@ class DashboardController extends Controller
             'publisher_id' => ['nullable', 'integer', Rule::exists('publishers', 'id')],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => ['integer', Rule::exists('categories', 'id')],
+            'author_ids' => ['nullable', 'array'],
+            'author_ids.*' => ['integer', Rule::exists('authors', 'id')],
         ]);
 
         $title = trim((string) $data['title']);
@@ -148,6 +154,7 @@ class DashboardController extends Controller
         ]);
 
         $book->categories()->sync($data['category_ids'] ?? []);
+        $book->authors()->sync($data['author_ids'] ?? []);
 
         return back()->with('success', 'Đã thêm sách mới.');
     }
@@ -170,6 +177,8 @@ class DashboardController extends Controller
             'publisher_id' => ['nullable', 'integer', Rule::exists('publishers', 'id')],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => ['integer', Rule::exists('categories', 'id')],
+            'author_ids' => ['nullable', 'array'],
+            'author_ids.*' => ['integer', Rule::exists('authors', 'id')],
         ]);
 
         $title = trim((string) $data['title']);
@@ -207,6 +216,7 @@ class DashboardController extends Controller
         ]);
 
         $book->categories()->sync($data['category_ids'] ?? []);
+        $book->authors()->sync($data['author_ids'] ?? []);
 
         return back()->with('success', 'Đã cập nhật sách.');
     }
@@ -364,6 +374,91 @@ class DashboardController extends Controller
         $publisher->delete();
 
         return back()->with('success', 'Đã xóa nhà xuất bản.');
+    }
+
+    public function authors(Request $request): View
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $authors = Author::query()
+            ->withCount('books')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('bio', 'like', "%{$q}%");
+            })
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('admin.authors', [
+            'authors' => $authors,
+            'q' => $q,
+        ]);
+    }
+
+    public function storeAuthor(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'bio' => ['nullable', 'string'],
+            'avatar_file' => ['nullable', 'image', 'max:3072'],
+        ]);
+
+        $avatarPath = $request->hasFile('avatar_file')
+            ? $request->file('avatar_file')->store('author-avatars', 'public')
+            : null;
+
+        Author::query()->create([
+            'name' => $data['name'],
+            'bio' => $data['bio'] ?? null,
+            'avatar_url' => $avatarPath,
+        ]);
+
+        return back()->with('success', 'Đã thêm tác giả mới.');
+    }
+
+    public function updateAuthor(Request $request, Author $author): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'bio' => ['nullable', 'string'],
+            'avatar_file' => ['nullable', 'image', 'max:3072'],
+        ]);
+
+        $avatarPath = $author->avatar_url;
+
+        if ($request->hasFile('avatar_file')) {
+            if (
+                $avatarPath
+                && ! str_starts_with($avatarPath, 'http://')
+                && ! str_starts_with($avatarPath, 'https://')
+                && ! str_starts_with($avatarPath, '/')
+                && Storage::disk('public')->exists($avatarPath)
+            ) {
+                Storage::disk('public')->delete($avatarPath);
+            }
+
+            $avatarPath = $request->file('avatar_file')->store('author-avatars', 'public');
+        }
+
+        $author->update([
+            'name' => $data['name'],
+            'bio' => $data['bio'] ?? null,
+            'avatar_url' => $avatarPath,
+        ]);
+
+        return back()->with('success', 'Đã cập nhật tác giả.');
+    }
+
+    public function destroyAuthor(Author $author): RedirectResponse
+    {
+        if ($author->books()->exists()) {
+            return back()->with('error', 'Không thể xóa tác giả đã gắn với sách.');
+        }
+
+        $author->delete();
+
+        return back()->with('success', 'Đã xóa tác giả.');
     }
 
     public function orders(Request $request): View

@@ -40,11 +40,15 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('account.show');
 
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('panel');
+    Route::middleware('role:staff,admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('panel');
 
-        Route::get('/users', [AdminDashboardController::class, 'users'])->name('users.index');
-        Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('users.update');
+            Route::get('/users', [AdminDashboardController::class, 'users'])->name('users.index');
+            Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('users.update');
+
+            Route::get('/revenue', [AdminDashboardController::class, 'revenue'])->name('revenue.index');
+        });
 
         Route::get('/books', [AdminDashboardController::class, 'books'])->name('books.index');
         Route::post('/books', [AdminDashboardController::class, 'storeBook'])->name('books.store');
@@ -61,19 +65,18 @@ Route::middleware('auth')->group(function () {
         Route::patch('/publishers/{publisher}', [AdminDashboardController::class, 'updatePublisher'])->name('publishers.update');
         Route::delete('/publishers/{publisher}', [AdminDashboardController::class, 'destroyPublisher'])->name('publishers.destroy');
 
+        Route::get('/authors', [AdminDashboardController::class, 'authors'])->name('authors.index');
+        Route::post('/authors', [AdminDashboardController::class, 'storeAuthor'])->name('authors.store');
+        Route::patch('/authors/{author}', [AdminDashboardController::class, 'updateAuthor'])->name('authors.update');
+        Route::delete('/authors/{author}', [AdminDashboardController::class, 'destroyAuthor'])->name('authors.destroy');
+
         Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders.index');
         Route::patch('/orders/{order}', [AdminDashboardController::class, 'updateOrder'])->name('orders.update');
-
-        Route::get('/revenue', [AdminDashboardController::class, 'revenue'])->name('revenue.index');
     });
 
     Route::middleware('role:staff,admin')->group(function () {
         Route::get('/staff', function () {
-            return view('role-panel', [
-                'title' => 'Khu vực Staff',
-                'description' => 'Xử lý đơn hàng, chăm sóc khách hàng và kiểm duyệt nội dung vận hành.',
-                'theme' => 'cyan',
-            ]);
+            return view('staff.dashboard');
         })->name('staff.panel');
     });
 

@@ -30,6 +30,18 @@
             <p class="mt-4 text-sm font-semibold text-orange-600">Mở chức năng</p>
         </a>
 
+        <a href="{{ route('admin.authors.index') }}" class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Chức năng</p>
+                    <h2 class="mt-1 text-lg font-bold text-slate-900">Quản lý tác giả</h2>
+                    <p class="mt-2 text-sm text-slate-500">Cập nhật hồ sơ tác giả và kiểm soát dữ liệu liên quan.</p>
+                </div>
+                <span class="rounded-xl bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-700">{{ number_format($stats['authors']) }}</span>
+            </div>
+            <p class="mt-4 text-sm font-semibold text-orange-600">Mở chức năng</p>
+        </a>
+
         <a href="{{ route('admin.categories.index') }}" class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md">
             <div class="flex items-start justify-between gap-3">
                 <div>
@@ -79,35 +91,4 @@
         </a>
     </div>
 
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">Đơn hàng mới nhất</h2>
-        <div class="mt-4 overflow-x-auto">
-            <table class="min-w-full text-left text-sm">
-                <thead>
-                    <tr class="border-b border-slate-200 text-slate-500">
-                        <th class="px-3 py-2">Mã đơn</th>
-                        <th class="px-3 py-2">Khách hàng</th>
-                        <th class="px-3 py-2">Trạng thái</th>
-                        <th class="px-3 py-2">Tổng tiền</th>
-                        <th class="px-3 py-2">Ngày tạo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($recentOrders as $order)
-                        <tr class="border-b border-slate-100">
-                            <td class="px-3 py-2 font-semibold text-slate-900">{{ $order->order_code }}</td>
-                            <td class="px-3 py-2 text-slate-700">{{ $order->user?->full_name ?? 'N/A' }}</td>
-                            <td class="px-3 py-2 text-slate-700">{{ $order->order_status }}</td>
-                            <td class="px-3 py-2 text-slate-700">{{ number_format($order->total_amount, 0, ',', '.') }} đ</td>
-                            <td class="px-3 py-2 text-slate-700">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-3 py-4 text-center text-slate-500">Chưa có dữ liệu đơn hàng.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
 @endsection

@@ -3,7 +3,6 @@
         <div class="mb-8 text-center">
             <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-300/90">Chào mừng trở lại</p>
             <h2 class="mt-3 text-3xl font-bold text-white">Đăng nhập Catbook</h2>
-            <p class="mt-2 text-sm text-slate-300">Dùng email và mật khẩu để vào trang quản trị hoặc tài khoản mua sách.</p>
         </div>
 
         @if ($errors->any())

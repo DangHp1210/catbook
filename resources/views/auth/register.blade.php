@@ -3,7 +3,7 @@
         <div class="mb-8 text-center">
             <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-300/90">Bắt đầu ngay</p>
             <h2 class="mt-3 text-3xl font-bold text-white">Đăng ký Catbook</h2>
-            <p class="mt-2 text-sm text-slate-300">Tạo tài khoản khách hàng để lưu giỏ hàng, đơn hàng và lịch sử chat AI.</p>
+
         </div>
 
         @if ($errors->any())

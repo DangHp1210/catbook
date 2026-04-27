@@ -6,10 +6,9 @@
     <title>{{ $title }} - Catbook</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(34,197,94,0.12),_transparent_25%),radial-gradient(circle_at_bottom_left,_rgba(14,165,233,0.12),_transparent_30%)]"></div>
-    <main class="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <x-navbar :dark="true" />
+<body class="cb-site text-slate-900">
+    <main class="cb-page">
+        <x-navbar />
 
         @php
             $themeClasses = match ($theme ?? 'amber') {
@@ -19,10 +18,10 @@
             };
         @endphp
 
-        <section class="mt-6 rounded-3xl border bg-gradient-to-br p-8 backdrop-blur {{ $themeClasses }}">
-            <h1 class="text-3xl font-bold">{{ $title }}</h1>
-            <p class="mt-3 text-base text-slate-200">{{ $description }}</p>
-            <p class="mt-5 text-sm text-slate-300">Tài khoản hiện tại: {{ auth()->user()->full_name }} ({{ auth()->user()->role }})</p>
+        <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h1 class="text-3xl font-bold text-slate-900">{{ $title }}</h1>
+            <p class="mt-3 text-base text-slate-600">{{ $description }}</p>
+            <p class="mt-5 text-sm text-slate-500">Tài khoản hiện tại: {{ auth()->user()->full_name }} ({{ auth()->user()->role }})</p>
         </section>
     </main>
 </body>

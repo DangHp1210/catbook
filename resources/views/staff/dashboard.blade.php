@@ -5,36 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Nhân viên - Catbook</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        .staff-compact {
-            font-size: 13px;
-            line-height: 1.45;
-        }
-
-        .staff-compact .text-2xl {
-            font-size: 1.3rem !important;
-            line-height: 1.35 !important;
-        }
-
-        .staff-compact .text-lg {
-            font-size: 0.98rem !important;
-            line-height: 1.35 !important;
-        }
-
-        .staff-compact .text-sm {
-            font-size: 0.8rem !important;
-            line-height: 1.4 !important;
-        }
-
-        .staff-compact .p-5 {
-            padding: 0.9rem !important;
-        }
-    </style>
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-900">
+<body class="cb-site text-slate-900">
     <x-navbar />
 
-    <main class="staff-compact mx-auto w-full max-w-6xl space-y-4 px-2.5 pb-7 pt-4 sm:px-3.5 lg:px-4">
+    <main class="cb-page space-y-4">
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h1 class="text-2xl font-bold text-slate-900">Bảng điều khiển Nhân viên</h1>
             <p class="mt-2 text-sm text-slate-500">Truy cập nhanh các chức năng vận hành được cấp quyền cho nhân viên.</p>

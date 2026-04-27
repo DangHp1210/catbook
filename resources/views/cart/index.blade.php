@@ -6,10 +6,10 @@
     <title>Catbook | Giỏ hàng</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-[#f7f8fc] text-slate-800">
+<body class="cb-site text-slate-800">
     <x-navbar />
 
-    <main class="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+    <main class="cb-page">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-3xl font-black text-slate-900">Giỏ hàng của bạn</h1>
             <a href="{{ route('catalog.categories') }}" class="text-sm font-semibold text-orange-600 hover:text-orange-700">Tiếp tục mua sách</a>

@@ -6,10 +6,10 @@
     <title>Catbook | {{ $book->title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-[#f7f8fc] text-slate-800">
+<body class="cb-site text-slate-800">
     <x-navbar />
 
-    <main class="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+    <main class="cb-page">
         @if (session('success'))
             <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                 {{ session('success') }}

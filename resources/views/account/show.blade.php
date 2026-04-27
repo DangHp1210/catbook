@@ -6,10 +6,10 @@
     <title>Catbook | Thông tin tài khoản</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-[#f7f8fc] text-slate-800">
+<body class="cb-site text-slate-800">
     <x-navbar />
 
-    <main class="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+    <main class="cb-page">
         <section class="grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div class="flex items-center gap-4">

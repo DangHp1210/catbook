@@ -3,477 +3,600 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CatBook | Mua sách trực tuyến thông minh</title>
+    <title>CatBook — Trang chủ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <!-- Tailwind CSS fallback (Xóa dòng này nếu Vite của bạn đã config sẵn Tailwind) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ─── Reset & Base ─────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f8f6f1;
+            color: #1a1a1a;
+            margin: 0;
+        }
+
+        /* ─── Navbar ────────────────────────────────────────────── */
+        .cb-nav {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(248,246,241,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e8e3d8;
+            padding: 0 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .cb-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px; font-weight: 900;
+            color: #1a1a1a; letter-spacing: -0.5px;
+            text-decoration: none;
+        }
+        .cb-logo span { color: #2d6a4f; }
+
+        .cb-nav-links { display: flex; gap: 28px; align-items: center; }
+        .cb-nav-links a {
+            font-size: 14px; font-weight: 500; color: #555;
+            text-decoration: none; transition: color 0.2s;
+        }
+        .cb-nav-links a:hover { color: #1a1a1a; }
+        .cb-nav-links a.active { color: #2d6a4f; }
+
+        .cb-nav-right { display: flex; gap: 10px; align-items: center; }
+        .cb-cart-icon {
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 1.5px solid #ddd; background: transparent;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: border-color 0.2s; position: relative;
+            text-decoration: none; color: #1a1a1a;
+        }
+        .cb-cart-icon:hover { border-color: #1a1a1a; }
+        .cb-cart-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: #2d6a4f; color: #fff;
+            width: 18px; height: 18px; border-radius: 50%;
+            font-size: 10px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cb-btn-ghost {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 500;
+            padding: 8px 18px; border-radius: 999px;
+            border: 1.5px solid #ccc; background: transparent;
+            color: #333; cursor: pointer; transition: all 0.2s;
+            text-decoration: none; display: inline-flex; align-items: center;
+        }
+        .cb-btn-ghost:hover { border-color: #1a1a1a; color: #1a1a1a; }
+        .cb-btn-solid {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 600;
+            padding: 8px 20px; border-radius: 999px;
+            border: none; background: #1a1a1a;
+            color: #fff; cursor: pointer; transition: all 0.2s;
+            text-decoration: none; display: inline-flex; align-items: center;
+        }
+        .cb-btn-solid:hover { background: #2d6a4f; }
+
+        /* ─── Hero ──────────────────────────────────────────────── */
+        .cb-hero {
+            max-width: 1140px; margin: 0 auto;
+            padding: 80px 40px 64px;
+            display: grid; grid-template-columns: 1fr 400px; gap: 72px; align-items: center;
+        }
+        .cb-hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 11px; font-weight: 600; letter-spacing: 1.8px;
+            text-transform: uppercase; color: #2d6a4f;
+            background: #d8f3dc; padding: 5px 14px; border-radius: 999px;
+            margin-bottom: 22px;
+        }
+        .cb-eyebrow-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #2d6a4f;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%,100%{ opacity:1; transform:scale(1); }
+            50%{ opacity:0.5; transform:scale(1.5); }
+        }
+        .cb-hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 58px; font-weight: 900;
+            line-height: 1.06; letter-spacing: -2px;
+            color: #0d1b10; margin: 0;
+        }
+        .cb-hero h1 em { font-style: italic; color: #2d6a4f; }
+        .cb-hero-sub {
+            margin-top: 20px; font-size: 16px; font-weight: 300;
+            color: #5a5a5a; line-height: 1.75; max-width: 460px;
+        }
+
+        /* Search bar */
+        .cb-search-wrap { margin-top: 32px; display: flex; gap: 10px; }
+        .cb-search-form { display: flex; gap: 10px; flex: 1; }
+        .cb-search-input {
+            flex: 1; font-family: 'DM Sans', sans-serif;
+            font-size: 14px; padding: 14px 22px;
+            border: 2px solid #e0dbd0; border-radius: 999px;
+            background: #fff; outline: none; color: #1a1a1a;
+            transition: border-color 0.2s; min-width: 0;
+        }
+        .cb-search-input:focus { border-color: #2d6a4f; }
+        .cb-search-input::placeholder { color: #b0aa9e; }
+        .cb-search-btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 600;
+            padding: 14px 28px; border-radius: 999px;
+            background: #2d6a4f; color: #fff;
+            border: none; cursor: pointer;
+            transition: background 0.2s, transform 0.15s; white-space: nowrap;
+        }
+        .cb-search-btn:hover { background: #1b4332; transform: translateY(-1px); }
+
+        /* Stats */
+        .cb-hero-stats {
+            display: flex; gap: 32px; margin-top: 36px;
+            padding-top: 28px; border-top: 1px solid #e0dbd0;
+        }
+        .cb-stat-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px; font-weight: 700; color: #0d1b10;
+            line-height: 1;
+        }
+        .cb-stat-lbl { font-size: 12px; color: #999; margin-top: 4px; }
+
+        /* Hero visual — floating book cards */
+        .cb-hero-visual { position: relative; display: flex; flex-direction: column; gap: 12px; }
+        .cb-ai-badge {
+            position: absolute; top: -14px; right: -16px;
+            background: #1a1a1a; color: #fff;
+            font-size: 11px; font-weight: 600;
+            padding: 9px 16px; border-radius: 999px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+            display: flex; align-items: center; gap: 7px;
+            animation: cb-float 3s ease-in-out infinite; z-index: 10;
+        }
+        @keyframes cb-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .cb-ai-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #4ade80;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        .cb-book-card {
+            background: #fff; border-radius: 16px;
+            padding: 16px 18px; display: flex; gap: 14px; align-items: center;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+            border: 1px solid #ede9de;
+            transition: transform 0.25s, box-shadow 0.25s; cursor: pointer;
+        }
+        .cb-book-card:nth-child(2) { margin-left: 24px; }
+        .cb-book-card:nth-child(3) { margin-left: 12px; }
+        .cb-book-card:hover { transform: translateX(5px) translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
+        .cb-book-thumb {
+            width: 50px; height: 70px; border-radius: 8px;
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900;
+        }
+        .cb-book-thumb.t1 { background: #d8f3dc; color: #1b4332; }
+        .cb-book-thumb.t2 { background: #fde8d8; color: #7c3d12; }
+        .cb-book-thumb.t3 { background: #e0eaff; color: #1e3a8a; }
+        .cb-book-info { flex: 1; min-width: 0; }
+        .cb-book-title { font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.35; }
+        .cb-book-author { font-size: 11px; color: #999; margin-top: 3px; }
+        .cb-book-price { font-size: 15px; font-weight: 700; color: #2d6a4f; margin-top: 7px; }
+        .cb-badge-hot {
+            background: #2d6a4f; color: #fff;
+            font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+            letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0;
+        }
+        .cb-badge-new {
+            background: #1a1a1a; color: #fff;
+            font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+            letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0;
+        }
+
+        /* ─── Section wrapper ───────────────────────────────────── */
+        .cb-section { max-width: 1140px; margin: 0 auto; padding: 0 40px 72px; }
+        .cb-section-head {
+            display: flex; align-items: baseline; justify-content: space-between;
+            margin-bottom: 28px;
+        }
+        .cb-section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px; font-weight: 700; color: #0d1b10;
+            letter-spacing: -0.5px;
+        }
+        .cb-see-all {
+            font-size: 13px; font-weight: 500; color: #2d6a4f;
+            text-decoration: none;
+            padding-bottom: 1px; border-bottom: 1px solid currentColor;
+            transition: opacity 0.2s;
+        }
+        .cb-see-all:hover { opacity: 0.65; }
+
+        /* ─── Divider ───────────────────────────────────────────── */
+        .cb-divider { max-width: 1140px; margin: 0 auto 72px; padding: 0 40px; }
+        .cb-divider hr { border: none; border-top: 1px solid #e0dbd0; }
+
+        /* ─── Categories ────────────────────────────────────────── */
+        .cb-cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        @media(max-width: 768px) { .cb-cat-grid { grid-template-columns: repeat(2, 1fr); } }
+        .cb-cat-card {
+            background: #fff; border: 1px solid #ede9de;
+            border-radius: 16px; padding: 24px 18px;
+            text-align: center; cursor: pointer;
+            transition: all 0.22s; text-decoration: none; display: block;
+        }
+        .cb-cat-card:hover {
+            background: #2d6a4f; border-color: #2d6a4f;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(45,106,79,0.2);
+        }
+        .cb-cat-card:hover .cb-cat-name { color: #fff; }
+        .cb-cat-card:hover .cb-cat-count { color: rgba(255,255,255,0.65); }
+        .cb-cat-icon { font-size: 28px; margin-bottom: 12px; line-height: 1; }
+        .cb-cat-name { font-size: 14px; font-weight: 600; color: #1a1a1a; transition: color 0.22s; }
+        .cb-cat-count { font-size: 12px; color: #aaa; margin-top: 5px; transition: color 0.22s; }
+
+        /* ─── Book cards ────────────────────────────────────────── */
+        .cb-books-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        @media(max-width: 900px) { .cb-books-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media(max-width: 600px) { .cb-books-grid { grid-template-columns: 1fr; } }
+
+        .cb-product-card {
+            background: #fff; border: 1px solid #ede9de;
+            border-radius: 18px; overflow: hidden;
+            text-decoration: none; display: block;
+            transition: all 0.25s;
+        }
+        .cb-product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 48px rgba(0,0,0,0.1);
+        }
+        .cb-product-img {
+            height: 200px; background: #f0ede6;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 56px; font-weight: 700;
+            position: relative; overflow: hidden;
+        }
+        /* When there's a real image */
+        .cb-product-img img { width: 100%; height: 100%; object-fit: cover; }
+        /* Color variants for placeholder */
+        .cb-product-img.no-img { color: #c9bfa8; }
+        .cb-ribbon {
+            position: absolute; top: 12px; left: 12px;
+            background: #1a1a1a; color: #fff;
+            font-size: 10px; font-weight: 700; padding: 4px 12px;
+            border-radius: 999px; letter-spacing: 0.8px;
+        }
+        .cb-product-body { padding: 18px; }
+        .cb-product-title {
+            font-size: 15px; font-weight: 600; color: #1a1a1a; line-height: 1.45;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .cb-product-author { font-size: 12px; color: #aaa; margin-top: 6px; }
+        .cb-product-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0ede6;
+        }
+        .cb-product-price { font-size: 18px; font-weight: 700; color: #2d6a4f; }
+        .cb-product-orig {
+            font-size: 12px; color: #bbb; text-decoration: line-through; margin-left: 7px;
+        }
+        .cb-add-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #2d6a4f; color: #fff; border: none;
+            font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; flex-shrink: 0; line-height: 1;
+        }
+        .cb-add-btn:hover { background: #1b4332; transform: scale(1.12); }
+
+        /* ─── CTA Strip ─────────────────────────────────────────── */
+        .cb-cta { max-width: 1140px; margin: 0 auto 80px; padding: 0 40px; }
+        .cb-cta-inner {
+            background: #0d1b10; border-radius: 26px;
+            padding: 56px 64px;
+            display: flex; align-items: center; justify-content: space-between; gap: 40px;
+        }
+        .cb-cta-text h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 34px; font-weight: 700; color: #fff;
+            letter-spacing: -0.5px; line-height: 1.2; margin: 0;
+        }
+        .cb-cta-text h3 em { font-style: italic; color: #4ade80; }
+        .cb-cta-text p { font-size: 15px; color: #6a9e7a; margin: 10px 0 0; }
+        .cb-cta-btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px; font-weight: 600;
+            padding: 16px 34px; border-radius: 999px;
+            background: #4ade80; color: #0d1b10;
+            border: none; cursor: pointer; white-space: nowrap;
+            flex-shrink: 0; transition: all 0.2s;
+        }
+        .cb-cta-btn:hover { background: #86efac; transform: translateY(-2px); }
+
+        /* ─── Footer ────────────────────────────────────────────── */
+        .cb-footer {
+            background: #0d1b10; color: #4a6455;
+            padding: 32px 40px; font-size: 13px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .cb-footer-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px; font-weight: 900; color: #fff;
+        }
+        .cb-footer-logo span { color: #4ade80; }
+        .cb-footer-links { display: flex; gap: 24px; }
+        .cb-footer-links a { color: #4a6455; text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .cb-footer-links a:hover { color: #6a9e7a; }
+
+        /* ─── Responsive ────────────────────────────────────────── */
+        @media(max-width: 900px) {
+            .cb-hero { grid-template-columns: 1fr; gap: 48px; }
+            .cb-hero-visual { display: none; }
+            .cb-hero h1 { font-size: 42px; }
+            .cb-cta-inner { flex-direction: column; text-align: center; padding: 40px 32px; }
+            .cb-nav-links { display: none; }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-white font-sans text-slate-800">
+<body>
 
-    <!-- Bạn có thể tách phần <nav> này thành file <x-navbar /> của bạn -->
-    <nav class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-emerald-100">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="bg-emerald-600 p-1.5 rounded-lg">
-                    <svg class="text-white w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                </div>
-                <span class="text-2xl font-bold text-emerald-700 tracking-tight">CatBook</span>
-            </div>
+    {{-- ── Navbar ─────────────────────────────────────────────── --}}
+    <nav class="cb-nav">
+        <a href="{{ route('home') }}" class="cb-logo">Cat<span>Book</span></a>
 
-            <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
-                <form method="GET" action="{{ route('catalog.categories') }}" class="relative w-full">
-                    <input 
-                        name="q"
-                        type="text" 
-                        value="{{ request('q') }}"
-                        placeholder="Tìm sách, tác giả hoặc ISBN..." 
-                        class="w-full bg-emerald-50 border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
-                    />
-                    <button type="submit" class="absolute left-3 top-2.5 text-emerald-500 w-5 h-5">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </button>
-                </form>
-            </div>
+        <div class="cb-nav-links">
+            <a href="{{ route('home') }}" class="active">Trang chủ</a>
+            <a href="{{ route('catalog.categories') }}">Danh mục</a>
+            <a href="#">Tác giả</a>
+            <a href="#">Giới thiệu</a>
+        </div>
 
-            <div class="flex items-center gap-5">
-                <div class="hidden md:flex gap-6 font-medium text-slate-600">
-                    <a href="#" class="hover:text-emerald-600 transition-colors">Trang chủ</a>
-                    <a href="{{ route('catalog.categories') }}" class="hover:text-emerald-600 transition-colors">Thể loại</a>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button class="p-2 text-slate-600 hover:bg-emerald-50 rounded-full transition-colors relative">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        <span class="absolute top-0 right-0 bg-emerald-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
-                    </button>
-                    @auth
-                        <!-- Menu Dropdown khi đã đăng nhập -->
-                        <div class="relative group">
-                            <button class="flex items-center gap-2 p-1 pr-2 rounded-full border border-emerald-100 hover:bg-emerald-50 transition-colors">
-                                <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
-                                    {{ substr(auth()->user()->name, 0, 1) }}
-                                </div>
-                                <span class="text-sm font-medium text-slate-700 hidden sm:block">{{ auth()->user()->name }}</span>
-                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
+        <div class="cb-nav-right">
+            {{-- Cart --}}
+            <a href="{{ route('cart.index') }}" class="cb-cart-icon" title="Giỏ hàng">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+                @auth
+                    @if(($cartCount ?? 0) > 0)
+                        <span class="cb-cart-badge">{{ $cartCount }}</span>
+                    @endif
+                @endauth
+            </a>
 
-                            <!-- Dropdown Content (hiện khi hover) -->
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
-                                <div class="py-2 bg-white rounded-xl border border-emerald-50">
-                                    <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">Trang cá nhân</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">Đơn hàng của tôi</a>
-                                    <hr class="my-1 border-slate-100">
-                                    <!-- Form Đăng xuất chuẩn Laravel -->
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
-                                            Đăng xuất
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <!-- Nút Đăng nhập / Đăng ký khi chưa đăng nhập -->
-                        <div class="flex items-center gap-1 pl-2 border-l border-emerald-100">
-                            <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors px-3 py-2 hidden sm:block">Đăng nhập</a>
-                            <a href="{{ route('register') }}" class="text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors px-4 py-2 rounded-full shadow-sm">Đăng ký</a>
-                        </div>
-                    @endauth
-                </div>
-            </div>
+            @guest
+                <a href="{{ route('login') }}" class="cb-btn-ghost">Đăng nhập</a>
+                <a href="{{ route('register') }}" class="cb-btn-solid">Đăng ký</a>
+            @else
+                {{-- Thay 'user.profile' bằng tên route profile thực tế trong web.php của bạn --}}
+                <a href="#" class="cb-btn-ghost">{{ auth()->user()->full_name }}</a>
+            @endguest
         </div>
     </nav>
-    <!-- Kết thúc Navbar -->
 
-    <main class="space-y-12 pb-14">
-        <!-- Hero Section -->
-        <section class="relative py-16 md:py-24 overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-full bg-emerald-50/50 -z-10 skew-y-3 origin-top-left"></div>
-            <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-                <div class="space-y-6">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold">
-                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                        <span>Catbook 2026</span>
-                    </div>
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight">
-                        Nhà sách trực tuyến <br/>
-                        <span class="text-emerald-600">cho tương lai xanh.</span>
-                    </h1>
-                    <p class="text-lg text-slate-600 max-w-lg">
-                        Catbook giúp bạn tìm nhanh cuốn sách phù hợp với mục tiêu cá nhân. Kết hợp kho sách thực tế và trợ lý AI để quyết định dễ dàng hơn.
-                    </p>
-                    
-                    <div class="flex flex-wrap gap-4 pt-4">
-                        @auth
-                            <a href="{{ route('catalog.categories') }}" class="bg-emerald-600 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center gap-2">
-                                Khám phá sách
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </a>
-                        @else
-                            <a href="#" class="bg-emerald-600 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
-                                Đăng nhập ngay
-                            </a>
-                        @endauth
-                    </div>
+    <main>
+        {{-- ── Hero ───────────────────────────────────────────────── --}}
+        <section class="cb-hero">
+            {{-- Left copy --}}
+            <div class="cb-hero-left">
+                <div class="cb-hero-eyebrow">
+                    <span class="cb-eyebrow-dot"></span>
+                    Kho sách trực tuyến
+                </div>
+                <h1>Tìm đúng cuốn sách<br><em>dành cho bạn</em></h1>
+                <p class="cb-hero-sub">Hàng nghìn đầu sách, gợi ý thông minh từ AI. Khám phá tri thức theo cách của bạn.</p>
 
-                    <!-- Stats -->
-                    <div class="grid grid-cols-3 gap-6 pt-6 border-t border-emerald-100 mt-6">
-                        <div>
-                            <p class="text-2xl font-black text-emerald-600">{{ number_format($stats['books'] ?? 0) }}</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wide mt-1">Đầu sách</p>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-black text-emerald-600">{{ number_format($stats['authors'] ?? 0) }}</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wide mt-1">Tác giả</p>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-black text-emerald-600">{{ number_format($stats['categories'] ?? 0) }}</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wide mt-1">Danh mục</p>
-                        </div>
-                    </div>
+                <div class="cb-search-wrap">
+                    <form method="GET" action="{{ route('catalog.categories') }}" class="cb-search-form">
+                        <input name="q" type="search" value="{{ request('q') }}"
+                               placeholder="Tìm sách, tác giả hoặc ISBN..."
+                               class="cb-search-input" />
+                        <button type="submit" class="cb-search-btn">Tìm kiếm</button>
+                    </form>
                 </div>
 
-                <div class="relative hidden md:block">
-                    <div class="w-full h-[450px] bg-emerald-200 rounded-3xl overflow-hidden shadow-2xl rotate-3 relative">
-                        <img 
-                            src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=1000" 
-                            alt="Book collection" 
-                            class="w-full h-full object-cover"
-                        />
+                <div class="cb-hero-stats">
+                    <div>
+                        <div class="cb-stat-num">{{ number_format($stats['books'] ?? 0) }}+</div>
+                        <div class="cb-stat-lbl">Đầu sách</div>
                     </div>
-                    <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-bounce">
-                        <div class="bg-emerald-500 p-2 rounded-lg">
-                            <svg class="text-white w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-medium">Hỗ trợ bởi AI</p>
-                            <p class="text-sm font-bold text-slate-800">Luôn sẵn sàng</p>
-                        </div>
+                    <div>
+                        <div class="cb-stat-num">{{ number_format($stats['authors'] ?? 0) }}</div>
+                        <div class="cb-stat-lbl">Tác giả</div>
+                    </div>
+                    <div>
+                        <div class="cb-stat-num">{{ number_format($stats['categories'] ?? 0) }}</div>
+                        <div class="cb-stat-lbl">Danh mục</div>
                     </div>
                 </div>
+            </div>
+
+            {{-- Right — floating book cards (decorative) --}}
+            <div class="cb-hero-visual">
+                <div class="cb-ai-badge">
+                    <span class="cb-ai-dot"></span>AI đang hoạt động
+                </div>
+
+                @forelse(($featuredBooks ?? collect())->take(3) as $hb)
+                    @php
+                        $initial = mb_substr($hb->title, 0, 1);
+                        $colors  = ['t1','t2','t3'];
+                        $ci      = $loop->index % 3;
+                    @endphp
+                    <a href="{{ route('catalog.book', $hb->slug) }}" class="cb-book-card" style="text-decoration:none">
+                        <div class="cb-book-thumb {{ $colors[$ci] }}">{{ $initial }}</div>
+                        <div class="cb-book-info">
+                            <div class="cb-book-title">{{ Str::limit($hb->title, 40) }}</div>
+                            <div class="cb-book-author">{{ $hb->authors->pluck('name')->first() ?? 'Đang cập nhật' }}</div>
+                            <div class="cb-book-price">{{ number_format($hb->discount_price ?? $hb->price, 0, ',', '.') }}đ</div>
+                        </div>
+                        @if($loop->first)
+                            <span class="cb-badge-hot">HOT</span>
+                        @elseif($loop->last)
+                            <span class="cb-badge-new">MỚI</span>
+                        @endif
+                    </a>
+                @empty
+                    {{-- Placeholder cards khi chưa có data --}}
+                    <div class="cb-book-card">
+                        <div class="cb-book-thumb t1">S</div>
+                        <div class="cb-book-info">
+                            <div class="cb-book-title">Sapiens: Lược Sử Loài Người</div>
+                            <div class="cb-book-author">Yuval Noah Harari</div>
+                            <div class="cb-book-price">148.000đ</div>
+                        </div>
+                        <span class="cb-badge-hot">HOT</span>
+                    </div>
+                @endforelse
             </div>
         </section>
 
-        <!-- Categories -->
-        <section class="max-w-7xl mx-auto px-4">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl font-bold text-slate-900">Danh mục nổi bật</h2>
-                <a href="{{ route('catalog.categories') }}" class="text-emerald-600 font-semibold flex items-center gap-1 hover:underline">
-                    Xem tất cả 
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </a>
+        {{-- ── Categories ─────────────────────────────────────────── --}}
+        <section class="cb-section">
+            <div class="cb-section-head">
+                <h2 class="cb-section-title">Danh mục nổi bật</h2>
+                <a href="{{ route('catalog.categories') }}" class="cb-see-all">Xem tất cả →</a>
             </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                @forelse ($topCategories ?? [] as $category)
-                    <a href="{{ route('catalog.category', $category->slug) }}" class="group bg-emerald-50 hover:bg-emerald-600 p-6 rounded-3xl text-center transition-all cursor-pointer flex flex-col items-center justify-center border border-transparent hover:border-emerald-500">
-                        <h3 class="font-bold text-emerald-700 group-hover:text-white transition-colors">{{ $category->name }}</h3>
-                        <p class="text-emerald-600/60 group-hover:text-white/80 text-sm mt-1 transition-colors">{{ $category->books_count }} cuốn</p>
+
+            @php
+                $catIcons = ['📚','🧠','💼','🔬','🎨','📖','💡','🌍'];
+            @endphp
+            <div class="cb-cat-grid">
+                @forelse($topCategories ?? [] as $cat)
+                    <a href="{{ route('catalog.category', $cat->slug) }}" class="cb-cat-card">
+                        <div class="cb-cat-icon">{{ $catIcons[$loop->index % count($catIcons)] }}</div>
+                        <div class="cb-cat-name">{{ $cat->name }}</div>
+                        <div class="cb-cat-count">{{ number_format($cat->books_count ?? 0) }} cuốn</div>
                     </a>
                 @empty
-                    <div class="col-span-2 md:col-span-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-10 text-center text-sm text-slate-500">
+                    <div style="grid-column:1/-1;text-align:center;padding:40px 0;color:#aaa;font-size:14px">
                         Chưa có danh mục để hiển thị.
                     </div>
                 @endforelse
             </div>
-            
-            <div class="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 flex items-start gap-4">
-                <div class="bg-white p-2 rounded-full shadow-sm text-emerald-500">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                </div>
-                <div>
-                    <p class="font-bold text-emerald-800">Gợi ý từ Catbook AI</p>
-                    <p class="mt-1 text-sm text-emerald-600">Bạn có thể mở cửa sổ Chat ở góc dưới màn hình và hỏi: “Mình cần sách Laravel thực chiến cho đồ án trong 2 tháng”.</p>
-                </div>
-            </div>
         </section>
 
-        <!-- Featured Books -->
-        <section class="py-12 bg-slate-50 mt-12 border-y border-slate-100">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="mb-10 flex items-end justify-between gap-3">
-                    <div>
-                        <p class="text-sm font-bold text-emerald-600 uppercase tracking-widest">Best Seller</p>
-                        <h2 class="text-3xl font-extrabold text-slate-900 mt-2">Sách nổi bật tuần này</h2>
+        <div class="cb-divider"><hr></div>
+
+        {{-- ── Featured Books ──────────────────────────────────────── --}}
+        <section class="cb-section">
+            <div class="cb-section-head">
+                <h2 class="cb-section-title">Sách nổi bật</h2>
+                <a href="{{ route('catalog.categories') }}" class="cb-see-all">Xem thêm →</a>
+            </div>
+
+            <div class="cb-books-grid">
+                @forelse($featuredBooks ?? [] as $book)
+                    @php
+                        $cover = null;
+                        if (!empty($book->cover_image)) {
+                            $cover = str_starts_with($book->cover_image, 'http')
+                                ? $book->cover_image
+                                : asset('storage/' . $book->cover_image);
+                        }
+                        $initial  = mb_substr($book->title, 0, 1);
+                        $bgColors = ['#e8f5e9','#fff3e0','#e3f2fd','#fce4ec','#f3e5f5'];
+                        $txColors = ['#2e7d32','#e65100','#1565c0','#880e4f','#4a148c'];
+                        $ci       = $loop->index % 5;
+                        $ribbons  = ['BESTSELLER','PHỔ BIẾN','MỚI','HOT','NỔI BẬT'];
+                    @endphp
+                    <a href="{{ route('catalog.book', $book->slug) }}" class="cb-product-card">
+                        <div class="cb-product-img {{ $cover ? '' : 'no-img' }}"
+                             style="{{ $cover ? '' : 'background:'.$bgColors[$ci].';color:'.$txColors[$ci] }}">
+                            @if($cover)
+                                <img src="{{ $cover }}" alt="{{ $book->title }}">
+                            @else
+                                {{ $initial }}
+                            @endif
+                            <span class="cb-ribbon">{{ $ribbons[$ci] }}</span>
+                        </div>
+                        <div class="cb-product-body">
+                            <div class="cb-product-title">{{ $book->title }}</div>
+                            <div class="cb-product-author">{{ $book->authors->pluck('name')->first() ?? 'Đang cập nhật' }}</div>
+                            <div class="cb-product-footer">
+                                <div>
+                                    <span class="cb-product-price">
+                                        {{ number_format((float)($book->discount_price ?? $book->price), 0, ',', '.') }}đ
+                                    </span>
+                                    @if($book->discount_price && $book->discount_price < $book->price)
+                                        <span class="cb-product-orig">{{ number_format((float)$book->price, 0, ',', '.') }}đ</span>
+                                    @endif
+                                </div>
+                                {{-- nút giỏ hàng: gọi route add-to-cart hoặc xử lý bằng JS --}}
+                                <button class="cb-add-btn"
+                                        onclick="event.preventDefault(); addToCart('{{ $book->slug }}')"
+                                        title="Thêm vào giỏ">+</button>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#aaa;font-size:14px">
+                        Chưa có sách nổi bật.
                     </div>
-                    <a href="{{ route('catalog.categories') }}" class="text-sm font-bold text-emerald-600 hover:text-emerald-700">Xem toàn bộ</a>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    @forelse ($featuredBooks ?? [] as $book)
-                        @php
-                            $cover = null;
-                            if (! empty($book->cover_image)) {
-                                $cover = str_starts_with($book->cover_image, 'http://') || str_starts_with($book->cover_image, 'https://')
-                                    ? $book->cover_image
-                                    : asset('storage/'.$book->cover_image);
-                            }
-                        @endphp
-                        <article class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 relative flex flex-col">
-                            <div class="absolute top-3 right-3 z-10">
-                                <button class="bg-white/90 p-2 rounded-full text-slate-400 hover:text-red-500 shadow-sm transition-colors">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                                </button>
-                            </div>
-                            <a href="{{ route('catalog.book', $book->slug) }}" class="h-64 overflow-hidden relative block bg-slate-100">
-                                @if ($cover)
-                                    <img src="{{ $cover }}" alt="{{ $book->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                @else
-                                    <div class="flex h-full items-center justify-center text-sm font-semibold text-slate-400">Không có ảnh bìa</div>
-                                @endif
-                                <div class="absolute bottom-0 left-0 w-full p-4 translate-y-full group-hover:translate-y-0 transition-transform bg-gradient-to-t from-black/60 to-transparent">
-                                    <span class="block w-full bg-white text-center text-emerald-600 py-2 rounded-lg font-bold text-sm shadow-md">Xem chi tiết</span>
-                                </div>
-                            </a>
-                            <div class="p-5 flex-1 flex flex-col">
-                                <div class="flex gap-1 mb-2">
-                                    @for ($i = 0; $i < 5; $i++)
-                                        <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                                    @endfor
-                                </div>
-                                <a href="{{ route('catalog.book', $book->slug) }}" class="font-bold text-slate-900 hover:text-emerald-600 transition-colors line-clamp-2 min-h-[40px]">{{ $book->title }}</a>
-                                <p class="text-slate-500 text-sm mt-1 mb-3 flex-1 line-clamp-1">{{ $book->authors->pluck('name')->take(2)->join(', ') ?: 'Đang cập nhật' }}</p>
-                                <div class="flex items-end justify-between mt-auto">
-                                    <div>
-                                        <span class="text-emerald-600 font-extrabold text-lg">{{ number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') }}đ</span>
-                                        @if ($book->discount_price)
-                                            <span class="text-xs text-slate-400 line-through block">{{ number_format((float) $book->price, 0, ',', '.') }}đ</span>
-                                        @endif
-                                    </div>
-                                    <button class="bg-emerald-50 text-emerald-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </article>
-                    @empty
-                        <div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">
-                            Chưa có dữ liệu sách nổi bật. Hãy thêm dữ liệu bảng books để hiển thị.
-                        </div>
-                    @endforelse
-                </div>
+                @endforelse
             </div>
         </section>
 
-        <!-- New Arrivals & Top Authors -->
-        <section class="max-w-7xl mx-auto px-4 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-            <!-- New Books -->
-            <article class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
-                <div class="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-900">Sách mới cập nhật</h2>
-                    <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">Mới</span>
+        {{-- ── CTA Strip ───────────────────────────────────────────── --}}
+        <div class="cb-cta">
+            <div class="cb-cta-inner">
+                <div class="cb-cta-text">
+                    <h3>Để AI gợi ý cuốn sách<br><em>hoàn hảo</em> cho bạn</h3>
+                    <p>Chỉ cần nói cho chatbot biết bạn muốn đọc gì — mọi thứ còn lại để CatBook lo.</p>
                 </div>
-                <div class="space-y-3">
-                    @forelse ($newArrivals ?? [] as $book)
-                        <div class="flex items-center justify-between rounded-xl border border-slate-100 bg-white px-4 py-3 transition hover:border-emerald-300 hover:bg-emerald-50 group">
-                            <div>
-                                <a href="{{ route('catalog.book', $book->slug) }}" class="font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">{{ $book->title }}</a>
-                                <p class="text-xs text-slate-500 mt-0.5">{{ $book->authors->pluck('name')->first() ?: 'Đang cập nhật tác giả' }}</p>
-                            </div>
-                            <p class="text-sm font-black text-emerald-600 whitespace-nowrap ml-4">{{ number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') }}đ</p>
-                        </div>
-                    @empty
-                        <p class="text-sm text-slate-500 text-center py-4">Chưa có dữ liệu sách mới.</p>
-                    @endforelse
-                </div>
-            </article>
-
-            <!-- Top Authors -->
-            <article class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
-                <div class="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-900">Tác giả quan tâm</h2>
-                    <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">Top</span>
-                </div>
-                <div class="space-y-3">
-                    @forelse ($topAuthors ?? [] as $author)
-                        <div class="flex items-center justify-between rounded-xl border border-slate-100 bg-white px-4 py-3 transition hover:border-emerald-300 hover:bg-emerald-50">
-                            <p class="font-bold text-slate-800">{{ $author->name }}</p>
-                            <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full font-medium">{{ $author->books_count }} sách</span>
-                        </div>
-                    @empty
-                        <p class="text-sm text-slate-500 text-center py-4">Chưa có dữ liệu tác giả.</p>
-                    @endforelse
-                </div>
-            </article>
-        </section>
+                <button id="open-chat-btn" class="cb-cta-btn">Mở trợ lý AI ✦</button>
+            </div>
+        </div>
     </main>
 
-    <!-- AI Chatbot UI -->
-    <button id="chat-toggle-btn" class="fixed bottom-6 right-6 z-50 bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-full shadow-2xl shadow-emerald-400/50 transition-all hover:scale-110 flex items-center gap-2 group">
-        <div class="relative">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-            <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+    {{-- ── Footer ──────────────────────────────────────────────────── --}}
+    <footer class="cb-footer">
+        <div class="cb-footer-logo">Cat<span>Book</span></div>
+        <div class="cb-footer-links">
+            <a href="#">Chính sách</a>
+            <a href="#">Liên hệ</a>
+            <a href="#">Facebook</a>
         </div>
-        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 font-bold whitespace-nowrap">
-            Hỏi AI tư vấn
-        </span>
-    </button>
+        <div>© {{ date('Y') }} CatBook</div>
+    </footer>
 
-    <div id="chat-window" class="hidden fixed bottom-6 right-6 z-[60] w-[90vw] md:w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex-col overflow-hidden border border-emerald-100 animate-[slide-in_0.3s_ease-out]">
-        <!-- Chat Header -->
-        <div class="bg-emerald-600 p-4 text-white flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 p-2 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                </div>
-                <div>
-                    <p class="font-bold leading-tight">CatBook AI Assistant</p>
-                    <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></span>
-                        <span class="text-[10px] opacity-80 uppercase tracking-widest font-bold">Online</span>
-                    </div>
-                </div>
-            </div>
-            <button id="chat-close" class="hover:bg-white/10 p-1.5 rounded-lg transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-
-        <!-- Chat Messages -->
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-emerald-50/20">
-            <!-- Initial AI Message -->
-            <div class="flex justify-start">
-                <div class="max-w-[85%] p-3 rounded-2xl text-sm bg-white text-slate-700 rounded-tl-none shadow-sm border border-emerald-50">
-                    Chào bạn! Mình là AI trợ lý của CatBook. Bạn đang tìm cuốn sách nào cho hôm nay?
-                </div>
-            </div>
-        </div>
-
-        <!-- Typing Indicator (Hidden by default) -->
-        <div id="typing-indicator" class="hidden px-4 pb-4 bg-emerald-50/20">
-            <div class="flex justify-start">
-                <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-emerald-50 flex gap-1">
-                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce"></span>
-                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-                    <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chat Input -->
-        <div class="p-4 bg-white border-t border-emerald-50">
-            <form id="chat-form" class="flex items-center gap-2">
-                <input 
-                    type="text" 
-                    id="chat-input"
-                    placeholder="Nhập câu hỏi của bạn..."
-                    class="flex-1 bg-emerald-50/50 border border-emerald-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                    autocomplete="off"
-                />
-                <button type="submit" id="chat-submit" class="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-md active:scale-95">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                </button>
-            </form>
-            <p class="text-[10px] text-center text-slate-400 mt-2">Phản hồi bởi CatBook AI - Luôn sẵn sàng hỗ trợ bạn</p>
-        </div>
-    </div>
-
-    <!-- Script điều khiển Chatbot bằng Vanilla JS -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const apiKey = ""; // ĐIỀN API KEY CỦA BẠN VÀO ĐÂY (Nên bảo mật trên server thực tế)
-            
-            const chatToggleBtn = document.getElementById('chat-toggle-btn');
-            const chatWindow = document.getElementById('chat-window');
-            const chatCloseBtn = document.getElementById('chat-close');
-            const chatForm = document.getElementById('chat-form');
-            const chatInput = document.getElementById('chat-input');
-            const chatMessages = document.getElementById('chat-messages');
-            const typingIndicator = document.getElementById('typing-indicator');
-            const chatSubmitBtn = document.getElementById('chat-submit');
-
-            // Mở / Đóng Chat Window
-            chatToggleBtn.addEventListener('click', () => {
-                chatWindow.classList.remove('hidden');
-                chatWindow.classList.add('flex');
-                chatInput.focus();
-            });
-
-            chatCloseBtn.addEventListener('click', () => {
-                chatWindow.classList.add('hidden');
-                chatWindow.classList.remove('flex');
-            });
-
-            // Thêm tin nhắn vào giao diện
-            function appendMessage(text, isUser) {
-                const msgDiv = document.createElement('div');
-                msgDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
-                
-                const bubble = document.createElement('div');
-                bubble.className = `max-w-[85%] p-3 rounded-2xl text-sm ${
-                    isUser 
-                    ? 'bg-emerald-600 text-white rounded-tr-none shadow-md' 
-                    : 'bg-white text-slate-700 rounded-tl-none shadow-sm border border-emerald-50'
-                }`;
-                bubble.textContent = text;
-                
-                msgDiv.appendChild(bubble);
-                chatMessages.appendChild(msgDiv);
-                
-                // Cuộn xuống cuối cùng
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            // Gửi tin nhắn
-            chatForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const text = chatInput.value.trim();
-                if (!text) return;
-
-                // 1. Hiển thị tin nhắn người dùng
-                appendMessage(text, true);
-                chatInput.value = '';
-                chatInput.disabled = true;
-                chatSubmitBtn.disabled = true;
-
-                // 2. Hiển thị hiệu ứng AI đang gõ
-                typingIndicator.classList.remove('hidden');
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                try {
-                    // Gọi API Gemini
-                    const response = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-                        {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: `Bạn là trợ lý AI của cửa hàng sách CatBook. Hãy tư vấn nhiệt tình về sách. Câu hỏi: ${text}` }] }],
-                                systemInstruction: { parts: [{ text: "Hãy trả lời ngắn gọn, lịch sự, gợi ý thêm các đầu sách liên quan." }] }
-                            })
-                        }
-                    );
-
-                    const data = await response.json();
-                    let aiText = "Xin lỗi, mình đang gặp chút trục trặc. Bạn thử lại nhé!";
-                    
-                    if (data.candidates && data.candidates[0].content.parts[0].text) {
-                        aiText = data.candidates[0].content.parts[0].text;
-                    }
-                    
-                    appendMessage(aiText, false);
-                } catch (error) {
-                    console.error("Chat Error: ", error);
-                    appendMessage("Hệ thống đang bận, bạn vui lòng quay lại sau nhé!", false);
-                } finally {
-                    typingIndicator.classList.add('hidden');
-                    chatInput.disabled = false;
-                    chatSubmitBtn.disabled = false;
-                    chatInput.focus();
-                }
-            });
+        // Mở chatbot
+        document.getElementById('open-chat-btn')?.addEventListener('click', function () {
+            const toggle = document.getElementById('chat-toggle-btn');
+            if (toggle) toggle.click();
         });
-    </script>
 
-    <style>
-        /* Thêm animation nhẹ cho khung chat */
-        @keyframes slide-in {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        // Thêm vào giỏ hàng (AJAX)
+        function addToCart(bookSlug) {
+            fetch('/gio-hang/' + bookSlug, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                body: JSON.stringify({ quantity: 1 })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Cập nhật badge giỏ hàng nếu cần
+                    const badge = document.querySelector('.cb-cart-badge');
+                    if (badge && data.cart_count) badge.textContent = data.cart_count;
+                }
+            })
+            .catch(console.error);
         }
-        .animate-\[slide-in_0\.3s_ease-out\] {
-            animation: slide-in 0.3s ease-out forwards;
-        }
-    </style>
+    </script>
 </body>
 </html>

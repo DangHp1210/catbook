@@ -18,12 +18,7 @@
 @endphp
 
 <header class="sticky top-0 z-50">
-    <div class="{{ $isDark ? 'bg-slate-950' : 'cb-top-strip' }}">
-        <div class="{{ $isDark ? 'mx-auto flex w-full max-w-[1120px] items-center justify-between gap-2 px-3 py-1 text-[11px] font-semibold text-slate-300 sm:px-4' : 'cb-top-strip-inner' }}">
-            <p>{{ $isDark ? 'Catbook workspace' : 'Freeship đơn từ 299.000đ' }}</p>
-            <p>{{ $isDark ? 'Kho sách + AI gợi ý' : 'Ưu đãi NEWBOOK10 cho khách hàng mới' }}</p>
-        </div>
-    </div>
+    {{-- top strip removed per user request: promos hidden --}}
 
     <div class="border-b {{ $headerClasses }} shadow-sm">
         <div class="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-2 px-3 py-2 sm:px-4">
@@ -38,42 +33,9 @@
             <nav class="flex items-center gap-1">
                 @auth
                     @if (auth()->user()->role === 'admin')
-                        <div class="relative group">
-                            <button class="rounded-lg px-2.5 py-1.5 text-xs font-medium transition {{ $linkClasses }} flex items-center gap-1.5">
-                                <span>Admin</span>
-                                <svg class="h-3.5 w-3.5 transition group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                                </svg>
-                            </button>
-                            
-                            <!-- Admin Dropdown Menu -->
-                            <div class="absolute right-0 mt-0 w-48 rounded-lg shadow-lg {{ $isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200' }} opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                <a href="{{ route('admin.panel') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }} hover:rounded-t-lg first-of-type:rounded-t-lg">
-                                    📊 Tổng quan
-                                </a>
-                                <a href="{{ route('admin.users.index') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }}">
-                                    👥 Quản lý người dùng
-                                </a>
-                                <a href="{{ route('admin.books.index') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }}">
-                                    📚 Quản lý sách
-                                </a>
-                                <a href="{{ route('admin.authors.index') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }}">
-                                    ✍️ Quản lý tác giả
-                                </a>
-                                <a href="{{ route('admin.categories.index') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }}">
-                                    🏷️ Quản lý danh mục
-                                </a>
-                                <a href="{{ route('admin.publishers.index') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }}">
-                                    🏢 Quản lý nhà xuất bản
-                                </a>
-                                <a href="{{ route('admin.orders.index') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }}">
-                                    📦 Quản lý đơn hàng
-                                </a>
-                                <a href="{{ route('admin.revenue.index') }}" class="block px-4 py-2.5 text-xs {{ $linkClasses }} hover:rounded-b-lg last-of-type:rounded-b-lg">
-                                    💰 Báo cáo doanh thu
-                                </a>
-                            </div>
-                        </div>
+                        <a href="{{ route('admin.panel') }}" class="rounded-lg px-2.5 py-1.5 text-xs font-medium transition {{ $linkClasses }}">
+                            Admin
+                        </a>
                     @elseif (in_array(auth()->user()->role, ['staff', 'admin'], true))
                         <a href="{{ route('staff.panel') }}" class="rounded-lg px-2.5 py-1.5 text-xs font-medium transition {{ $linkClasses }}">
                             Staff

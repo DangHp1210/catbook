@@ -186,6 +186,21 @@
                                                         </div>
 
                                                         <div class="sm:col-span-2 space-y-1.5">
+                                                            <label class="text-sm font-semibold text-slate-700">Tác giả</label>
+                                                            <select name="author_ids[]" multiple size="4" class="w-full rounded-xl border border-slate-300 p-2 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+                                                                @php
+                                                                    $selectedAuthors = $openEditBookId === $book->id
+                                                                        ? collect(old('author_ids', []))->map(fn ($id) => (int) $id)
+                                                                        : $book->authors->pluck('id');
+                                                                @endphp
+                                                                @foreach ($authors as $author)
+                                                                    <option class="rounded-md p-1.5 mb-1 hover:bg-slate-50 checked:bg-indigo-50 checked:text-indigo-700" value="{{ $author->id }}" @selected($selectedAuthors->contains((int) $author->id))>{{ $author->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <p class="text-xs text-slate-500">Giữ phím Ctrl (hoặc Cmd trên Mac) để chọn nhiều tác giả.</p>
+                                                        </div>
+
+                                                        <div class="sm:col-span-2 space-y-1.5">
                                                             <label class="text-sm font-semibold text-slate-700">Ảnh bìa</label>
                                                             <input name="cover_image_file" type="file" accept="image/*" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
                                                         </div>
@@ -316,6 +331,16 @@
                         </div>
 
                         <div class="sm:col-span-2 space-y-1.5">
+                            <label class="text-sm font-semibold text-slate-700">Tác giả</label>
+                            <select name="author_ids[]" multiple size="4" class="w-full rounded-xl border border-slate-300 p-2 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+                                @foreach ($authors as $author)
+                                    <option class="rounded-md p-1.5 mb-1 hover:bg-slate-50 checked:bg-indigo-50 checked:text-indigo-700" value="{{ $author->id }}" @selected(collect(old('author_ids', []))->contains($author->id))>{{ $author->name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-slate-500">Giữ phím Ctrl (hoặc Cmd trên Mac) để chọn nhiều tác giả.</p>
+                        </div>
+
+                        <div class="sm:col-span-2 space-y-1.5">
                             <label class="text-sm font-semibold text-slate-700">Ảnh bìa</label>
                             <input name="cover_image_file" type="file" accept="image/*" class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
                         </div>
@@ -340,7 +365,7 @@
             
             <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
                 <button type="button" id="cancelCreateBookModal" class="rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition-colors">Hủy bỏ</button>
-                <button type="submit" form="form-create" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Thêm sách</button>
+                <button type="submit" form="form-create" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-green shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Thêm sách</button>
             </div>
         </div>
     </div>

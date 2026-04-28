@@ -78,15 +78,14 @@
                                 value="1"
                                 class="w-20 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-orange-400"
                             >
-                            <button type="submit" class="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600">
-                                Them vao gio
+                            <button type="submit" class="min-w-[180px] rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold text-red shadow-md shadow-orange-200 transition hover:bg-orange-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2">
+                                Thêm vào giỏ hàng
                             </button>
                         </form>
                         <a href="{{ route('cart.index') }}" class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-700">Xem gio hang</a>
                     @else
                         <a href="{{ route('login') }}" class="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600">Dang nhap de mua</a>
                     @endauth
-                    <a href="{{ route('catalog.categories') }}" class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-700">Quay lai danh muc</a>
                 </div>
 
                 <div class="mt-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-2">

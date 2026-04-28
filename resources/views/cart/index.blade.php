@@ -99,7 +99,7 @@
                         </div>
                     </div>
 
-                    <a href="{{ route('checkout.show') }}" class="mt-5 block w-full rounded-xl bg-orange-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-orange-600">
+                    <a href="{{ route('checkout.show') }}" class="mt-5 block w-full rounded-xl bg-orange-500 px-4 py-3 text-center text-sm font-semibold text-red transition hover:bg-orange-600">
                         Tiến hành thanh toán
                     </a>
                     <p class="mt-2 text-xs text-slate-500">Miễn phí vận chuyển với đơn từ 299.000đ.</p>

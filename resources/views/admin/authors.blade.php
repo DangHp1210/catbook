@@ -8,14 +8,19 @@
 
     <div class="space-y-4">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <h1 class="text-xl font-bold text-slate-900">Quản lý tác giả</h1>
-                <div class="flex w-full max-w-2xl flex-wrap items-center justify-end gap-2">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900">Quản lý tác giả</h1>
+                    <p class="mt-1 text-sm text-slate-500">Thêm mới, chỉnh sửa và quản lý thông tin tác giả.</p>
+                </div>
+
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                     <form method="GET" class="w-full sm:w-80">
                         <input name="q" value="{{ $q }}" placeholder="Tìm theo tên hoặc tiểu sử..." class="w-full rounded-xl border border-slate-300 px-4 py-2 text-sm" />
                     </form>
-                    <button type="button" id="openCreateAuthorModal" class="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600">
-                        + Thêm tác giả
+                    <button type="button" id="openCreateAuthorModal" class="inline-flex min-w-[160px] items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-green shadow-sm transition hover:bg-orange-700 hover:shadow-md whitespace-nowrap">
+                        <span class="text-base leading-none">+</span>
+                        <span>Thêm tác giả mới</span>
                     </button>
                 </div>
             </div>
@@ -147,7 +152,7 @@
                 </div>
                 <div class="flex items-center justify-end gap-2">
                     <button type="button" id="cancelCreateAuthorModal" class="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100">Hủy</button>
-                    <button class="rounded-md bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600">Thêm tác giả</button>
+                    <button class="rounded-md bg-orange-500 px-3 py-1.5 text-xs font-semibold text-greens hover:bg-orange-600">Thêm tác giả</button>
                 </div>
             </form>
         </div>

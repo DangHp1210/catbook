@@ -40,6 +40,15 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('account.show');
 
+    // Address management
+    Route::get('/tai-khoan/dia-chi', [\App\Http\Controllers\UserAddressController::class, 'index'])->name('account.addresses.index');
+    Route::get('/tai-khoan/dia-chi/them', [\App\Http\Controllers\UserAddressController::class, 'create'])->name('account.addresses.create');
+    Route::post('/tai-khoan/dia-chi', [\App\Http\Controllers\UserAddressController::class, 'store'])->name('account.addresses.store');
+    Route::get('/tai-khoan/dia-chi/{address}/sua', [\App\Http\Controllers\UserAddressController::class, 'edit'])->name('account.addresses.edit');
+    Route::patch('/tai-khoan/dia-chi/{address}', [\App\Http\Controllers\UserAddressController::class, 'update'])->name('account.addresses.update');
+    Route::delete('/tai-khoan/dia-chi/{address}', [\App\Http\Controllers\UserAddressController::class, 'destroy'])->name('account.addresses.destroy');
+    Route::post('/tai-khoan/dia-chi/{address}/mac-dinh', [\App\Http\Controllers\UserAddressController::class, 'setDefault'])->name('account.addresses.set_default');
+
     Route::middleware('role:staff,admin')->prefix('admin')->name('admin.')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('panel');

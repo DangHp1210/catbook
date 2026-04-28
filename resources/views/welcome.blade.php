@@ -81,6 +81,53 @@
         }
         .cb-btn-solid:hover { background: #2d6a4f; }
 
+        /* User Menu Dropdown */
+        .cb-user-menu {
+            position: relative; display: inline-block;
+        }
+        .cb-user-trigger {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 500;
+            padding: 8px 14px; border-radius: 999px;
+            background: transparent; border: none;
+            color: #333; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .cb-user-trigger:hover { color: #2d6a4f; }
+        .cb-user-dropdown {
+            position: absolute; top: 100%; right: 0;
+            background: #fff; border: 1px solid #e0dbd0; border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 200px; margin-top: 8px;
+            display: none; flex-direction: column; z-index: 100;
+            opacity: 0; transition: opacity 0.2s, visibility 0.2s;
+            visibility: hidden;
+        }
+        .cb-user-menu.active .cb-user-dropdown {
+            display: flex; opacity: 1; visibility: visible;
+        }
+        .cb-user-dropdown a, .cb-user-dropdown button {
+            padding: 12px 16px; text-align: left; border: none;
+            background: transparent; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+            color: #333; text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .cb-user-dropdown a:hover, .cb-user-dropdown button:hover {
+            background: #f8f6f1; color: #2d6a4f;
+        }
+        .cb-user-dropdown a:first-child { border-radius: 12px 12px 0 0; }
+        .cb-user-dropdown a:last-child, .cb-user-dropdown button:last-child { border-radius: 0 0 12px 12px; }
+        .cb-user-dropdown-divider {
+            height: 1px; background: #e8e3d8; margin: 4px 0;
+        }
+        .cb-logout-btn {
+            color: #d32f2f; font-weight: 600;
+        }
+        .cb-logout-btn:hover {
+            background: #ffebee; color: #d32f2f;
+        }
+
         /* ─── Hero ──────────────────────────────────────────────── */
         .cb-hero {
             max-width: 1140px; margin: 0 auto;
@@ -277,8 +324,8 @@
         .cb-product-body { padding: 18px; }
         .cb-product-title {
             font-size: 15px; font-weight: 600; color: #1a1a1a; line-height: 1.45;
-            display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            line-clamp: 2; overflow: hidden;
         }
         .cb-product-author { font-size: 12px; color: #aaa; margin-top: 6px; }
         .cb-product-footer {
@@ -378,8 +425,27 @@
                 <a href="{{ route('login') }}" class="cb-btn-ghost">Đăng nhập</a>
                 <a href="{{ route('register') }}" class="cb-btn-solid">Đăng ký</a>
             @else
-                {{-- Thay 'user.profile' bằng tên route profile thực tế trong web.php của bạn --}}
-                <a href="#" class="cb-btn-ghost">{{ auth()->user()->full_name }}</a>
+                <div class="cb-user-menu" id="cb-user-menu">
+                    <button class="cb-user-trigger" onclick="document.getElementById('cb-user-menu').classList.toggle('active')">
+                        {{ auth()->user()->full_name }}
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="cb-user-dropdown">
+                        <a href="{{ route('account.show') }}">Trang cá nhân</a>
+                        @if(auth()->user()->role === 'admin')
+                            <a href="{{ route('admin.panel') }}">Admin Dashboard</a>
+                        @elseif(auth()->user()->role === 'staff')
+                            <a href="{{ route('staff.panel') }}">Staff Dashboard</a>
+                        @endif
+                        <div class="cb-user-dropdown-divider"></div>
+                        <form method="POST" action="{{ route('logout') }}" style="margin:0">
+                            @csrf
+                            <button type="submit" class="cb-logout-btn">Đăng xuất</button>
+                        </form>
+                    </div>
+                </div>
             @endguest
         </div>
     </nav>
@@ -512,7 +578,7 @@
                     @endphp
                     <a href="{{ route('catalog.book', $book->slug) }}" class="cb-product-card">
                         <div class="cb-product-img {{ $cover ? '' : 'no-img' }}"
-                             style="{{ $cover ? '' : 'background:'.$bgColors[$ci].';color:'.$txColors[$ci] }}">
+                             @if(!$cover)style="background:{{ $bgColors[$ci] }};color:{{ $txColors[$ci] }}"@endif>
                             @if($cover)
                                 <img src="{{ $cover }}" alt="{{ $book->title }}">
                             @else
@@ -597,6 +663,14 @@
             })
             .catch(console.error);
         }
+
+        // Đóng user menu khi click ra ngoài
+        document.addEventListener('click', function (e) {
+            const userMenu = document.getElementById('cb-user-menu');
+            if (userMenu && !userMenu.contains(e.target)) {
+                userMenu.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>

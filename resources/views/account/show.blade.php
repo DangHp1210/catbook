@@ -24,10 +24,6 @@
 
                 <div class="mt-6 space-y-3 text-sm">
                     <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                        <span class="text-slate-500">Trạng thái</span>
-                        <span class="font-semibold {{ $user->status === 'active' ? 'text-emerald-600' : 'text-rose-600' }}">{{ $user->status }}</span>
-                    </div>
-                    <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
                         <span class="text-slate-500">Email</span>
                         <span class="font-semibold text-slate-900">{{ $user->email }}</span>
                     </div>
@@ -40,9 +36,35 @@
 
             <section class="space-y-6">
                 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Địa chỉ</p>
-                        <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->addresses_count }}</p>
+                    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:col-span-2 xl:col-span-2">
+                        <div class="mb-4 flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Địa chỉ</p>
+                                <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->addresses_count }}</p>
+                            </div>
+                            <a href="{{ route('account.addresses.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Quản lý địa chỉ</a>
+                        </div>
+
+                        <div class="space-y-3">
+                            @forelse ($user->addresses()->latest()->limit(3)->get() as $address)
+                                <a href="{{ route('account.addresses.index') }}" class="block rounded-xl border border-slate-200 px-4 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/50">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="font-semibold text-slate-900">{{ $address->receiver_name }}</p>
+                                            <p class="mt-1 text-sm text-slate-600">{{ $address->address_line }}</p>
+                                            <p class="text-xs text-slate-500">{{ collect([$address->ward, $address->district, $address->province])->filter()->implode(', ') }}</p>
+                                        </div>
+                                        @if($address->is_default)
+                                            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Mặc định</span>
+                                        @endif
+                                    </div>
+                                </a>
+                            @empty
+                                <a href="{{ route('account.addresses.index') }}" class="block rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500 transition hover:border-emerald-200 hover:bg-emerald-50/50 hover:text-emerald-700">
+                                    Chưa có địa chỉ nào. Nhấn để quản lý địa chỉ.
+                                </a>
+                            @endforelse
+                        </div>
                     </article>
                     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Đơn hàng</p>
@@ -59,44 +81,7 @@
                 </div>
 
                 <div class="grid gap-6 lg:grid-cols-2">
-                    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="mb-4 flex items-center justify-between">
-                            <h2 class="text-xl font-black text-slate-900">Địa chỉ gần nhất</h2>
-                        </div>
-
-                        <div class="space-y-3">
-                            @forelse ($user->addresses()->latest()->limit(3)->get() as $address)
-                                <div class="rounded-xl border border-slate-200 px-4 py-3">
-                                    <p class="font-semibold text-slate-900">{{ $address->receiver_name }}</p>
-                                    <p class="mt-1 text-sm text-slate-600">{{ $address->address_line }}</p>
-                                    <p class="text-xs text-slate-500">{{ collect([$address->ward, $address->district, $address->province])->filter()->implode(', ') }}</p>
-                                </div>
-                            @empty
-                                <p class="text-sm text-slate-500">Chưa có địa chỉ nào.</p>
-                            @endforelse
-                        </div>
-                    </article>
-
-                    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="mb-4 flex items-center justify-between">
-                            <h2 class="text-xl font-black text-slate-900">Truy cập nhanh</h2>
-                        </div>
-
-                        <div class="space-y-3">
-                            <a href="{{ route('catalog.categories') }}" class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 transition hover:border-orange-200 hover:bg-orange-50/40">
-                                <span class="font-semibold text-slate-900">Tiếp tục mua sách</span>
-                                <span class="text-sm text-orange-600">Đi tới catalog</span>
-                            </a>
-                            <a href="{{ route('orders.index') }}" class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 transition hover:border-orange-200 hover:bg-orange-50/40">
-                                <span class="font-semibold text-slate-900">Lịch sử đơn hàng</span>
-                                <span class="text-sm text-orange-600">Xem đơn hàng</span>
-                            </a>
-                            <a href="{{ route('home') }}" class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 transition hover:border-orange-200 hover:bg-orange-50/40">
-                                <span class="font-semibold text-slate-900">Về trang chủ</span>
-                                <span class="text-sm text-orange-600">Catbook</span>
-                            </a>
-                        </div>
-                    </article>
+                    {{-- Quick access removed as requested --}}
                 </div>
             </section>
         </section>

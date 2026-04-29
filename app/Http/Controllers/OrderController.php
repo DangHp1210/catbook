@@ -44,8 +44,15 @@ class OrderController extends Controller
             ->with(['items.book', 'payments'])
             ->findOrFail($order->id);
 
+        $reviewsByBookId = $request->user()
+            ->reviews()
+            ->whereIn('book_id', $order->items->pluck('book_id'))
+            ->get()
+            ->keyBy('book_id');
+
         return view('orders.show', [
             'order' => $order,
+            'reviewsByBookId' => $reviewsByBookId,
         ]);
     }
 

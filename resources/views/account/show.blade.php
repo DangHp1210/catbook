@@ -69,10 +69,7 @@
                         <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Đơn hàng</p>
                         <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->orders_count }}</p>
                     </a>
-                    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Đánh giá</p>
-                        <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->reviews_count }}</p>
-                    </article>
+                    <!-- Đánh giá card hidden per user request -->
                     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Chat</p>
                         <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->chat_sessions_count }}</p>

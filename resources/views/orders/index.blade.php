@@ -12,7 +12,6 @@
     <main class="cb-page">
         <div class="mb-6 flex items-center justify-between">
             <div>
-                <p class="text-xs uppercase tracking-[0.16em] text-slate-500">Đơn hàng</p>
                 <h1 class="mt-1 text-3xl font-black text-slate-900">Lịch sử đơn hàng của bạn</h1>
             </div>
             <a href="{{ route('catalog.categories') }}" class="text-sm font-semibold text-orange-600 hover:text-orange-700">Tiếp tục mua sách</a>
@@ -29,6 +28,25 @@
                 {{ session('error') }}
             </div>
         @endif
+
+        @php
+            $statusLabels = [
+                'pending' => 'Đang chờ',
+                'confirmed' => 'Đã xác nhận',
+                'shipping' => 'Đang giao',
+                'completed' => 'Hoàn thành',
+                'cancelled' => 'Đã hủy',
+                'refunded' => 'Đã hoàn trả',
+            ];
+            $paymentLabels = [
+                'bank_transfer' => 'Chuyển khoản ngân hàng',
+                'momo' => 'Ví Momo',
+                'vnpay' => 'VNPAY',
+                'cod' => 'Thanh toán khi nhận hàng (COD)',
+                'card' => 'Thẻ tín dụng/ghi nợ',
+                'paypal' => 'PayPal',
+            ];
+        @endphp
 
         @if (($activeOrders->isEmpty() ?? true) && ($completedOrders->isEmpty() ?? true) && ($cancelledOrders->isEmpty() ?? true))
             <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
@@ -65,14 +83,14 @@
                                             </td>
                                             <td class="px-4 py-3 text-slate-600">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
                                             <td class="px-4 py-3 text-slate-600">{{ $order->items_count }} sản phẩm</td>
-                                            <td class="px-4 py-3 text-slate-600">{{ $order->payment_method }}</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $paymentLabels[$order->payment_method] ?? $order->payment_method }}</td>
                                             <td class="px-4 py-3">
                                                 <span class="rounded-full px-2.5 py-1 text-xs font-semibold
                                                     {{ $order->order_status === 'pending' ? 'bg-amber-100 text-amber-700' : '' }}
                                                     {{ $order->order_status === 'shipping' ? 'bg-sky-100 text-sky-700' : '' }}
                                                     {{ $order->order_status === 'confirmed' ? 'bg-indigo-100 text-indigo-700' : '' }}
                                                 ">
-                                                    {{ $order->order_status }}
+                                                    {{ $statusLabels[$order->order_status] ?? $order->order_status }}
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3 text-right font-bold text-orange-600">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
@@ -111,10 +129,10 @@
                                             </td>
                                             <td class="px-4 py-3 text-slate-600">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
                                             <td class="px-4 py-3 text-slate-600">{{ $order->items_count }} sản phẩm</td>
-                                            <td class="px-4 py-3 text-slate-600">{{ $order->payment_method }}</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $paymentLabels[$order->payment_method] ?? $order->payment_method }}</td>
                                             <td class="px-4 py-3">
                                                 <span class="rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700">
-                                                    {{ $order->order_status }}
+                                                    {{ $statusLabels[$order->order_status] ?? $order->order_status }}
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3 text-right font-bold text-orange-600">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
@@ -153,12 +171,12 @@
                                             </td>
                                             <td class="px-4 py-3 text-slate-600">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
                                             <td class="px-4 py-3 text-slate-600">{{ $order->items_count }} sản phẩm</td>
-                                            <td class="px-4 py-3 text-slate-600">{{ $order->payment_method }}</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $paymentLabels[$order->payment_method] ?? $order->payment_method }}</td>
                                             <td class="px-4 py-3">
                                                 <span class="rounded-full px-2.5 py-1 text-xs font-semibold
                                                     {{ in_array($order->order_status, ['cancelled', 'refunded'], true) ? 'bg-rose-100 text-rose-700' : '' }}
                                                 ">
-                                                    {{ $order->order_status }}
+                                                    {{ $statusLabels[$order->order_status] ?? $order->order_status }}
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3 text-right font-bold text-orange-600">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>

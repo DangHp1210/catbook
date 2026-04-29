@@ -85,7 +85,9 @@ class CatalogController extends Controller
             'authors:id,name',
             'categories:id,name',
             'publisher:id,name',
-            'reviews.user:id,full_name',
+            'reviews' => function ($query): void {
+                $query->latest()->with('user:id,full_name');
+            },
         ]);
 
         $book->loadCount('reviews');

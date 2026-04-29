@@ -18,9 +18,9 @@ class UserAddressController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        return view('account.addresses.create');
+        return redirect()->route('account.addresses.index');
     }
 
     public function store(Request $request): RedirectResponse

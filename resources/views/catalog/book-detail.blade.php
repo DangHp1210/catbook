@@ -106,6 +106,29 @@
                         Diem trung binh: {{ number_format((float) ($book->reviews_avg_rating ?? 0), 1) }}/5
                         ({{ $book->reviews_count }} danh gia)
                     </p>
+
+                    <div class="mt-4 space-y-3">
+                        @forelse ($book->reviews as $review)
+                            <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p class="font-semibold text-slate-900">{{ $review->user?->full_name ?? 'Nguoi dung' }}</p>
+                                        <p class="text-xs text-slate-500">{{ $review->created_at?->format('d/m/Y H:i') }}</p>
+                                    </div>
+                                    <div class="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">
+                                        {{ $review->rating }}/5 sao
+                                    </div>
+                                </div>
+                                @if ($review->comment)
+                                    <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">{{ $review->comment }}</p>
+                                @endif
+                            </article>
+                        @empty
+                            <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                                Chua co danh gia nao cho cuon sach nay.
+                            </p>
+                        @endforelse
+                    </div>
                 </div>
             </article>
         </section>

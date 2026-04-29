@@ -25,6 +25,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
     Route::post('/gio-hang/{book:slug}', [CartController::class, 'store'])->name('cart.store');
+    Route::patch('/gio-hang/items/{item}', [CartController::class, 'update'])->name('cart.items.update');
     Route::delete('/gio-hang/items/{item}', [CartController::class, 'destroy'])->name('cart.items.destroy');
     Route::get('/don-hang', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -33,7 +34,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
     Route::get('/tai-khoan', function () {
-        $user = request()->user()->loadCount(['addresses', 'orders', 'reviews', 'chatSessions']);
+        $user = request()->user();
+        $user->loadCount(['addresses', 'reviews', 'chatSessions']);
+        
+        // Count all displayable orders (active + completed + cancelled)
+        $user->orders_count = $user->orders()
+            ->whereIn('order_status', ['pending', 'confirmed', 'shipping', 'completed', 'cancelled', 'refunded'])
+            ->count();
 
         return view('account.show', [
             'user' => $user,

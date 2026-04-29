@@ -86,4 +86,39 @@ class CartController extends Controller
 
         return back()->with('success', 'Đã xóa sách khỏi giỏ hàng.');
     }
+
+    public function update(Request $request, CartItem $item): RedirectResponse
+    {
+        $validated = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        $belongsToCurrentUser = Cart::query()
+            ->where('id', $item->cart_id)
+            ->where('user_id', $request->user()->id)
+            ->exists();
+
+        if (! $belongsToCurrentUser) {
+            abort(403);
+        }
+
+        $book = $item->book;
+
+        if (! $book || $book->status !== 'available') {
+            return back()->with('error', 'Sách không còn khả dụng để cập nhật giỏ hàng.');
+        }
+
+        $targetQuantity = (int) $validated['quantity'];
+
+        if ($targetQuantity > $book->stock_quantity) {
+            return back()->with('error', 'Số lượng vượt quá tồn kho hiện tại.');
+        }
+
+        $item->update([
+            'quantity' => $targetQuantity,
+            'unit_price' => (float) ($book->discount_price ?? $book->price),
+        ]);
+
+        return back()->with('success', 'Đã cập nhật số lượng trong giỏ hàng.');
+    }
 }

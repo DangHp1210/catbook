@@ -13,15 +13,27 @@ class OrderController extends Controller
 {
     public function index(Request $request): View
     {
-        $orders = Order::query()
-            ->where('user_id', $request->user()->id)
-            ->withCount('items')
+        $base = Order::query()->where('user_id', $request->user()->id)->withCount('items');
+
+        $activeOrders = (clone $base)
+            ->whereIn('order_status', ['pending', 'confirmed', 'shipping'])
             ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            ->get();
+
+        $completedOrders = (clone $base)
+            ->where('order_status', 'completed')
+            ->latest()
+            ->get();
+
+        $cancelledOrders = (clone $base)
+            ->whereIn('order_status', ['cancelled', 'refunded'])
+            ->latest()
+            ->get();
 
         return view('orders.index', [
-            'orders' => $orders,
+            'activeOrders' => $activeOrders,
+            'completedOrders' => $completedOrders,
+            'cancelledOrders' => $cancelledOrders,
         ]);
     }
 

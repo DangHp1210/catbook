@@ -18,7 +18,6 @@
                     </div>
                     <div>
                         <h1 class="text-2xl font-black text-slate-900">{{ $user->full_name }}</h1>
-                        <p class="text-sm text-slate-500">Tài khoản {{ $user->role }}</p>
                     </div>
                 </div>
 
@@ -66,10 +65,10 @@
                             @endforelse
                         </div>
                     </article>
-                    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <a href="{{ route('orders.index') }}" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm block hover:shadow-md">
                         <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Đơn hàng</p>
                         <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->orders_count }}</p>
-                    </article>
+                    </a>
                     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Đánh giá</p>
                         <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->reviews_count }}</p>

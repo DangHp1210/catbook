@@ -41,11 +41,6 @@
                             Staff
                         </a>
                     @endif
-                    <a href="{{ route('orders.index') }}" class="rounded-lg px-2.5 py-1.5 text-xs font-medium transition {{ $linkClasses }}">
-                        Don hang
-                    </a>
-                    <a href="{{ route('cart.index') }}" class="rounded-lg px-2.5 py-1.5 text-xs font-medium transition {{ $linkClasses }}">
-                        Gio hang{{ $cartCount > 0 ? ' ('.$cartCount.')' : '' }}
                     </a>
                     <a href="{{ route('account.show') }}" class="hidden rounded-lg px-2.5 py-1.5 text-xs font-semibold transition sm:inline-flex {{ $isDark ? 'bg-slate-800 text-slate-100 hover:bg-slate-700' : 'bg-orange-50 text-orange-700 hover:bg-orange-100' }}">
                         {{ auth()->user()->full_name }}

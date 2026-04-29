@@ -61,7 +61,23 @@
                                     </div>
 
                                     <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <p class="text-sm text-slate-600">Số lượng: <span class="font-semibold">{{ $item->quantity }}</span></p>
+                                        <form method="POST" action="{{ route('cart.items.update', $item->id) }}" class="flex items-center gap-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <label for="qty-{{ $item->id }}" class="text-sm text-slate-600">Số lượng</label>
+                                            <input
+                                                id="qty-{{ $item->id }}"
+                                                name="quantity"
+                                                type="number"
+                                                min="1"
+                                                max="99"
+                                                value="{{ $item->quantity }}"
+                                                class="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm font-semibold text-slate-900"
+                                            >
+                                            <button type="submit" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
+                                                Cập nhật
+                                            </button>
+                                        </form>
                                         <p class="text-lg font-black text-orange-600">
                                             {{ number_format((float) $item->unit_price * $item->quantity, 0, ',', '.') }}đ
                                         </p>

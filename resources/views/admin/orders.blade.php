@@ -1,6 +1,29 @@
 @extends('admin.layout', ['title' => 'Quản lý đơn hàng'])
 
 @section('content')
+    @php
+        $orderStatusLabels = [
+            'pending' => 'Chờ xử lý',
+            'confirmed' => 'Đã xác nhận',
+            'shipping' => 'Đang giao',
+            'completed' => 'Hoàn tất',
+            'cancelled' => 'Đã hủy',
+        ];
+
+        $paymentStatusLabels = [
+            'unpaid' => 'Chưa thanh toán',
+            'paid' => 'Đã thanh toán',
+            'refunded' => 'Đã hoàn tiền',
+        ];
+
+        $paymentMethodLabels = [
+            'cod' => 'COD',
+            'bank_transfer' => 'Chuyển khoản',
+            'momo' => 'MoMo',
+            'vnpay' => 'VNPay',
+        ];
+    @endphp
+
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <h1 class="text-xl font-bold text-slate-900">Quản lý đơn hàng</h1>
@@ -32,20 +55,20 @@
                             <p class="text-slate-400">SP: {{ $order->items_count }}</p>
                         </td>
                         <td class="px-3 py-3 text-slate-700">{{ number_format($order->total_amount, 0, ',', '.') }} đ</td>
-                        <td class="px-3 py-3 text-slate-700">{{ $order->order_status }}</td>
-                        <td class="px-3 py-3 text-slate-700">{{ $order->payment_status }} ({{ $order->payment_method }})</td>
+                        <td class="px-3 py-3 text-slate-700">{{ $orderStatusLabels[$order->order_status] ?? $order->order_status }}</td>
+                        <td class="px-3 py-3 text-slate-700">{{ $paymentStatusLabels[$order->payment_status] ?? $order->payment_status }} ({{ $paymentMethodLabels[$order->payment_method] ?? $order->payment_method }})</td>
                         <td class="px-3 py-3">
                             <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="space-y-2">
                                 @csrf
                                 @method('PATCH')
                                 <select name="order_status" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm">
                                     @foreach (['pending', 'confirmed', 'shipping', 'completed', 'cancelled'] as $status)
-                                        <option value="{{ $status }}" @selected($order->order_status === $status)>{{ $status }}</option>
+                                        <option value="{{ $status }}" @selected($order->order_status === $status)>{{ $orderStatusLabels[$status] ?? $status }}</option>
                                     @endforeach
                                 </select>
                                 <select name="payment_status" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm">
                                     @foreach (['unpaid', 'paid', 'refunded'] as $status)
-                                        <option value="{{ $status }}" @selected($order->payment_status === $status)>{{ $status }}</option>
+                                        <option value="{{ $status }}" @selected($order->payment_status === $status)>{{ $paymentStatusLabels[$status] ?? $status }}</option>
                                     @endforeach
                                 </select>
                                 <button class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">Lưu</button>

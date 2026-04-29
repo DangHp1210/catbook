@@ -30,7 +30,7 @@
             </div>
         @endif
 
-        @if ($orders->isEmpty())
+        @if (($activeOrders->isEmpty() ?? true) && ($completedOrders->isEmpty() ?? true) && ($cancelledOrders->isEmpty() ?? true))
             <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
                 <p class="text-lg font-semibold text-slate-700">Bạn chưa có đơn hàng nào.</p>
                 <p class="mt-2 text-sm">Hãy chọn vài cuốn sách và thanh toán để tạo đơn đầu tiên.</p>
@@ -39,52 +39,137 @@
                 </a>
             </div>
         @else
-            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Mã đơn</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Ngày đặt</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Sản phẩm</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Thanh toán</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Trạng thái</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-600">Tổng tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach ($orders as $order)
-                                <tr class="hover:bg-slate-50/80">
-                                    <td class="px-4 py-3 font-semibold text-slate-900">
-                                        <a href="{{ route('orders.show', $order) }}" class="hover:text-orange-700 hover:underline">
-                                            {{ $order->order_code }}
-                                        </a>
-                                    </td>
-                                    <td class="px-4 py-3 text-slate-600">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ $order->items_count }} sản phẩm</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ $order->payment_method }}</td>
-                                    <td class="px-4 py-3">
-                                        <span class="rounded-full px-2.5 py-1 text-xs font-semibold
-                                            {{ $order->order_status === 'completed' ? 'bg-emerald-100 text-emerald-700' : '' }}
-                                            {{ $order->order_status === 'pending' ? 'bg-amber-100 text-amber-700' : '' }}
-                                            {{ $order->order_status === 'shipping' ? 'bg-sky-100 text-sky-700' : '' }}
-                                            {{ in_array($order->order_status, ['cancelled', 'refunded'], true) ? 'bg-rose-100 text-rose-700' : '' }}
-                                            {{ $order->order_status === 'confirmed' ? 'bg-indigo-100 text-indigo-700' : '' }}
-                                        ">
-                                            {{ $order->order_status }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-right font-bold text-orange-600">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+            @if(!($activeOrders->isEmpty() ?? true))
+                <div class="mb-6">
+                    <p class="text-sm uppercase tracking-[0.12em] text-slate-500">Đang xử lý</p>
+                    <div class="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Mã đơn</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Ngày đặt</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Sản phẩm</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Thanh toán</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Trạng thái</th>
+                                        <th class="px-4 py-3 text-right font-semibold text-slate-600">Tổng tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($activeOrders as $order)
+                                        <tr class="hover:bg-slate-50/80">
+                                            <td class="px-4 py-3 font-semibold text-slate-900">
+                                                <a href="{{ route('orders.show', $order) }}" class="hover:text-orange-700 hover:underline">
+                                                    {{ $order->order_code }}
+                                                </a>
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->items_count }} sản phẩm</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->payment_method }}</td>
+                                            <td class="px-4 py-3">
+                                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold
+                                                    {{ $order->order_status === 'pending' ? 'bg-amber-100 text-amber-700' : '' }}
+                                                    {{ $order->order_status === 'shipping' ? 'bg-sky-100 text-sky-700' : '' }}
+                                                    {{ $order->order_status === 'confirmed' ? 'bg-indigo-100 text-indigo-700' : '' }}
+                                                ">
+                                                    {{ $order->order_status }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-right font-bold text-orange-600">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
+            @endif
 
-                <div class="border-t border-slate-200 px-4 py-3">
-                    {{ $orders->links() }}
+            @if(!($completedOrders->isEmpty() ?? true))
+                <div>
+                    <p class="text-sm uppercase tracking-[0.12em] text-slate-500">Đã hoàn thành</p>
+                    <div class="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Mã đơn</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Ngày đặt</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Sản phẩm</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Thanh toán</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Trạng thái</th>
+                                        <th class="px-4 py-3 text-right font-semibold text-slate-600">Tổng tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($completedOrders as $order)
+                                        <tr class="hover:bg-slate-50/80">
+                                            <td class="px-4 py-3 font-semibold text-slate-900">
+                                                <a href="{{ route('orders.show', $order) }}" class="hover:text-orange-700 hover:underline">
+                                                    {{ $order->order_code }}
+                                                </a>
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->items_count }} sản phẩm</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->payment_method }}</td>
+                                            <td class="px-4 py-3">
+                                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700">
+                                                    {{ $order->order_status }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-right font-bold text-orange-600">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </section>
+            @endif
+
+            @if(!($cancelledOrders->isEmpty() ?? true))
+                <div>
+                    <p class="text-sm uppercase tracking-[0.12em] text-slate-500">Đã hủy</p>
+                    <div class="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Mã đơn</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Ngày đặt</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Sản phẩm</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Thanh toán</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Trạng thái</th>
+                                        <th class="px-4 py-3 text-right font-semibold text-slate-600">Tổng tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($cancelledOrders as $order)
+                                        <tr class="hover:bg-slate-50/80">
+                                            <td class="px-4 py-3 font-semibold text-slate-900">
+                                                <a href="{{ route('orders.show', $order) }}" class="hover:text-orange-700 hover:underline">
+                                                    {{ $order->order_code }}
+                                                </a>
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->items_count }} sản phẩm</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $order->payment_method }}</td>
+                                            <td class="px-4 py-3">
+                                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold
+                                                    {{ in_array($order->order_status, ['cancelled', 'refunded'], true) ? 'bg-rose-100 text-rose-700' : '' }}
+                                                ">
+                                                    {{ $order->order_status }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-right font-bold text-orange-600">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
         @endif
     </main>
 </body>

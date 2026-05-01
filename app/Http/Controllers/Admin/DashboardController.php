@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\Publisher;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -110,6 +111,35 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function searchAuthors(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $authors = Author::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%");
+            })
+            ->orderBy('name')
+            ->limit(10)
+            ->get(['id', 'name']);
+
+        $exactMatch = false;
+        if ($q !== '') {
+            $exactMatch = Author::query()
+                ->whereRaw('LOWER(name) = ?', [Str::lower($q)])
+                ->exists();
+        }
+
+        return response()->json([
+            'data' => $authors->map(fn (Author $author) => [
+                'id' => $author->id,
+                'name' => $author->name,
+            ]),
+            'can_create' => $q !== '' && ! $exactMatch,
+            'query' => $q,
+        ]);
+    }
+
     public function storeBook(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -129,6 +159,8 @@ class DashboardController extends Controller
             'category_ids.*' => ['integer', Rule::exists('categories', 'id')],
             'author_ids' => ['nullable', 'array'],
             'author_ids.*' => ['integer', Rule::exists('authors', 'id')],
+            'author_names' => ['nullable', 'array'],
+            'author_names.*' => ['nullable', 'string', 'max:255'],
         ]);
 
         $title = trim((string) $data['title']);
@@ -154,7 +186,7 @@ class DashboardController extends Controller
         ]);
 
         $book->categories()->sync($data['category_ids'] ?? []);
-        $book->authors()->sync($data['author_ids'] ?? []);
+        $book->authors()->sync($this->resolveAuthorIds($data['author_ids'] ?? [], $data['author_names'] ?? []));
 
         return back()->with('success', 'Đã thêm sách mới.');
     }
@@ -179,6 +211,8 @@ class DashboardController extends Controller
             'category_ids.*' => ['integer', Rule::exists('categories', 'id')],
             'author_ids' => ['nullable', 'array'],
             'author_ids.*' => ['integer', Rule::exists('authors', 'id')],
+            'author_names' => ['nullable', 'array'],
+            'author_names.*' => ['nullable', 'string', 'max:255'],
         ]);
 
         $title = trim((string) $data['title']);
@@ -216,7 +250,7 @@ class DashboardController extends Controller
         ]);
 
         $book->categories()->sync($data['category_ids'] ?? []);
-        $book->authors()->sync($data['author_ids'] ?? []);
+        $book->authors()->sync($this->resolveAuthorIds($data['author_ids'] ?? [], $data['author_names'] ?? []));
 
         return back()->with('success', 'Đã cập nhật sách.');
     }
@@ -459,6 +493,39 @@ class DashboardController extends Controller
         $author->delete();
 
         return back()->with('success', 'Đã xóa tác giả.');
+    }
+
+    /**
+     * @param array<int, int|string> $authorIds
+     * @param array<int, string|null> $authorNames
+     * @return array<int, int>
+     */
+    private function resolveAuthorIds(array $authorIds, array $authorNames): array
+    {
+        $resolvedIds = collect($authorIds)
+            ->filter(fn ($id) => is_numeric($id))
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        $names = collect($authorNames)
+            ->map(fn ($name) => trim((string) $name))
+            ->filter()
+            ->unique(fn ($name) => Str::lower($name))
+            ->values();
+
+        foreach ($names as $name) {
+            $author = Author::query()
+                ->whereRaw('LOWER(name) = ?', [Str::lower($name)])
+                ->first();
+
+            if ($author === null) {
+                $author = Author::query()->create(['name' => $name]);
+            }
+
+            $resolvedIds->push($author->id);
+        }
+
+        return $resolvedIds->unique()->values()->all();
     }
 
     public function orders(Request $request): View

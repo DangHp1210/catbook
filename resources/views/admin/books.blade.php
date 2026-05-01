@@ -4,6 +4,35 @@
     @php
         $openCreateModal = old('_form') === 'create-book';
         $openEditBookId = old('_form') === 'update-book' ? (int) old('_book_id') : null;
+        $authorLookup = $authors->keyBy('id');
+        $buildAuthorTags = function (array $authorIds, array $authorNames) use ($authorLookup) {
+            $selectedAuthors = collect($authorIds)
+                ->filter(fn ($id) => is_numeric($id))
+                ->map(function ($id) use ($authorLookup) {
+                    $author = $authorLookup->get((int) $id);
+
+                    return $author ? [
+                        'type' => 'existing',
+                        'value' => (int) $author->id,
+                        'name' => $author->name,
+                    ] : null;
+                })
+                ->filter()
+                ->values();
+
+            $newAuthors = collect($authorNames)
+                ->map(fn ($name) => trim((string) $name))
+                ->filter()
+                ->unique(fn ($name) => mb_strtolower($name))
+                ->map(fn ($name) => [
+                    'type' => 'new',
+                    'value' => $name,
+                    'name' => $name,
+                ])
+                ->values();
+
+            return $selectedAuthors->merge($newAuthors)->values()->all();
+        };
         
         $statusColors = [
             'available' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -187,17 +216,29 @@
 
                                                         <div class="sm:col-span-2 space-y-1.5">
                                                             <label class="text-sm font-semibold text-slate-700">Tác giả</label>
-                                                            <select name="author_ids[]" multiple size="4" class="w-full rounded-xl border border-slate-300 p-2 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
-                                                                @php
-                                                                    $selectedAuthors = $openEditBookId === $book->id
-                                                                        ? collect(old('author_ids', []))->map(fn ($id) => (int) $id)
-                                                                        : $book->authors->pluck('id');
-                                                                @endphp
-                                                                @foreach ($authors as $author)
-                                                                    <option class="rounded-md p-1.5 mb-1 hover:bg-slate-50 checked:bg-indigo-50 checked:text-indigo-700" value="{{ $author->id }}" @selected($selectedAuthors->contains((int) $author->id))>{{ $author->name }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                            <p class="text-xs text-slate-500">Giữ phím Ctrl (hoặc Cmd trên Mac) để chọn nhiều tác giả.</p>
+                                                            @php
+                                                                $selectedAuthors = $openEditBookId === $book->id
+                                                                    ? $buildAuthorTags((array) old('author_ids', []), (array) old('author_names', []))
+                                                                    : $buildAuthorTags($book->authors->pluck('id')->all(), []);
+                                                            @endphp
+                                                            <div class="space-y-2" data-author-picker data-search-url="{{ route('admin.books.authors.search') }}">
+                                                                <div class="min-h-16 rounded-xl border border-slate-300 bg-white px-3 py-2.5 shadow-sm transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                                                                    <div class="flex flex-wrap gap-2" data-author-tags>
+                                                                        @foreach ($selectedAuthors as $authorItem)
+                                                                            <span class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700" data-author-tag data-author-type="{{ $authorItem['type'] }}" data-author-value="{{ $authorItem['value'] }}" data-author-name="{{ $authorItem['name'] }}">
+                                                                                <span>{{ $authorItem['name'] }}</span>
+                                                                                <button type="button" class="inline-flex h-5 w-5 items-center justify-center rounded-full text-indigo-500 transition-colors hover:bg-indigo-100 hover:text-indigo-700" data-author-remove aria-label="Xóa tác giả">×</button>
+                                                                                <input type="hidden" name="{{ $authorItem['type'] === 'existing' ? 'author_ids[]' : 'author_names[]' }}" value="{{ $authorItem['value'] }}">
+                                                                            </span>
+                                                                        @endforeach
+                                                                        <input type="text" data-author-input class="min-w-48 flex-1 border-0 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-slate-400" placeholder="Gõ để tìm hoặc thêm tác giả..." autocomplete="off">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="relative">
+                                                                    <div data-author-suggestions class="absolute left-0 right-0 top-full z-20 mt-2 hidden max-h-64 overflow-auto rounded-xl border border-slate-200 bg-white shadow-xl"></div>
+                                                                </div>
+                                                            </div>
+                                                            <p class="text-xs text-slate-500">Gõ tên để tìm tác giả. Nếu chưa có, nhấn Enter để thêm mới.</p>
                                                         </div>
 
                                                         <div class="sm:col-span-2 space-y-1.5">
@@ -332,12 +373,27 @@
 
                         <div class="sm:col-span-2 space-y-1.5">
                             <label class="text-sm font-semibold text-slate-700">Tác giả</label>
-                            <select name="author_ids[]" multiple size="4" class="w-full rounded-xl border border-slate-300 p-2 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
-                                @foreach ($authors as $author)
-                                    <option class="rounded-md p-1.5 mb-1 hover:bg-slate-50 checked:bg-indigo-50 checked:text-indigo-700" value="{{ $author->id }}" @selected(collect(old('author_ids', []))->contains($author->id))>{{ $author->name }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-slate-500">Giữ phím Ctrl (hoặc Cmd trên Mac) để chọn nhiều tác giả.</p>
+                            @php
+                                $selectedAuthors = $buildAuthorTags((array) old('author_ids', []), (array) old('author_names', []));
+                            @endphp
+                            <div class="space-y-2" data-author-picker data-search-url="{{ route('admin.books.authors.search') }}">
+                                <div class="min-h-16 rounded-xl border border-slate-300 bg-white px-3 py-2.5 shadow-sm transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                                    <div class="flex flex-wrap gap-2" data-author-tags>
+                                        @foreach ($selectedAuthors as $authorItem)
+                                            <span class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700" data-author-tag data-author-type="{{ $authorItem['type'] }}" data-author-value="{{ $authorItem['value'] }}" data-author-name="{{ $authorItem['name'] }}">
+                                                <span>{{ $authorItem['name'] }}</span>
+                                                <button type="button" class="inline-flex h-5 w-5 items-center justify-center rounded-full text-indigo-500 transition-colors hover:bg-indigo-100 hover:text-indigo-700" data-author-remove aria-label="Xóa tác giả">×</button>
+                                                <input type="hidden" name="{{ $authorItem['type'] === 'existing' ? 'author_ids[]' : 'author_names[]' }}" value="{{ $authorItem['value'] }}">
+                                            </span>
+                                        @endforeach
+                                        <input type="text" data-author-input class="min-w-48 flex-1 border-0 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-slate-400" placeholder="Gõ để tìm hoặc thêm tác giả..." autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <div data-author-suggestions class="absolute left-0 right-0 top-full z-20 mt-2 hidden max-h-64 overflow-auto rounded-xl border border-slate-200 bg-white shadow-xl"></div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500">Gõ tên để tìm tác giả. Nếu chưa có, nhấn Enter để thêm mới.</p>
                         </div>
 
                         <div class="sm:col-span-2 space-y-1.5">
@@ -372,10 +428,247 @@
 
     <script>
         (function () {
+            const normalizeName = (value) => value.replace(/\s+/g, ' ').trim();
+
+            const initAuthorPicker = (picker) => {
+                const tags = picker.querySelector('[data-author-tags]');
+                const input = picker.querySelector('[data-author-input]');
+                const suggestions = picker.querySelector('[data-author-suggestions]');
+                const searchUrl = picker.dataset.searchUrl;
+
+                if (!tags || !input || !suggestions || !searchUrl) return;
+
+                const selectedKey = (type, value) => `${type}:${String(value).toLowerCase()}`;
+                const selectedName = (tag) => normalizeName(tag.dataset.authorName || '');
+                let debounceTimer = null;
+                let abortController = null;
+                let blurTimer = null;
+
+                const getSelectedTags = () => Array.from(tags.querySelectorAll('[data-author-tag]'));
+
+                const isDuplicate = (type, value, name) => {
+                    const normalizedName = normalizeName(name).toLowerCase();
+
+                    return getSelectedTags().some((tag) => {
+                        const tagType = tag.dataset.authorType || '';
+                        const tagValue = tag.dataset.authorValue || '';
+                        const tagName = selectedName(tag).toLowerCase();
+
+                        return selectedKey(tagType, tagValue) === selectedKey(type, value) || (normalizedName !== '' && tagName === normalizedName);
+                    });
+                };
+
+                const removeTag = (tag) => {
+                    if (!tag) return;
+                    tag.remove();
+                    input.focus();
+                };
+
+                const addTag = ({ type, value, name }) => {
+                    const normalizedName = normalizeName(name);
+                    if (!normalizedName || isDuplicate(type, value, normalizedName)) return;
+
+                    const tag = document.createElement('span');
+                    tag.className = 'inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700';
+                    tag.dataset.authorTag = 'true';
+                    tag.dataset.authorType = type;
+                    tag.dataset.authorValue = value;
+                    tag.dataset.authorName = normalizedName;
+
+                    const label = document.createElement('span');
+                    label.textContent = normalizedName;
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'inline-flex h-5 w-5 items-center justify-center rounded-full text-indigo-500 transition-colors hover:bg-indigo-100 hover:text-indigo-700';
+                    removeBtn.setAttribute('aria-label', 'Xóa tác giả');
+                    removeBtn.textContent = '×';
+
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = type === 'existing' ? 'author_ids[]' : 'author_names[]';
+                    hidden.value = value;
+
+                    tag.append(label, removeBtn, hidden);
+                    tags.insertBefore(tag, input);
+                    input.value = '';
+                    closeSuggestions();
+                    input.focus();
+                };
+
+                const closeSuggestions = () => {
+                    suggestions.classList.add('hidden');
+                    suggestions.innerHTML = '';
+                };
+
+                const renderSuggestions = (items, query, canCreate) => {
+                    suggestions.innerHTML = '';
+
+                    if (items.length === 0 && ! canCreate) {
+                        const empty = document.createElement('div');
+                        empty.className = 'px-4 py-3 text-sm text-slate-500';
+                        empty.textContent = 'Không tìm thấy tác giả phù hợp.';
+                        suggestions.appendChild(empty);
+                        suggestions.classList.remove('hidden');
+                        return;
+                    }
+
+                    items.forEach((item) => {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-slate-50';
+                        button.dataset.authorAction = 'select';
+                        button.dataset.authorId = item.id;
+                        button.dataset.authorName = item.name;
+                        button.innerHTML = `<span class="font-medium text-slate-800"></span><span class="text-xs text-slate-400">Chọn</span>`;
+                        button.querySelector('span').textContent = item.name;
+                        suggestions.appendChild(button);
+                    });
+
+                    if (canCreate) {
+                        const createBtn = document.createElement('button');
+                        createBtn.type = 'button';
+                        createBtn.className = 'flex w-full items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-left text-sm transition-colors hover:bg-emerald-50';
+                        createBtn.dataset.authorAction = 'create';
+                        createBtn.dataset.authorName = query;
+                        createBtn.innerHTML = `<span class="font-medium text-emerald-700"></span><span class="text-xs text-emerald-600">Tạo mới</span>`;
+                        createBtn.querySelector('span').textContent = `Thêm "${query}"`;
+                        suggestions.appendChild(createBtn);
+                    }
+
+                    suggestions.classList.remove('hidden');
+                };
+
+                const fetchSuggestions = async (query) => {
+                    if (abortController) {
+                        abortController.abort();
+                    }
+
+                    abortController = new AbortController();
+
+                    try {
+                        const response = await fetch(`${searchUrl}?q=${encodeURIComponent(query)}`, {
+                            headers: { Accept: 'application/json' },
+                            signal: abortController.signal,
+                        });
+
+                        if (! response.ok) {
+                            closeSuggestions();
+                            return;
+                        }
+
+                        const payload = await response.json();
+                        const items = (payload.data || [])
+                            .filter((item) => ! isDuplicate('existing', item.id, item.name))
+                            .slice(0, 8);
+                        const canCreate = Boolean(payload.can_create) && ! isDuplicate('new', query, query);
+
+                        renderSuggestions(items, query, canCreate);
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            closeSuggestions();
+                        }
+                    }
+                };
+
+                const commitFromKeyboard = () => {
+                    const query = normalizeName(input.value);
+                    if (! query) return;
+
+                    const firstSelect = suggestions.querySelector('[data-author-action="select"]');
+                    const exactSelect = Array.from(suggestions.querySelectorAll('[data-author-action="select"]')).find((button) => normalizeName(button.dataset.authorName || '').toLowerCase() === query.toLowerCase());
+                    const createBtn = suggestions.querySelector('[data-author-action="create"]');
+
+                    if (exactSelect) {
+                        exactSelect.click();
+                        return;
+                    }
+
+                    if (createBtn) {
+                        createBtn.click();
+                        return;
+                    }
+
+                    if (firstSelect) {
+                        firstSelect.click();
+                        return;
+                    }
+
+                    addTag({ type: 'new', value: query, name: query });
+                };
+
+                tags.addEventListener('click', (event) => {
+                    const removeBtn = event.target.closest('[data-author-remove]');
+                    if (removeBtn) {
+                        removeTag(removeBtn.closest('[data-author-tag]'));
+                    }
+                });
+
+                input.addEventListener('input', () => {
+                    const query = normalizeName(input.value);
+                    clearTimeout(debounceTimer);
+
+                    if (! query) {
+                        closeSuggestions();
+                        return;
+                    }
+
+                    debounceTimer = setTimeout(() => fetchSuggestions(query), 220);
+                });
+
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        commitFromKeyboard();
+                        return;
+                    }
+
+                    if (event.key === 'Backspace' && input.value === '') {
+                        const tagsList = getSelectedTags();
+                        removeTag(tagsList[tagsList.length - 1]);
+                    }
+                });
+
+                input.addEventListener('focus', () => {
+                    const query = normalizeName(input.value);
+                    if (query) {
+                        fetchSuggestions(query);
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    blurTimer = setTimeout(closeSuggestions, 150);
+                });
+
+                suggestions.addEventListener('mousedown', (event) => {
+                    event.preventDefault();
+                    clearTimeout(blurTimer);
+                });
+
+                suggestions.addEventListener('click', (event) => {
+                    const button = event.target.closest('[data-author-action]');
+                    if (! button) return;
+
+                    const action = button.dataset.authorAction;
+                    const name = normalizeName(button.dataset.authorName || button.textContent || '');
+
+                    if (action === 'select') {
+                        addTag({ type: 'existing', value: button.dataset.authorId || '', name });
+                        return;
+                    }
+
+                    if (action === 'create') {
+                        addTag({ type: 'new', value: name, name });
+                    }
+                });
+            };
+
             const modal = document.getElementById('createBookModal');
             const openBtn = document.getElementById('openCreateBookModal');
             const closeBtn = document.getElementById('closeCreateBookModal');
             const cancelBtn = document.getElementById('cancelCreateBookModal');
+
+            document.querySelectorAll('[data-author-picker]').forEach(initAuthorPicker);
 
             if (!modal || !openBtn || !closeBtn || !cancelBtn) return;
 

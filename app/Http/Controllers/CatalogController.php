@@ -67,10 +67,6 @@ class CatalogController extends Controller
             }
         }
 
-        if ($selectedParent === null) {
-            $selectedParent = $parentCategories->first();
-        }
-
         $childCategories = collect();
         if ($selectedParent !== null) {
             $childCategories = Category::query()

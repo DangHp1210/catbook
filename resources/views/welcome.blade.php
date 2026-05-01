@@ -416,7 +416,6 @@
         <section class="cb-section">
             <div class="cb-section-head">
                 <h2 class="cb-section-title">Sách nổi bật</h2>
-                <a href="{{ route('catalog.categories') }}" class="cb-see-all">Xem thêm →</a>
             </div>
 
             <div class="cb-books-grid">

@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::get('/books', [AdminDashboardController::class, 'books'])->name('books.index');
+        Route::get('/books/authors/search', [AdminDashboardController::class, 'searchAuthors'])->name('books.authors.search');
         Route::post('/books', [AdminDashboardController::class, 'storeBook'])->name('books.store');
         Route::patch('/books/{book}', [AdminDashboardController::class, 'updateBook'])->name('books.update');
         Route::delete('/books/{book}', [AdminDashboardController::class, 'destroyBook'])->name('books.destroy');

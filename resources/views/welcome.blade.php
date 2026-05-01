@@ -4,146 +4,57 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CatBook — Trang chủ</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* ─── Reset & Base ─────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; }
 
+        :root {
+            --cb-bg: var(--cb-brand-bg);
+            --cb-surface: var(--cb-brand-surface);
+            --cb-border: var(--cb-brand-border);
+            --cb-text: var(--cb-brand-text);
+            --cb-muted: var(--cb-brand-muted);
+            --cb-accent: var(--cb-brand-accent);
+            --cb-accent-dark: var(--cb-brand-accent-dark);
+        }
+
         body {
             font-family: 'DM Sans', sans-serif;
-            background: #f8f6f1;
-            color: #1a1a1a;
+            background: var(--cb-bg);
+            color: var(--cb-text);
             margin: 0;
-        }
-
-        /* ─── Navbar ────────────────────────────────────────────── */
-        .cb-nav {
-            position: sticky; top: 0; z-index: 50;
-            background: rgba(248,246,241,0.92);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid #e8e3d8;
-            padding: 0 40px;
-            display: flex; align-items: center; justify-content: space-between;
-            height: 64px;
-        }
-        .cb-logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 22px; font-weight: 900;
-            color: #1a1a1a; letter-spacing: -0.5px;
-            text-decoration: none;
-        }
-        .cb-logo span { color: #2d6a4f; }
-
-        .cb-nav-links { display: flex; gap: 28px; align-items: center; }
-        .cb-nav-links a {
-            font-size: 14px; font-weight: 500; color: #555;
-            text-decoration: none; transition: color 0.2s;
-        }
-        .cb-nav-links a:hover { color: #1a1a1a; }
-        .cb-nav-links a.active { color: #2d6a4f; }
-
-        .cb-nav-right { display: flex; gap: 10px; align-items: center; }
-        .cb-cart-icon {
-            width: 38px; height: 38px; border-radius: 50%;
-            border: 1.5px solid #ddd; background: transparent;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: border-color 0.2s; position: relative;
-            text-decoration: none; color: #1a1a1a;
-        }
-        .cb-cart-icon:hover { border-color: #1a1a1a; }
-        .cb-cart-badge {
-            position: absolute; top: -5px; right: -5px;
-            background: #2d6a4f; color: #fff;
-            width: 18px; height: 18px; border-radius: 50%;
-            font-size: 10px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .cb-btn-ghost {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px; font-weight: 500;
-            padding: 8px 18px; border-radius: 999px;
-            border: 1.5px solid #ccc; background: transparent;
-            color: #333; cursor: pointer; transition: all 0.2s;
-            text-decoration: none; display: inline-flex; align-items: center;
-        }
-        .cb-btn-ghost:hover { border-color: #1a1a1a; color: #1a1a1a; }
-        .cb-btn-solid {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px; font-weight: 600;
-            padding: 8px 20px; border-radius: 999px;
-            border: none; background: #1a1a1a;
-            color: #fff; cursor: pointer; transition: all 0.2s;
-            text-decoration: none; display: inline-flex; align-items: center;
-        }
-        .cb-btn-solid:hover { background: #2d6a4f; }
-
-        /* User Menu Dropdown */
-        .cb-user-menu {
-            position: relative; display: inline-block;
-        }
-        .cb-user-trigger {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px; font-weight: 500;
-            padding: 8px 14px; border-radius: 999px;
-            background: transparent; border: none;
-            color: #333; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .cb-user-trigger:hover { color: #2d6a4f; }
-        .cb-user-dropdown {
-            position: absolute; top: 100%; right: 0;
-            background: #fff; border: 1px solid #e0dbd0; border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            min-width: 200px; margin-top: 8px;
-            display: none; flex-direction: column; z-index: 100;
-            opacity: 0; transition: opacity 0.2s, visibility 0.2s;
-            visibility: hidden;
-        }
-        .cb-user-menu.active .cb-user-dropdown {
-            display: flex; opacity: 1; visibility: visible;
-        }
-        .cb-user-dropdown a, .cb-user-dropdown button {
-            padding: 12px 16px; text-align: left; border: none;
-            background: transparent; cursor: pointer;
-            font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-            color: #333; text-decoration: none;
-            transition: background 0.15s, color 0.15s;
-        }
-        .cb-user-dropdown a:hover, .cb-user-dropdown button:hover {
-            background: #f8f6f1; color: #2d6a4f;
-        }
-        .cb-user-dropdown a:first-child { border-radius: 12px 12px 0 0; }
-        .cb-user-dropdown a:last-child, .cb-user-dropdown button:last-child { border-radius: 0 0 12px 12px; }
-        .cb-user-dropdown-divider {
-            height: 1px; background: #e8e3d8; margin: 4px 0;
-        }
-        .cb-logout-btn {
-            color: #d32f2f; font-weight: 600;
-        }
-        .cb-logout-btn:hover {
-            background: #ffebee; color: #d32f2f;
         }
 
         /* ─── Hero ──────────────────────────────────────────────── */
         .cb-hero {
-            max-width: 1140px; margin: 0 auto;
-            padding: 80px 40px 64px;
-            display: grid; grid-template-columns: 1fr 400px; gap: 72px; align-items: center;
+            max-width: 1240px; margin: 0 auto;
+            padding: 52px 40px 64px;
+            display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 56px; align-items: center;
+            position: relative;
+        }
+        .cb-hero::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 40px;
+            right: 40px;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(45,106,79,0), var(--cb-brand-accent-tint-strong), rgba(45,106,79,0));
+            pointer-events: none;
         }
         .cb-hero-eyebrow {
             display: inline-flex; align-items: center; gap: 8px;
             font-size: 11px; font-weight: 600; letter-spacing: 1.8px;
-            text-transform: uppercase; color: #2d6a4f;
-            background: #d8f3dc; padding: 5px 14px; border-radius: 999px;
+            text-transform: uppercase; color: var(--cb-accent);
+            background: rgba(255,255,255,0.78); padding: 5px 14px; border-radius: 999px;
+            border: 1px solid var(--cb-border);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset;
             margin-bottom: 22px;
         }
         .cb-eyebrow-dot {
             width: 6px; height: 6px; border-radius: 50%;
-            background: #2d6a4f;
+            background: var(--cb-accent);
             animation: pulse-dot 2s ease-in-out infinite;
         }
         @keyframes pulse-dot {
@@ -152,14 +63,14 @@
         }
         .cb-hero h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 58px; font-weight: 900;
+            font-size: 56px; font-weight: 900;
             line-height: 1.06; letter-spacing: -2px;
-            color: #0d1b10; margin: 0;
+            color: var(--cb-text); margin: 0;
         }
-        .cb-hero h1 em { font-style: italic; color: #2d6a4f; }
+        .cb-hero h1 em { font-style: italic; color: var(--cb-accent); }
         .cb-hero-sub {
             margin-top: 20px; font-size: 16px; font-weight: 300;
-            color: #5a5a5a; line-height: 1.75; max-width: 460px;
+            color: var(--cb-muted); line-height: 1.75; max-width: 460px;
         }
 
         /* Search bar */
@@ -168,39 +79,39 @@
         .cb-search-input {
             flex: 1; font-family: 'DM Sans', sans-serif;
             font-size: 14px; padding: 14px 22px;
-            border: 2px solid #e0dbd0; border-radius: 999px;
-            background: #fff; outline: none; color: #1a1a1a;
+            border: 2px solid var(--cb-border); border-radius: 999px;
+            background: var(--cb-brand-surface-strong); outline: none; color: var(--cb-text);
             transition: border-color 0.2s; min-width: 0;
         }
-        .cb-search-input:focus { border-color: #2d6a4f; }
+        .cb-search-input:focus { border-color: var(--cb-accent); }
         .cb-search-input::placeholder { color: #b0aa9e; }
         .cb-search-btn {
             font-family: 'DM Sans', sans-serif;
             font-size: 14px; font-weight: 600;
             padding: 14px 28px; border-radius: 999px;
-            background: #2d6a4f; color: #fff;
+            background: var(--cb-text); color: #fff;
             border: none; cursor: pointer;
             transition: background 0.2s, transform 0.15s; white-space: nowrap;
         }
-        .cb-search-btn:hover { background: #1b4332; transform: translateY(-1px); }
+        .cb-search-btn:hover { background: var(--cb-accent); transform: translateY(-1px); }
 
         /* Stats */
         .cb-hero-stats {
-            display: flex; gap: 32px; margin-top: 36px;
-            padding-top: 28px; border-top: 1px solid #e0dbd0;
+            display: flex; gap: 32px; margin-top: 32px;
+            padding-top: 28px; border-top: 1px solid var(--cb-border);
         }
         .cb-stat-num {
             font-family: 'Playfair Display', serif;
-            font-size: 28px; font-weight: 700; color: #0d1b10;
+            font-size: 28px; font-weight: 700; color: var(--cb-text);
             line-height: 1;
         }
-        .cb-stat-lbl { font-size: 12px; color: #999; margin-top: 4px; }
+        .cb-stat-lbl { font-size: 12px; color: var(--cb-muted); margin-top: 4px; }
 
         /* Hero visual — floating book cards */
         .cb-hero-visual { position: relative; display: flex; flex-direction: column; gap: 12px; }
         .cb-ai-badge {
-            position: absolute; top: -14px; right: -16px;
-            background: #1a1a1a; color: #fff;
+            position: absolute; top: -10px; right: -8px;
+            background: var(--cb-text); color: #fff;
             font-size: 11px; font-weight: 600;
             padding: 9px 16px; border-radius: 999px;
             box-shadow: 0 6px 20px rgba(0,0,0,0.22);
@@ -214,10 +125,10 @@
             animation: pulse-dot 1.5s ease-in-out infinite;
         }
         .cb-book-card {
-            background: #fff; border-radius: 16px;
+            background: var(--cb-brand-surface-strong); border-radius: 16px;
             padding: 16px 18px; display: flex; gap: 14px; align-items: center;
             box-shadow: 0 2px 14px rgba(0,0,0,0.06);
-            border: 1px solid #ede9de;
+            border: 1px solid var(--cb-border);
             transition: transform 0.25s, box-shadow 0.25s; cursor: pointer;
         }
         .cb-book-card:nth-child(2) { margin-left: 24px; }
@@ -228,20 +139,20 @@
             flex-shrink: 0; display: flex; align-items: center; justify-content: center;
             font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900;
         }
-        .cb-book-thumb.t1 { background: #d8f3dc; color: #1b4332; }
+        .cb-book-thumb.t1 { background: var(--cb-brand-accent-soft); color: var(--cb-accent-dark); }
         .cb-book-thumb.t2 { background: #fde8d8; color: #7c3d12; }
         .cb-book-thumb.t3 { background: #e0eaff; color: #1e3a8a; }
         .cb-book-info { flex: 1; min-width: 0; }
-        .cb-book-title { font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.35; }
+        .cb-book-title { font-size: 13px; font-weight: 600; color: var(--cb-text); line-height: 1.35; }
         .cb-book-author { font-size: 11px; color: #999; margin-top: 3px; }
-        .cb-book-price { font-size: 15px; font-weight: 700; color: #2d6a4f; margin-top: 7px; }
+        .cb-book-price { font-size: 15px; font-weight: 700; color: var(--cb-accent); margin-top: 7px; }
         .cb-badge-hot {
-            background: #2d6a4f; color: #fff;
+            background: var(--cb-accent); color: #fff;
             font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
             letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0;
         }
         .cb-badge-new {
-            background: #1a1a1a; color: #fff;
+            background: var(--cb-text); color: #fff;
             font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
             letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0;
         }
@@ -258,7 +169,7 @@
             letter-spacing: -0.5px;
         }
         .cb-see-all {
-            font-size: 13px; font-weight: 500; color: #2d6a4f;
+            font-size: 13px; font-weight: 500; color: var(--cb-accent);
             text-decoration: none;
             padding-bottom: 1px; border-bottom: 1px solid currentColor;
             transition: opacity 0.2s;
@@ -279,14 +190,14 @@
             transition: all 0.22s; text-decoration: none; display: block;
         }
         .cb-cat-card:hover {
-            background: #2d6a4f; border-color: #2d6a4f;
+            background: var(--cb-accent); border-color: var(--cb-accent);
             transform: translateY(-4px);
             box-shadow: 0 12px 32px rgba(45,106,79,0.2);
         }
         .cb-cat-card:hover .cb-cat-name { color: #fff; }
         .cb-cat-card:hover .cb-cat-count { color: rgba(255,255,255,0.65); }
         .cb-cat-icon { font-size: 28px; margin-bottom: 12px; line-height: 1; }
-        .cb-cat-name { font-size: 14px; font-weight: 600; color: #1a1a1a; transition: color 0.22s; }
+        .cb-cat-name { font-size: 14px; font-weight: 600; color: var(--cb-text); transition: color 0.22s; }
         .cb-cat-count { font-size: 12px; color: #aaa; margin-top: 5px; transition: color 0.22s; }
 
         /* ─── Book cards ────────────────────────────────────────── */
@@ -317,13 +228,13 @@
         .cb-product-img.no-img { color: #c9bfa8; }
         .cb-ribbon {
             position: absolute; top: 12px; left: 12px;
-            background: #1a1a1a; color: #fff;
+            background: var(--cb-text); color: #fff;
             font-size: 10px; font-weight: 700; padding: 4px 12px;
             border-radius: 999px; letter-spacing: 0.8px;
         }
         .cb-product-body { padding: 18px; }
         .cb-product-title {
-            font-size: 15px; font-weight: 600; color: #1a1a1a; line-height: 1.45;
+            font-size: 15px; font-weight: 600; color: var(--cb-text); line-height: 1.45;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
             line-clamp: 2; overflow: hidden;
         }
@@ -332,18 +243,18 @@
             display: flex; align-items: center; justify-content: space-between;
             margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0ede6;
         }
-        .cb-product-price { font-size: 18px; font-weight: 700; color: #2d6a4f; }
+        .cb-product-price { font-size: 18px; font-weight: 700; color: var(--cb-accent); }
         .cb-product-orig {
             font-size: 12px; color: #bbb; text-decoration: line-through; margin-left: 7px;
         }
         .cb-add-btn {
             width: 36px; height: 36px; border-radius: 50%;
-            background: #2d6a4f; color: #fff; border: none;
+            background: var(--cb-accent); color: #fff; border: none;
             font-size: 20px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s; flex-shrink: 0; line-height: 1;
         }
-        .cb-add-btn:hover { background: #1b4332; transform: scale(1.12); }
+        .cb-add-btn:hover { background: var(--cb-accent-dark); transform: scale(1.12); }
 
         /* ─── CTA Strip ─────────────────────────────────────────── */
         .cb-cta { max-width: 1140px; margin: 0 auto 80px; padding: 0 40px; }
@@ -390,65 +301,12 @@
             .cb-hero-visual { display: none; }
             .cb-hero h1 { font-size: 42px; }
             .cb-cta-inner { flex-direction: column; text-align: center; padding: 40px 32px; }
-            .cb-nav-links { display: none; }
         }
     </style>
 </head>
 <body>
 
-    {{-- ── Navbar ─────────────────────────────────────────────── --}}
-    <nav class="cb-nav">
-        <a href="{{ route('home') }}" class="cb-logo">Cat<span>Book</span></a>
-
-        <div class="cb-nav-links">
-            <a href="{{ route('home') }}" class="active">Trang chủ</a>
-            <a href="{{ route('catalog.categories') }}">Danh mục</a>
-            <a href="#">Tác giả</a>
-            <a href="#">Giới thiệu</a>
-        </div>
-
-        <div class="cb-nav-right">
-            {{-- Cart --}}
-            <a href="{{ route('cart.index') }}" class="cb-cart-icon" title="Giỏ hàng">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
-                    <path d="M16 10a4 4 0 01-8 0"/>
-                </svg>
-                @auth
-                    @if(($cartCount ?? 0) > 0)
-                        <span class="cb-cart-badge">{{ $cartCount }}</span>
-                    @endif
-                @endauth
-            </a>
-
-            @guest
-                <a href="{{ route('login') }}" class="cb-btn-ghost">Đăng nhập</a>
-                <a href="{{ route('register') }}" class="cb-btn-solid">Đăng ký</a>
-            @else
-                <div class="cb-user-menu" id="cb-user-menu">
-                    <button class="cb-user-trigger" onclick="document.getElementById('cb-user-menu').classList.toggle('active')">
-                        {{ auth()->user()->full_name }}
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="cb-user-dropdown">
-                        <a href="{{ route('account.show') }}">Trang cá nhân</a>
-                        @if(auth()->user()->role === 'admin')
-                            <a href="{{ route('admin.panel') }}">Admin Dashboard</a>
-                        @elseif(auth()->user()->role === 'staff')
-                            <a href="{{ route('staff.panel') }}">Staff Dashboard</a>
-                        @endif
-                        <div class="cb-user-dropdown-divider"></div>
-                        <form method="POST" action="{{ route('logout') }}" style="margin:0">
-                            @csrf
-                            <button type="submit" class="cb-logout-btn">Đăng xuất</button>
-                        </form>
-                    </div>
-                </div>
-            @endguest
-        </div>
-    </nav>
+    <x-navbar />
 
     <main>
         {{-- ── Hero ───────────────────────────────────────────────── --}}
@@ -664,13 +522,6 @@
             .catch(console.error);
         }
 
-        // Đóng user menu khi click ra ngoài
-        document.addEventListener('click', function (e) {
-            const userMenu = document.getElementById('cb-user-menu');
-            if (userMenu && !userMenu.contains(e.target)) {
-                userMenu.classList.remove('active');
-            }
-        });
     </script>
 </body>
 </html>

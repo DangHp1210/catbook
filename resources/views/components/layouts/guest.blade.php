@@ -6,10 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? config('app.name', 'CatBook') }}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -18,8 +14,8 @@
         body {
             margin: 0;
             font-family: 'DM Sans', sans-serif;
-            background: #f8f6f1;
-            color: #1a1a1a;
+            background: var(--cb-brand-bg);
+            color: var(--cb-brand-text);
         }
 
         .cb-auth-page {
@@ -86,8 +82,8 @@
             font-weight: 600;
             letter-spacing: 1.8px;
             text-transform: uppercase;
-            color: #2d6a4f;
-            background: #d8f3dc;
+            color: var(--cb-brand-accent);
+            background: var(--cb-brand-accent-soft);
             padding: 6px 14px;
             border-radius: 999px;
             margin-bottom: 20px;
@@ -97,7 +93,7 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #2d6a4f;
+            background: var(--cb-brand-accent);
         }
 
         .cb-auth-copy h1 {
@@ -106,12 +102,12 @@
             font-size: clamp(36px, 6vw, 60px);
             line-height: 1.05;
             letter-spacing: -1.8px;
-            color: #0d1b10;
+            color: var(--cb-brand-text);
         }
 
         .cb-auth-copy h1 em {
             font-style: italic;
-            color: #2d6a4f;
+            color: var(--cb-brand-accent);
         }
 
         .cb-auth-copy p {
@@ -119,7 +115,7 @@
             max-width: 560px;
             font-size: 16px;
             line-height: 1.8;
-            color: #5a5a5a;
+            color: var(--cb-brand-muted);
         }
 
         .cb-auth-benefits {
@@ -131,7 +127,7 @@
 
         .cb-auth-benefit {
             background: rgba(255,255,255,0.75);
-            border: 1px solid #e8e3d8;
+            border: 1px solid var(--cb-brand-border);
             border-radius: 16px;
             padding: 16px 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.04);
@@ -153,7 +149,7 @@
             position: relative;
             width: 100%;
             background: rgba(255,255,255,0.92);
-            border: 1px solid #e8e3d8;
+            border: 1px solid var(--cb-brand-border);
             border-radius: 22px;
             padding: 44px 44px 40px;
             box-shadow: 0 24px 70px rgba(13,27,16,0.08);
@@ -170,13 +166,13 @@
             font-family: 'Playfair Display', serif;
             font-size: 30px;
             font-weight: 900;
-            color: #1a1a1a;
+            color: var(--cb-brand-text);
             text-decoration: none;
             letter-spacing: -0.5px;
             line-height: 1;
         }
 
-        .cb-auth-logo a span { color: #2d6a4f; }
+        .cb-auth-logo a span { color: var(--cb-brand-accent); }
 
         .cb-auth-logo p {
             margin: 8px 0 0;
@@ -225,7 +221,7 @@
             border-radius: 12px;
             background: #fff;
             border: 1.5px solid #e0dbd0;
-            color: #1a1a1a;
+            color: var(--cb-brand-text);
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
             margin-bottom: 16px;
@@ -237,7 +233,7 @@
         .cb-auth-slot input:focus,
         .cb-auth-slot select:focus,
         .cb-auth-slot textarea:focus {
-            border-color: #2d6a4f;
+            border-color: var(--cb-brand-accent);
             box-shadow: 0 0 0 3px rgba(45,106,79,0.1);
         }
 
@@ -261,7 +257,7 @@
             padding: 13px;
             border-radius: 999px;
             border: none;
-            background: #1a1a1a;
+            background: var(--cb-brand-text);
             color: #fff;
             cursor: pointer;
             transition: background 0.2s, transform 0.15s;
@@ -271,7 +267,7 @@
         }
 
         .cb-auth-slot .cb-btn-primary:hover {
-            background: #2d6a4f;
+            background: var(--cb-brand-accent);
             transform: translateY(-1px);
         }
 
@@ -294,8 +290,8 @@
         }
 
         .cb-auth-slot .cb-btn-secondary:hover {
-            border-color: #1a1a1a;
-            color: #1a1a1a;
+            border-color: var(--cb-brand-text);
+            color: var(--cb-brand-text);
         }
 
         .cb-auth-slot .cb-divider {
@@ -312,7 +308,7 @@
             content: '';
             flex: 1;
             height: 1px;
-            background: #e8e3d8;
+            background: var(--cb-brand-border);
         }
 
         .cb-auth-slot .cb-auth-footer {
@@ -323,7 +319,7 @@
         }
 
         .cb-auth-slot .cb-auth-footer a {
-            color: #2d6a4f;
+            color: var(--cb-brand-accent);
             text-decoration: none;
             font-weight: 600;
             transition: opacity 0.2s;
@@ -367,7 +363,7 @@
             width: 16px;
             height: 16px;
             border-radius: 4px;
-            accent-color: #2d6a4f;
+            accent-color: var(--cb-brand-accent);
             margin: 0;
             padding: 0;
             flex-shrink: 0;
@@ -395,7 +391,7 @@
             z-index: 2;
         }
 
-        .cb-auth-back:hover { color: #2d6a4f; }
+        .cb-auth-back:hover { color: var(--cb-brand-accent); }
 
         .cb-auth-back svg {
             width: 14px;

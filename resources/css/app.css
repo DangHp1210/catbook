@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap');
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -7,7 +8,7 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Be Vietnam Pro', 'Instrument Sans', ui-sans-serif, sans-serif;
+    --font-sans: 'DM Sans', 'Be Vietnam Pro', 'Instrument Sans', ui-sans-serif, sans-serif;
 }
 
 :root {
@@ -22,6 +23,18 @@
     --cb-brand-50: #fff7ed;
     --cb-brand-100: #ffedd5;
     --cb-brand-200: #fed7aa;
+
+    --cb-brand-bg: #f8f6f1;
+    --cb-brand-surface: rgba(248, 246, 241, 0.92);
+    --cb-brand-surface-strong: #ffffff;
+    --cb-brand-border: #e8e3d8;
+    --cb-brand-text: #1a1a1a;
+    --cb-brand-muted: #5a5a5a;
+    --cb-brand-accent: #2d6a4f;
+    --cb-brand-accent-dark: #1b4332;
+    --cb-brand-accent-soft: #d8f3dc;
+    --cb-brand-accent-tint: rgba(45, 106, 79, 0.1);
+    --cb-brand-accent-tint-strong: rgba(45, 106, 79, 0.18);
 }
 
 .cb-site {
@@ -387,4 +400,18 @@
     .cb-hero-grid {
         grid-template-columns: 1fr;
     }
+    html, body {
+    min-height: 100%;
+    margin: 0;
+    background: var(--cb-bg);
+    color: var(--cb-ink);
+}
+
+body {
+    background:
+        radial-gradient(58rem 30rem at 8% -12%, rgba(249, 115, 22, 0.14), transparent 42%),
+        radial-gradient(52rem 24rem at 92% -16%, rgba(56, 189, 248, 0.12), transparent 44%),
+        var(--cb-bg);
+    background-attachment: fixed;
+}
 }

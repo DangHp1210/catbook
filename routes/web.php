@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
@@ -48,6 +49,8 @@ Route::middleware('auth')->group(function () {
             'user' => $user,
         ]);
     })->name('account.show');
+
+    Route::post('/tai-khoan/avatar', [AccountController::class, 'updateAvatar'])->name('account.avatar.update');
 
     // Address management
     Route::get('/tai-khoan/dia-chi', [\App\Http\Controllers\UserAddressController::class, 'index'])->name('account.addresses.index');

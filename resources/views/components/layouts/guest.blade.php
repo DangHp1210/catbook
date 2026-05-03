@@ -404,7 +404,6 @@
             .cb-auth-benefits { grid-template-columns: 1fr; }
         }
     </style>
-    <x-navbar />
 
     <main class="cb-auth-page">
         <div class="cb-auth-glow-l"></div>

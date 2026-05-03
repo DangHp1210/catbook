@@ -22,6 +22,17 @@ $isAccount = request()->routeIs('account.*');
 $initial = auth()->check()
     ? mb_strtoupper(mb_substr(auth()->user()->full_name, 0, 1))
     : '';
+
+$avatarSrc = null;
+if (auth()->check()) {
+    $avatarPath = trim((string) (auth()->user()->avatar_url ?? ''));
+
+    if ($avatarPath !== '') {
+        $avatarSrc = \Illuminate\Support\Str::startsWith($avatarPath, ['http://', 'https://', '/'])
+            ? $avatarPath
+            : asset('storage/' . ltrim($avatarPath, '/'));
+    }
+}
 @endphp
 
 {{-- ── Design tokens dùng chung toàn site ─────────────────────── --}}
@@ -80,7 +91,13 @@ $initial = auth()->check()
                 <div class="cb-user-menu" id="cb-user-menu">
                     <button type="button" class="cb-user-trigger" id="cb-user-trigger"
                             aria-haspopup="true" aria-expanded="false">
-                        <span class="cb-avatar-sm">{{ $initial }}</span>
+                        <span class="cb-avatar-sm">
+                            @if($avatarSrc)
+                                <img src="{{ $avatarSrc }}" alt="{{ auth()->user()->full_name }}">
+                            @else
+                                {{ $initial }}
+                            @endif
+                        </span>
                         <span class="cb-user-trigger-name">{{ auth()->user()->full_name }}</span>
                         <svg width="14" height="14" fill="none" stroke="currentColor"
                              stroke-width="2" viewBox="0 0 24 24" class="cb-chevron">
@@ -335,12 +352,20 @@ $initial = auth()->check()
 .cb-avatar-sm {
     width: 28px; height: 28px;
     border-radius: 50%;
+    overflow: hidden;
     background: var(--cb-brand-accent);
     color: #fff;
     font-size: 11px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     font-family: var(--cb-font-sans);
+}
+.cb-avatar-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
 }
 
 .cb-user-trigger-name {

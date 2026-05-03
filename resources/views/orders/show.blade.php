@@ -187,32 +187,31 @@
                             form.action = reviewBase + '/' + encodeURIComponent(bookSlug);
                             ratingSelect.value = existingRating || '5';
                             commentField.value = existingComment || '';
+                            modal.classList.remove('hidden');
+                            modal.classList.add('flex');
                         }
 
-                        // ... rest of script truncated for brevity in this patch
+                        function closeModal() {
+                            modal.classList.add('hidden');
+                            modal.classList.remove('flex');
+                        }
+
+                        document.querySelectorAll('.open-review-modal').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                const slug = btn.getAttribute('data-book-slug');
+                                const titleText = btn.getAttribute('data-book-title');
+                                const existingRating = btn.getAttribute('data-existing-rating');
+                                const existingComment = btn.getAttribute('data-existing-comment');
+                                openModal(slug, titleText, existingRating, existingComment);
+                            });
+                        });
+
+                        closeBtn.addEventListener('click', closeModal);
+                        cancelBtn.addEventListener('click', closeModal);
+                        backdrop.addEventListener('click', closeModal);
                     });
                 </script>
+            </aside>
+        </section>
 
-            @endsection
-            function closeModal() {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-
-            document.querySelectorAll('.open-review-modal').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const slug = btn.getAttribute('data-book-slug');
-                    const titleText = btn.getAttribute('data-book-title');
-                    const existingRating = btn.getAttribute('data-existing-rating');
-                    const existingComment = btn.getAttribute('data-existing-comment');
-                    openModal(slug, titleText, existingRating, existingComment);
-                });
-            });
-
-            closeBtn.addEventListener('click', closeModal);
-            cancelBtn.addEventListener('click', closeModal);
-            backdrop.addEventListener('click', closeModal);
-        });
-    </script>
-</body>
-</html>
+@endsection

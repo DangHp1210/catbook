@@ -609,8 +609,7 @@
     .cat-lcard-desc {
         font-size: 13px; color: var(--cb-muted);
         line-height: 1.65;
-        display: -webkit-box;
-        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        max-height: 3.3em;
         overflow: hidden;
         margin-bottom: 14px;
         flex: 1;

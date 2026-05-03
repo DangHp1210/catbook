@@ -3,17 +3,49 @@
 @section('title','Thông tin tài khoản')
 
 @section('content')
+        @php
+            $avatarPath = trim((string) ($user->avatar_url ?? ''));
+            $avatarSrc = null;
+
+            if ($avatarPath !== '') {
+                $avatarSrc = \Illuminate\Support\Str::startsWith($avatarPath, ['http://', 'https://', '/'])
+                    ? $avatarPath
+                    : asset('storage/' . ltrim($avatarPath, '/'));
+            }
+
+            $initial = mb_strtoupper(mb_substr($user->full_name ?? '', 0, 1));
+        @endphp
+
         <section class="grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div class="flex items-center gap-4">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 text-2xl font-black text-white">
-                        {{ strtoupper(mb_substr($user->full_name, 0, 1)) }}
+                    <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 text-2xl font-black text-white">
+                        @if($avatarSrc)
+                            <img src="{{ $avatarSrc }}" alt="{{ $user->full_name }}" class="h-full w-full object-cover">
+                        @else
+                            {{ $initial }}
+                        @endif
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <h1 class="text-2xl font-black text-slate-900">{{ $user->full_name }}</h1>
-                    </div>
                 </div>
 
+
+                <form method="POST" action="{{ route('account.avatar.update') }}" enctype="multipart/form-data" class="mt-6 space-y-3">
+                    @csrf
+
+                    <div>
+                        <label for="avatar_file" class="mb-2 block text-sm font-semibold text-slate-700">Ảnh đại diện</label>
+                        <input id="avatar_file" name="avatar_file" type="file" accept="image/*" class="block w-full cursor-pointer rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700">
+                        @error('avatar_file')
+                            <p class="mt-2 text-sm text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700">
+                        Lưu ảnh đại diện
+                    </button>
+                </form>
                 <div class="mt-6 space-y-3 text-sm">
                     <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
                         <span class="text-slate-500">Email</span>
@@ -35,27 +67,6 @@
                                 <p class="mt-2 text-3xl font-black text-slate-900">{{ $user->addresses_count }}</p>
                             </div>
                             <a href="{{ route('account.addresses.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Quản lý địa chỉ</a>
-                        </div>
-
-                        <div class="space-y-3">
-                            @forelse ($user->addresses()->latest()->limit(3)->get() as $address)
-                                <a href="{{ route('account.addresses.index') }}" class="block rounded-xl border border-slate-200 px-4 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/50">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div>
-                                            <p class="font-semibold text-slate-900">{{ $address->receiver_name }}</p>
-                                            <p class="mt-1 text-sm text-slate-600">{{ $address->address_line }}</p>
-                                            <p class="text-xs text-slate-500">{{ collect([$address->ward, $address->district, $address->province])->filter()->implode(', ') }}</p>
-                                        </div>
-                                        @if($address->is_default)
-                                            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Mặc định</span>
-                                        @endif
-                                    </div>
-                                </a>
-                            @empty
-                                <a href="{{ route('account.addresses.index') }}" class="block rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500 transition hover:border-emerald-200 hover:bg-emerald-50/50 hover:text-emerald-700">
-                                    Chưa có địa chỉ nào. Nhấn để quản lý địa chỉ.
-                                </a>
-                            @endforelse
                         </div>
                     </article>
                     <a href="{{ route('orders.index') }}" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm block hover:shadow-md">

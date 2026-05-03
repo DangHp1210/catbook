@@ -280,7 +280,7 @@
 
         /* ─── Footer ────────────────────────────────────────────── */
         .cb-footer {
-            background: #0d1b10; color: #4a6455;
+            background: #0a1d0a; color: #cad0cd;
             padding: 32px 40px; font-size: 13px;
             display: flex; align-items: center; justify-content: space-between;
         }
@@ -288,9 +288,9 @@
             font-family: 'Playfair Display', serif;
             font-size: 18px; font-weight: 900; color: #fff;
         }
-        .cb-footer-logo span { color: #4ade80; }
+        .cb-footer-logo span { color: #339457; }
         .cb-footer-links { display: flex; gap: 24px; }
-        .cb-footer-links a { color: #4a6455; text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .cb-footer-links a { color: #86978c; text-decoration: none; font-size: 13px; transition: color 0.2s; }
         .cb-footer-links a:hover { color: #6a9e7a; }
 
         /* ─── Responsive ────────────────────────────────────────── */
@@ -366,15 +366,8 @@
                         @endif
                     </a>
                 @empty
-                    {{-- Placeholder cards khi chưa có data --}}
-                    <div class="cb-book-card">
-                        <div class="cb-book-thumb t1">S</div>
-                        <div class="cb-book-info">
-                            <div class="cb-book-title">Sapiens: Lược Sử Loài Người</div>
-                            <div class="cb-book-author">Yuval Noah Harari</div>
-                            <div class="cb-book-price">148.000đ</div>
-                        </div>
-                        <span class="cb-badge-hot">HOT</span>
+                    <div style="text-align:center;padding:40px 0;color:#aaa;font-size:14px">
+                        Chưa có sách nổi bật để hiển thị.
                     </div>
                 @endforelse
             </div>

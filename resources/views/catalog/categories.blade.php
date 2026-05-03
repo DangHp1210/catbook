@@ -1,1045 +1,1058 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $heading ?? 'Danh mục sách' }} — CatBook</title>
+@extends('layouts.app')
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+@section('title', $heading ?? 'Danh mục sách')
 
+@section('styles')
     <style>
-    *, *::before, *::after { box-sizing: border-box; }
+    /* ─── Design tokens (aligned with navbar component) ─────── */
+    :root {
+        --cb-bg:           var(--cb-brand-bg);
+        --cb-border:       var(--cb-brand-border);
+        --cb-text:         var(--cb-brand-text);
+        --cb-muted:        var(--cb-brand-muted);
+        --cb-white:        var(--cb-brand-white);
+        --cb-accent:       var(--cb-brand-accent);
+        --cb-accent-dark:  var(--cb-brand-accent-dark);
+        --cb-accent-light: var(--cb-brand-accent-light);
+        --cb-serif:        var(--cb-font-serif);
+        --cb-sans:         var(--cb-font-sans);
+        --cb-radius-sm:    8px;
+        --cb-radius-md:    12px;
+        --cb-radius-lg:    16px;
+        --cb-radius-xl:    20px;
+        --cb-shadow-sm:    0 1px 4px rgba(0,0,0,0.06);
+        --cb-shadow-md:    0 4px 16px rgba(0,0,0,0.08);
+        --cb-shadow-lg:    0 12px 36px rgba(0,0,0,0.10);
+    }
 
     body {
-        font-family: var(--cb-font-sans);
+        font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+        background: var(--cb-bg);
+        color: var(--cb-text);
         margin: 0;
-        min-height: 100vh;
     }
 
-    .cat-page {
-        padding: 40px 0 80px;
+    /* ─── Page wrapper ───────────────────────────────────────── */
+    .cat-wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 36px 32px 80px;
     }
 
-    @media (max-width: 768px) {
-        .cat-page { padding: 24px 16px 60px; }
-    }
-
+    /* ─── HERO ───────────────────────────────────────────────── */
     .cat-hero {
-        background: var(--cb-brand-white);
-        border: 1px solid var(--cb-brand-border);
-        border-radius: 20px;
-        padding: 32px 36px;
+        background: var(--cb-white);
+        border: 1px solid var(--cb-border);
+        border-radius: var(--cb-radius-xl);
+        padding: 36px 40px;
+        margin-bottom: 24px;
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
-        gap: 28px;
+        gap: 32px;
         flex-wrap: wrap;
-        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
     }
+    /* subtle texture */
+    .cat-hero::after {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 240px; height: 240px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(45,106,79,0.07) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .cat-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: var(--cb-accent);
+        background: var(--cb-accent-light);
+        padding: 4px 13px;
+        border-radius: 999px;
+        margin-bottom: 12px;
+    }
+    .cat-eyebrow::before {
+        content: '';
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--cb-accent);
+        animation: dot-pulse 2s ease-in-out infinite;
+    }
+    @keyframes dot-pulse {
+        0%,100% { opacity:1; transform:scale(1); }
+        50%      { opacity:.5; transform:scale(1.5); }
+    }
+
+    .cat-hero h1 {
+        font-family: var(--cb-serif);
+        font-size: 40px;
+        font-weight: 900;
+        color: #0d1b10;
+        letter-spacing: -1.5px;
+        line-height: 1.08;
+        margin-bottom: 16px;
+    }
+    .cat-hero h1 em { font-style: italic; color: var(--cb-accent); }
 
     .cat-breadcrumb {
         display: flex;
         align-items: center;
         gap: 6px;
         font-size: 12px;
-        color: var(--cb-brand-muted);
-        margin-bottom: 10px;
+        color: var(--cb-muted);
+        margin-bottom: 16px;
         flex-wrap: wrap;
     }
+    .cat-breadcrumb a { color: var(--cb-muted); text-decoration: none; transition: color .15s; }
+    .cat-breadcrumb a:hover { color: var(--cb-accent); }
+    .cat-breadcrumb-sep { opacity: .4; }
 
-    .cat-breadcrumb a { color: var(--cb-brand-muted); text-decoration: none; }
-    .cat-breadcrumb a:hover { color: var(--cb-brand-accent); }
-    .cat-breadcrumb span { opacity: 0.5; }
-
-    .cat-hero-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 1.6px;
-        text-transform: uppercase;
-        color: var(--cb-brand-accent);
-        background: var(--cb-brand-accent-light);
-        padding: 4px 12px;
-        border-radius: 999px;
-        margin-bottom: 10px;
-    }
-
-    .cat-hero h1 {
-        font-family: var(--cb-font-serif);
-        font-size: 36px;
-        font-weight: 900;
-        color: #0d1b10;
-        letter-spacing: -1px;
-        line-height: 1.1;
-        margin: 0 0 14px;
-    }
-
-    .cat-hero-meta {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .cat-meta-pill {
+    .cat-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cat-stat-chip {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         font-size: 13px;
-        color: var(--cb-brand-muted);
-        background: var(--cb-brand-bg);
-        border: 1px solid var(--cb-brand-border);
-        padding: 5px 14px;
+        color: var(--cb-muted);
+        background: var(--cb-bg);
+        border: 1px solid var(--cb-border);
+        padding: 6px 16px;
         border-radius: 999px;
     }
+    .cat-stat-chip strong { color: var(--cb-text); font-weight: 600; }
 
-    .cat-meta-pill strong { color: var(--cb-brand-text); font-weight: 600; }
-
-    .cat-search-form {
+    /* Hero search */
+    .cat-hero-search {
+        flex: 1;
+        min-width: 260px;
+        max-width: 400px;
         display: flex;
-        gap: 0;
-        border: 2px solid var(--cb-brand-border);
-        border-radius: 12px;
+        border: 2px solid var(--cb-border);
+        border-radius: var(--cb-radius-md);
         overflow: hidden;
-        background: var(--cb-brand-white);
-        transition: border-color 0.2s;
-        min-width: 300px;
-        flex: 1;
-        max-width: 420px;
+        background: var(--cb-white);
+        transition: border-color .2s, box-shadow .2s;
     }
-
-    .cat-search-form:focus-within { border-color: var(--cb-brand-accent); }
-
-    .cat-search-input {
+    .cat-hero-search:focus-within {
+        border-color: var(--cb-accent);
+        box-shadow: 0 0 0 3px rgba(45,106,79,.09);
+    }
+    .cat-hero-search input {
         flex: 1;
-        font-family: var(--cb-font-sans);
+        font-family: var(--cb-sans);
         font-size: 14px;
-        padding: 12px 18px;
+        padding: 13px 18px;
         border: none;
         outline: none;
         background: transparent;
-        color: var(--cb-brand-text);
+        color: var(--cb-text);
         min-width: 0;
     }
-
-    .cat-search-input::placeholder { color: #b5b0a8; }
-
-    .cat-search-btn {
-        font-family: var(--cb-font-sans);
+    .cat-hero-search input::placeholder { color: #c0bbb2; }
+    .cat-hero-search button {
+        font-family: var(--cb-sans);
         font-size: 13px;
         font-weight: 600;
-        padding: 12px 22px;
+        padding: 13px 22px;
         border: none;
-        background: var(--cb-brand-text);
+        background: var(--cb-text);
         color: #fff;
         cursor: pointer;
         white-space: nowrap;
-        transition: background 0.2s;
+        transition: background .2s;
     }
+    .cat-hero-search button:hover { background: var(--cb-accent); }
 
-    .cat-search-btn:hover { background: var(--cb-brand-accent); }
-
+    /* ─── Parent pills ───────────────────────────────────────── */
     .cat-parents {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-bottom: 28px;
+        margin-bottom: 24px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--cb-border);
     }
-
-    .cat-parent-pill {
+    .cat-pill {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        font-family: var(--cb-font-sans);
+        gap: 7px;
+        font-family: var(--cb-sans);
         font-size: 13px;
         font-weight: 500;
         padding: 8px 18px;
         border-radius: 999px;
-        border: 1.5px solid var(--cb-brand-border);
-        background: var(--cb-brand-white);
-        color: var(--cb-brand-muted);
+        border: 1.5px solid var(--cb-border);
+        background: var(--cb-white);
+        color: var(--cb-muted);
         text-decoration: none;
-        transition: all 0.2s;
+        transition: all .2s;
         white-space: nowrap;
     }
-
-    .cat-parent-pill:hover {
-        border-color: var(--cb-brand-accent);
-        color: var(--cb-brand-accent);
+    .cat-pill:hover { border-color: var(--cb-accent); color: var(--cb-accent); }
+    .cat-pill.active { background: var(--cb-accent); border-color: var(--cb-accent); color: #fff; }
+    .cat-pill .n {
+        font-size: 11px; font-weight: 700;
+        padding: 1px 7px; border-radius: 999px;
+        background: rgba(0,0,0,.1);
     }
+    .cat-pill.active .n { background: rgba(255,255,255,.25); }
 
-    .cat-parent-pill.active {
-        background: var(--cb-brand-accent);
-        border-color: var(--cb-brand-accent);
-        color: #fff;
-    }
-
-    .cat-parent-pill .cnt {
-        font-size: 11px;
-        font-weight: 600;
-        padding: 1px 7px;
-        border-radius: 999px;
-        background: rgba(0,0,0,0.12);
-        color: inherit;
-    }
-
-    .cat-parent-pill.active .cnt { background: rgba(255,255,255,0.25); }
-
+    /* ─── 2-col layout ───────────────────────────────────────── */
     .cat-layout {
         display: grid;
-        grid-template-columns: 260px 1fr;
-        gap: 24px;
+        grid-template-columns: 256px 1fr;
+        gap: 22px;
         align-items: start;
     }
+    @media (max-width: 920px) { .cat-layout { grid-template-columns: 1fr; } }
 
-    @media (max-width: 900px) { .cat-layout { grid-template-columns: 1fr; } }
-
-    .cat-sidebar { display: flex; flex-direction: column; gap: 16px; }
+    /* ─── Sidebar ────────────────────────────────────────────── */
+    .cat-sidebar { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 80px; }
 
     .cat-card {
-        background: var(--cb-brand-white);
-        border: 1px solid var(--cb-brand-border);
-        border-radius: 16px;
-        padding: 20px;
+        background: var(--cb-white);
+        border: 1px solid var(--cb-border);
+        border-radius: var(--cb-radius-lg);
+        overflow: hidden;
     }
-
-    .cat-card-title {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 1.4px;
+    .cat-card-head {
+        padding: 14px 18px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.6px;
         text-transform: uppercase;
-        color: #a09890;
-        margin: 0 0 14px;
+        color: #b0a898;
+        border-bottom: 1px solid var(--cb-border);
     }
+    .cat-card-body { padding: 10px; }
 
-    .cat-child-list { display: flex; flex-direction: column; gap: 2px; }
-
+    /* child list */
     .cat-child-link {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 9px 12px;
-        border-radius: 10px;
+        padding: 9px 10px;
+        border-radius: var(--cb-radius-sm);
         font-size: 13px;
         font-weight: 500;
-        color: #444;
+        color: #555;
         text-decoration: none;
-        transition: background 0.15s, color 0.15s;
+        transition: background .15s, color .15s;
+        gap: 8px;
     }
-
-    .cat-child-link:hover { background: var(--cb-brand-bg); color: var(--cb-brand-accent); }
-
+    .cat-child-link:hover { background: var(--cb-bg); color: var(--cb-accent); }
     .cat-child-link.active {
-        background: var(--cb-brand-accent-light);
-        color: var(--cb-brand-accent);
+        background: var(--cb-accent-light);
+        color: var(--cb-accent);
         font-weight: 600;
     }
-
-    .cat-child-cnt {
-        font-size: 11px;
-        font-weight: 600;
+    .cat-child-badge {
+        font-size: 10px;
+        font-weight: 700;
         padding: 2px 8px;
         border-radius: 999px;
-        background: var(--cb-brand-bg);
-        color: #888;
-        border: 1px solid var(--cb-brand-border);
+        background: var(--cb-bg);
+        color: #999;
+        border: 1px solid var(--cb-border);
         flex-shrink: 0;
     }
-
-    .cat-child-link.active .cat-child-cnt {
-        background: rgba(45,106,79,0.12);
-        color: var(--cb-brand-accent);
+    .cat-child-link.active .cat-child-badge {
+        background: rgba(45,106,79,.12);
+        color: var(--cb-accent);
         border-color: transparent;
     }
 
-    .cat-filter-section { margin-bottom: 20px; }
-    .cat-filter-section:last-child { margin-bottom: 0; }
-
-    .cat-filter-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--cb-brand-text);
-        margin-bottom: 10px;
+    /* filter form */
+    .cat-filter-form { padding: 14px 16px; }
+    .cat-filter-sec { margin-bottom: 18px; }
+    .cat-filter-sec:last-child { margin-bottom: 0; }
+    .cat-filter-lbl {
         display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--cb-text);
+        margin-bottom: 9px;
+        letter-spacing: .1px;
     }
+    .cat-hr { height: 1px; background: var(--cb-border); margin: 16px 0; }
 
-    .cat-range-wrap { display: flex; flex-direction: column; gap: 8px; }
-
-    .cat-range-input {
-        width: 100%;
-        accent-color: var(--cb-brand-accent);
-        cursor: pointer;
-    }
-
-    .cat-range-display {
+    /* range */
+    .cat-range { width: 100%; accent-color: var(--cb-accent); cursor: pointer; margin-bottom: 6px; }
+    .cat-range-vals {
         display: flex;
         justify-content: space-between;
         font-size: 12px;
         font-weight: 600;
-        color: var(--cb-brand-text);
-        background: var(--cb-brand-bg);
-        border: 1px solid var(--cb-brand-border);
-        border-radius: 8px;
+        color: var(--cb-text);
+        background: var(--cb-bg);
+        border: 1px solid var(--cb-border);
+        border-radius: var(--cb-radius-sm);
         padding: 7px 12px;
     }
 
+    /* select */
     .cat-select {
         width: 100%;
-        font-family: var(--cb-font-sans);
+        font-family: var(--cb-sans);
         font-size: 13px;
         padding: 10px 14px;
-        border: 1.5px solid var(--cb-brand-border);
-        border-radius: 10px;
-        background: var(--cb-brand-white);
-        color: var(--cb-brand-text);
+        border: 1.5px solid var(--cb-border);
+        border-radius: var(--cb-radius-sm);
+        background: var(--cb-white);
+        color: var(--cb-text);
         outline: none;
         cursor: pointer;
-        transition: border-color 0.2s;
+        transition: border-color .2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
     }
+    .cat-select:focus { border-color: var(--cb-accent); }
 
-    .cat-select:focus { border-color: var(--cb-brand-accent); }
-
-    .cat-radio-group { display: flex; flex-direction: column; gap: 8px; }
-
-    .cat-radio-label {
+    /* radio */
+    .cat-radio { display: flex; flex-direction: column; gap: 8px; }
+    .cat-radio label {
         display: flex;
         align-items: center;
         gap: 9px;
         font-size: 13px;
-        color: #444;
+        color: #555;
         cursor: pointer;
     }
+    .cat-radio input[type="radio"] { accent-color: var(--cb-accent); width: 14px; height: 14px; }
 
-    .cat-radio-label input { accent-color: var(--cb-brand-accent); }
-
-    .cat-filter-divider {
-        height: 1px;
-        background: var(--cb-brand-border);
-        margin: 18px 0;
+    /* filter buttons */
+    .cat-filter-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+    .cat-filter-submit {
+        font-family: var(--cb-sans);
+        font-size: 13px; font-weight: 600;
+        padding: 10px; border-radius: var(--cb-radius-sm);
+        border: none; background: var(--cb-text); color: #fff;
+        cursor: pointer; transition: background .2s;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
     }
-
-    .cat-filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
-
-    .cat-btn-primary {
-        font-family: var(--cb-font-sans);
-        font-size: 13px;
-        font-weight: 600;
-        padding: 10px;
-        border-radius: 10px;
-        border: none;
-        background: var(--cb-brand-text);
-        color: #fff;
-        cursor: pointer;
-        transition: background 0.2s;
-        text-align: center;
+    .cat-filter-submit:hover { background: var(--cb-accent); }
+    .cat-filter-reset {
+        font-family: var(--cb-sans);
+        font-size: 13px; font-weight: 500;
+        padding: 10px; border-radius: var(--cb-radius-sm);
+        border: 1.5px solid var(--cb-border);
+        background: transparent; color: var(--cb-muted);
+        cursor: pointer; transition: all .2s;
+        display: flex; align-items: center; justify-content: center;
         text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
+    .cat-filter-reset:hover { border-color: var(--cb-text); color: var(--cb-text); }
 
-    .cat-btn-primary:hover { background: var(--cb-brand-accent); }
-
-    .cat-btn-ghost {
-        font-family: var(--cb-font-sans);
-        font-size: 13px;
-        font-weight: 500;
-        padding: 10px;
-        border-radius: 10px;
-        border: 1.5px solid var(--cb-brand-border);
-        background: transparent;
-        color: var(--cb-brand-muted);
+    /* ─── Mobile sidebar toggle ──────────────────────────────── */
+    .cat-toggle {
+        display: none;
+        width: 100%;
+        font-family: var(--cb-sans);
+        font-size: 14px; font-weight: 600;
+        padding: 12px 18px;
+        border-radius: var(--cb-radius-md);
+        border: 1.5px solid var(--cb-border);
+        background: var(--cb-white);
+        color: var(--cb-text);
         cursor: pointer;
-        transition: all 0.2s;
-        text-align: center;
-        text-decoration: none;
-        display: flex;
+        margin-bottom: 14px;
+        text-align: left;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
+        transition: border-color .2s;
+    }
+    .cat-toggle svg { transition: transform .25s; flex-shrink: 0; }
+    .cat-toggle.open svg { transform: rotate(180deg); }
+    @media (max-width: 920px) {
+        .cat-toggle  { display: flex; }
+        .cat-sidebar { display: none; position: static; }
+        .cat-sidebar.open { display: flex; }
     }
 
-    .cat-btn-ghost:hover { border-color: var(--cb-brand-text); color: var(--cb-brand-text); }
-
+    /* ─── Toolbar ────────────────────────────────────────────── */
     .cat-toolbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 12px;
-        background: var(--cb-brand-white);
-        border: 1px solid var(--cb-brand-border);
-        border-radius: 14px;
+        background: var(--cb-white);
+        border: 1px solid var(--cb-border);
+        border-radius: var(--cb-radius-md);
         padding: 12px 18px;
-        margin-bottom: 18px;
+        margin-bottom: 16px;
     }
-
-    .cat-toolbar-count {
+    .cat-count {
         font-size: 13px;
-        color: var(--cb-brand-muted);
+        color: var(--cb-muted);
     }
-
-    .cat-toolbar-count strong { color: var(--cb-brand-text); font-weight: 600; }
+    .cat-count strong { color: var(--cb-text); font-weight: 600; }
+    .cat-count em { font-style: normal; color: var(--cb-accent); font-weight: 500; }
 
     .cat-toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-    .cat-sort-select {
-        font-family: var(--cb-font-sans);
+    .cat-sort {
+        font-family: var(--cb-sans);
         font-size: 13px;
-        padding: 7px 12px;
-        border: 1.5px solid var(--cb-brand-border);
-        border-radius: 10px;
-        background: var(--cb-brand-white);
-        color: var(--cb-brand-text);
-        outline: none;
-        cursor: pointer;
-        transition: border-color 0.2s;
+        padding: 8px 14px;
+        border: 1.5px solid var(--cb-border);
+        border-radius: var(--cb-radius-sm);
+        background: var(--cb-white);
+        color: var(--cb-text);
+        outline: none; cursor: pointer;
+        transition: border-color .2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 30px;
     }
+    .cat-sort:focus { border-color: var(--cb-accent); }
 
-    .cat-sort-select:focus { border-color: var(--cb-brand-accent); }
-
-    .cat-view-toggle {
+    .cat-view {
         display: flex;
-        border: 1.5px solid var(--cb-brand-border);
-        border-radius: 10px;
+        border: 1.5px solid var(--cb-border);
+        border-radius: var(--cb-radius-sm);
         overflow: hidden;
     }
-
-    .cat-view-btn {
+    .cat-view a {
         padding: 7px 13px;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--cb-brand-muted);
+        font-size: 14px;
+        color: var(--cb-muted);
         text-decoration: none;
         background: transparent;
-        border: none;
-        transition: all 0.15s;
-        cursor: pointer;
+        transition: all .15s;
         line-height: 1;
+        display: flex; align-items: center;
     }
+    .cat-view a:hover { background: var(--cb-bg); color: var(--cb-text); }
+    .cat-view a.active { background: var(--cb-text); color: #fff; }
 
-    .cat-view-btn:hover { color: var(--cb-brand-text); background: var(--cb-brand-bg); }
-
-    .cat-view-btn.active {
-        background: var(--cb-brand-text);
-        color: #fff;
-    }
-
+    /* ─── Empty state ────────────────────────────────────────── */
     .cat-empty {
-        background: var(--cb-brand-white);
-        border: 1.5px dashed var(--cb-brand-border);
-        border-radius: 20px;
-        padding: 64px 32px;
+        background: var(--cb-white);
+        border: 2px dashed var(--cb-border);
+        border-radius: var(--cb-radius-xl);
+        padding: 72px 32px;
         text-align: center;
     }
-
-    .cat-empty-icon {
-        font-size: 40px;
-        color: #c9bfa8;
-        margin-bottom: 16px;
-        line-height: 1;
-    }
-
+    .cat-empty svg { color: #d0c8be; margin-bottom: 16px; }
     .cat-empty h3 {
-        font-family: var(--cb-font-serif);
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--cb-brand-text);
-        margin: 0 0 8px;
+        font-family: var(--cb-serif);
+        font-size: 22px; font-weight: 700;
+        color: var(--cb-text);
+        margin-bottom: 8px;
     }
-
-    .cat-empty p {
-        font-size: 14px;
-        color: var(--cb-brand-muted);
-        margin: 0 0 24px;
+    .cat-empty p { font-size: 14px; color: var(--cb-muted); margin-bottom: 24px; }
+    .cat-empty-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: var(--cb-sans);
+        font-size: 13px; font-weight: 600;
+        padding: 10px 24px;
+        border-radius: var(--cb-radius-sm);
+        background: var(--cb-text); color: #fff;
+        text-decoration: none;
+        transition: background .2s;
     }
+    .cat-empty-btn:hover { background: var(--cb-accent); }
 
+    /* ─── GRID view ──────────────────────────────────────────── */
     .cat-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
+        gap: 14px;
     }
+    @media (max-width: 1080px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px)  { .cat-grid { grid-template-columns: 1fr; } }
 
-    @media (max-width: 1100px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .cat-grid { grid-template-columns: 1fr; } }
-
-    .cat-book-card {
-        background: var(--cb-brand-white);
-        border: 1px solid var(--cb-brand-border);
-        border-radius: 16px;
+    .cat-gcard {
+        background: var(--cb-white);
+        border: 1px solid var(--cb-border);
+        border-radius: var(--cb-radius-lg);
         overflow: hidden;
+        display: block;
         text-decoration: none;
-        display: block;
-        transition: transform 0.22s, box-shadow 0.22s;
+        transition: transform .22s ease, box-shadow .22s ease;
     }
-
-    .cat-book-card:hover {
+    .cat-gcard:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 36px rgba(0,0,0,0.09);
+        box-shadow: var(--cb-shadow-lg);
     }
 
-    .cat-book-thumb {
-        height: 200px;
-        background: #f0ede6;
-        overflow: hidden;
+    .cat-gcard-img {
+        height: 196px;
+        background: #ede9e1;
         position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
     }
-
-    .cat-book-thumb img {
-        width: 100%;
-        height: 100%;
+    .cat-gcard-img img {
+        width: 100%; height: 100%;
         object-fit: cover;
-        display: block;
+        transition: transform .4s ease;
+    }
+    .cat-gcard:hover .cat-gcard-img img { transform: scale(1.04); }
+    .cat-gcard-placeholder {
+        font-family: var(--cb-serif);
+        font-size: 52px; font-weight: 900;
+        color: #c5bdb0;
     }
 
-    .cat-book-thumb-placeholder {
-        font-family: var(--cb-font-serif);
-        font-size: 48px;
-        font-weight: 900;
-        color: #c9bfa8;
-    }
-
-    .cat-stock-badge {
+    /* overlaid badges */
+    .cat-gcard-badges {
         position: absolute;
-        top: 10px;
-        left: 10px;
-        font-size: 10px;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 999px;
-        letter-spacing: 0.4px;
+        top: 10px; left: 10px;
+        display: flex; flex-direction: column; gap: 4px;
     }
+    .cb-badge {
+        font-size: 10px; font-weight: 700;
+        padding: 3px 10px; border-radius: 999px;
+        letter-spacing: .4px; line-height: 1.4;
+        backdrop-filter: blur(4px);
+    }
+    .cb-badge-discount { background: rgba(220,38,38,.88); color: #fff; }
+    .cb-badge-stock-in  { background: rgba(45,106,79,.88); color: #fff; }
+    .cb-badge-stock-out { background: rgba(146,64,14,.88); color: #fff; }
 
-    .cat-stock-badge.in { background: var(--cb-brand-accent-light); color: var(--cb-brand-accent); }
-    .cat-stock-badge.out { background: #fef3c7; color: #92400e; }
-
-    .cat-book-body { padding: 16px; }
-
-    .cat-book-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--cb-brand-text);
+    .cat-gcard-body { padding: 14px 16px 16px; }
+    .cat-gcard-title {
+        font-size: 14px; font-weight: 600;
+        color: var(--cb-text);
         line-height: 1.4;
         display: -webkit-box;
-        line-clamp: 2;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         overflow: hidden;
-        margin: 0 0 5px;
+        margin-bottom: 4px;
+        transition: color .15s;
     }
-
-    .cat-book-card:hover .cat-book-title { color: var(--cb-brand-accent); }
-
-    .cat-book-author {
-        font-size: 12px;
-        color: #aaa;
-        margin: 0 0 12px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .cat-gcard:hover .cat-gcard-title { color: var(--cb-accent); }
+    .cat-gcard-author {
+        font-size: 12px; color: #aaa;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        margin-bottom: 12px;
     }
-
-    .cat-book-footer {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
+    .cat-gcard-foot {
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
         padding-top: 12px;
-        border-top: 1px solid var(--cb-brand-border);
-        gap: 8px;
+        border-top: 1px solid var(--cb-border);
     }
-
-    .cat-book-price {
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--cb-brand-accent);
-        line-height: 1;
+    .cat-price {
+        font-size: 17px; font-weight: 700;
+        color: var(--cb-accent); line-height: 1;
     }
-
-    .cat-book-orig {
-        font-size: 11px;
-        color: #bbb;
-        text-decoration: line-through;
-        margin-top: 3px;
+    .cat-price-orig {
+        font-size: 11px; color: #c0b8b0;
+        text-decoration: line-through; margin-top: 3px;
     }
-
     .cat-detail-btn {
-        font-family: var(--cb-font-sans);
-        font-size: 12px;
-        font-weight: 600;
-        padding: 7px 14px;
-        border-radius: 8px;
-        background: var(--cb-brand-text);
-        color: #fff;
-        text-decoration: none;
-        border: none;
-        cursor: pointer;
-        transition: background 0.2s;
+        font-family: var(--cb-sans);
+        font-size: 12px; font-weight: 600;
+        padding: 7px 14px; border-radius: var(--cb-radius-sm);
+        background: var(--cb-text); color: #fff;
+        text-decoration: none; border: none;
+        cursor: pointer; flex-shrink: 0;
+        transition: background .2s;
         white-space: nowrap;
-        flex-shrink: 0;
     }
+    .cat-detail-btn:hover { background: var(--cb-accent); }
 
-    .cat-detail-btn:hover { background: var(--cb-brand-accent); }
+    /* ─── LIST view ──────────────────────────────────────────── */
+    .cat-list { display: flex; flex-direction: column; gap: 10px; }
 
-    .cat-list { display: flex; flex-direction: column; gap: 12px; }
-
-    .cat-list-card {
-        background: var(--cb-brand-white);
-        border: 1px solid var(--cb-brand-border);
-        border-radius: 16px;
+    .cat-lcard {
+        background: var(--cb-white);
+        border: 1px solid var(--cb-border);
+        border-radius: var(--cb-radius-lg);
         overflow: hidden;
         display: grid;
-        grid-template-columns: 130px 1fr;
-        gap: 0;
+        grid-template-columns: 120px 1fr;
         text-decoration: none;
-        transition: box-shadow 0.22s;
+        transition: box-shadow .22s, border-color .22s;
     }
-
-    .cat-list-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
-
-    .cat-list-thumb {
-        height: 150px;
-        overflow: hidden;
-        background: #f0ede6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
+    .cat-lcard:hover {
+        box-shadow: var(--cb-shadow-md);
+        border-color: #d8d2c8;
     }
-
-    .cat-list-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+    .cat-lcard-img {
+        background: #ede9e1;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; position: relative;
+        min-height: 148px;
     }
-
-    .cat-list-thumb-placeholder {
-        font-family: var(--cb-font-serif);
-        font-size: 36px;
-        font-weight: 900;
-        color: #c9bfa8;
+    .cat-lcard-img img { width: 100%; height: 100%; object-fit: cover; }
+    .cat-lcard-placeholder {
+        font-family: var(--cb-serif);
+        font-size: 38px; font-weight: 900; color: #c5bdb0;
     }
-
-    .cat-list-body {
+    .cat-lcard-body {
         padding: 16px 20px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        display: flex; flex-direction: column; justify-content: space-between;
     }
-
-    .cat-list-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--cb-brand-text);
-        margin: 0 0 5px;
-        line-height: 1.4;
-        text-decoration: none;
+    .cat-lcard-title {
+        font-size: 15px; font-weight: 600;
+        color: var(--cb-text);
+        line-height: 1.4; margin-bottom: 4px;
+        transition: color .15s;
     }
-
-    .cat-list-card:hover .cat-list-title { color: var(--cb-brand-accent); }
-
-    .cat-list-author { font-size: 13px; color: #999; margin: 0 0 8px; }
-
-    .cat-list-desc {
-        font-size: 13px;
-        color: var(--cb-brand-muted);
-        line-height: 1.6;
+    .cat-lcard:hover .cat-lcard-title { color: var(--cb-accent); }
+    .cat-lcard-author { font-size: 12px; color: #aaa; margin-bottom: 8px; }
+    .cat-lcard-desc {
+        font-size: 13px; color: var(--cb-muted);
+        line-height: 1.65;
         display: -webkit-box;
-        line-clamp: 2;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         overflow: hidden;
-        margin: 0 0 14px;
+        margin-bottom: 14px;
+        flex: 1;
+    }
+    .cat-lcard-foot {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
 
-    .cat-list-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-    }
-
+    /* ─── Pagination ─────────────────────────────────────────── */
     .cat-pagination {
         margin-top: 28px;
-        display: flex;
-        justify-content: center;
+        display: flex; justify-content: center;
     }
-
-    .cat-pagination nav { display: flex; align-items: center; gap: 6px; }
-    .cat-pagination span,
-    .cat-pagination a {
-        font-family: var(--cb-font-sans);
-        font-size: 13px;
-        font-weight: 500;
-        padding: 7px 14px;
+    /* Override Laravel pagination */
+    .cat-pagination nav {
+        display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: center;
+    }
+    .cat-pagination nav span,
+    .cat-pagination nav a {
+        font-family: var(--cb-sans);
+        font-size: 13px; font-weight: 500;
+        padding: 7px 13px;
         border-radius: 9px;
-        border: 1.5px solid var(--cb-brand-border);
-        background: var(--cb-brand-white);
-        color: var(--cb-brand-muted);
+        border: 1.5px solid var(--cb-border);
+        background: var(--cb-white);
+        color: var(--cb-muted);
         text-decoration: none;
-        transition: all 0.15s;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 38px;
+        transition: all .15s;
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 36px;
     }
-
-    .cat-pagination a:hover { border-color: var(--cb-brand-accent); color: var(--cb-brand-accent); }
-    .cat-pagination [aria-current="page"] span,
-    .cat-pagination span[aria-current="page"] {
-        background: var(--cb-brand-text);
-        border-color: var(--cb-brand-text);
-        color: #fff;
+    .cat-pagination nav a:hover {
+        border-color: var(--cb-accent); color: var(--cb-accent);
     }
-
-    .cat-sidebar-toggle {
-        display: none;
-        width: 100%;
-        font-family: var(--cb-font-sans);
-        font-size: 14px;
-        font-weight: 600;
-        padding: 12px 18px;
-        border-radius: 12px;
-        border: 1.5px solid var(--cb-brand-border);
-        background: var(--cb-brand-white);
-        color: var(--cb-brand-text);
-        cursor: pointer;
-        margin-bottom: 12px;
-        text-align: left;
-        justify-content: space-between;
-        align-items: center;
-        transition: border-color 0.2s;
+    .cat-pagination nav [aria-current="page"] > span,
+    .cat-pagination nav span[aria-current="page"] {
+        background: var(--cb-text); border-color: var(--cb-text); color: #fff;
     }
-
-    @media (max-width: 900px) {
-        .cat-sidebar-toggle { display: flex; }
-        .cat-sidebar { display: none; }
-        .cat-sidebar.open { display: flex; }
-    }
+    .cat-pagination nav span[aria-disabled="true"] { opacity: .4; pointer-events: none; }
     </style>
-</head>
-<body class="cb-site text-slate-800">
+@endsection
 
-    <x-navbar />
+@section('content')
 
-    @php
-        $parentSlug = $selectedParent?->slug;
-        $childSlug = $selectedChild?->slug;
-        $queryBase = [
-            'q' => $keyword,
-            'sort' => $sortBy,
-            'view' => $viewMode,
-        ];
-        $clearFilterUrl = route('catalog.categories', []);
-        $isViewingAll = $selectedParent === null;
-    @endphp
+<div class="cat-wrap">
 
-    <main class="cb-page cat-page">
-        <section class="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-end lg:justify-between lg:p-5">
-            <div>
-                <div class="mb-2 text-sm text-slate-500">
-                    <a href="{{ route('home') }}" class="hover:text-orange-600">Trang chủ</a>
-                    <span class="mx-1">/</span>
-                    <span class="text-slate-700">Danh mục</span>
-                    @if($selectedParent)
-                        <span class="mx-1">/</span>
-                        <span class="text-slate-700">{{ $selectedParent->name }}</span>
-                    @endif
+@php
+    $parentSlug = $selectedParent?->slug;
+    $childSlug  = $selectedChild?->slug;
+    $queryBase  = [
+        'q'         => $keyword,
+        'sort'      => $sortBy,
+        'view'      => $viewMode,
+        'min_price' => $minPrice  ?? null,
+        'max_price' => $maxPrice  ?? null,
+        'language'  => $languageFilter ?? null,
+        'stock'     => $stockFilter    ?? null,
+    ];
+    $clearUrl = route('catalog.categories', []);
+@endphp
+
+    {{-- ── HERO ─────────────────────────────────────────────── --}}
+    <div class="cat-hero">
+        <div style="flex:1; min-width:260px">
+            {{-- Breadcrumb --}}
+            <nav class="cat-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('home') }}">Trang chủ</a>
+                <span class="cat-breadcrumb-sep">/</span>
+                @if($selectedParent)
+                    <a href="{{ route('catalog.categories') }}">Danh mục</a>
+                    <span class="cat-breadcrumb-sep">/</span>
                     @if($selectedChild)
-                        <span class="mx-1">/</span>
-                        <span class="text-slate-700">{{ $selectedChild->name }}</span>
+                        @php $ppQ = array_filter(array_merge($queryBase,['parent'=>$parentSlug,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='') @endphp
+                        <a href="{{ route('catalog.categories', $ppQ) }}">{{ $selectedParent->name }}</a>
+                        <span class="cat-breadcrumb-sep">/</span>
+                        <span style="color:var(--cb-text)">{{ $selectedChild->name }}</span>
+                    @else
+                        <span style="color:var(--cb-text)">{{ $selectedParent->name }}</span>
                     @endif
+                @else
+                    <span style="color:var(--cb-text)">Danh mục</span>
+                @endif
+            </nav>
+
+            <div class="cat-eyebrow">Danh mục sách</div>
+
+            <h1>
+                @if($selectedChild)
+                    <em>{{ $selectedChild->name }}</em>
+                @elseif($selectedParent)
+                    {{ $selectedParent->name }}
+                @else
+                    Khám phá <em>sách hay</em>
+                @endif
+            </h1>
+
+            <div class="cat-stats">
+                <span class="cat-stat-chip">
+                    <strong>{{ number_format($totalCategories) }}</strong> danh mục
+                </span>
+                <span class="cat-stat-chip">
+                    <strong>{{ number_format($totalBooks) }}</strong> đầu sách
+                </span>
+                @if($keyword)
+                    <span class="cat-stat-chip" style="background:#fff8e6; border-color:#f5d87a; color:#92400e">
+                        Kết quả cho: <strong>{{ $keyword }}</strong>
+                    </span>
+                @endif
+            </div>
+        </div>
+
+        {{-- Search --}}
+        <form method="GET" action="{{ route('catalog.categories') }}" class="cat-hero-search">
+            @if($parentSlug) <input type="hidden" name="parent" value="{{ $parentSlug }}"> @endif
+            @if($childSlug)  <input type="hidden" name="child"  value="{{ $childSlug }}">  @endif
+            <input type="search" name="q" value="{{ $keyword }}"
+                   placeholder="Tìm sách, tác giả, ISBN..."
+                   autocomplete="off">
+            <button type="submit">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="margin-right:6px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Tìm kiếm
+            </button>
+        </form>
+    </div>
+
+    {{-- ── PARENT PILLS ─────────────────────────────────────── --}}
+    <div class="cat-parents">
+        @php
+            $allQ = array_filter(array_merge($queryBase,['parent'=>null,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
+        @endphp
+        <a href="{{ route('catalog.categories', $allQ) }}"
+           class="cat-pill {{ !$selectedParent ? 'active' : '' }}">
+            Tất cả
+            <span class="n">{{ $parentCategories->sum('children_count') }}</span>
+        </a>
+        @foreach($parentCategories as $par)
+            @php
+                $pQ = array_filter(array_merge($queryBase,['parent'=>$par->slug,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
+            @endphp
+            <a href="{{ route('catalog.categories', $pQ) }}"
+               class="cat-pill {{ $selectedParent?->id===$par->id ? 'active' : '' }}">
+                {{ $par->name }}
+                <span class="n">{{ $par->children_count }}</span>
+            </a>
+        @endforeach
+    </div>
+
+    {{-- ── MOBILE TOGGLE ───────────────────────────────────── --}}
+    <button class="cat-toggle" id="cat-toggle" type="button" aria-expanded="false">
+        <span style="display:flex;align-items:center;gap:8px">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
+            Bộ lọc &amp; danh mục con
+        </span>
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+
+    {{-- ── 2-COL LAYOUT ────────────────────────────────────── --}}
+    <div class="cat-layout">
+
+        {{-- SIDEBAR --}}
+        <aside class="cat-sidebar" id="cat-sidebar">
+
+            {{-- Danh mục con --}}
+            @if($selectedParent)
+                <div class="cat-card">
+                    <div class="cat-card-head">Danh mục con</div>
+                    <div class="cat-card-body">
+                        @php
+                            $acQ = array_filter(array_merge($queryBase,['parent'=>$selectedParent->slug,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
+                        @endphp
+                        <a href="{{ route('catalog.categories', $acQ) }}"
+                           class="cat-child-link {{ !$selectedChild ? 'active' : '' }}">
+                            <span>Tất cả trong {{ $selectedParent->name }}</span>
+                        </a>
+                        @forelse($childCategories as $child)
+                            @php
+                                $cQ = array_filter(array_merge($queryBase,['parent'=>$selectedParent->slug,'child'=>$child->slug,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
+                            @endphp
+                            <a href="{{ route('catalog.categories', $cQ) }}"
+                               class="cat-child-link {{ $selectedChild?->id===$child->id ? 'active' : '' }}">
+                                <span>{{ $child->name }}</span>
+                                <span class="cat-child-badge">{{ $child->books_count }}</span>
+                            </a>
+                        @empty
+                            <p style="font-size:13px;color:#bbb;padding:6px 10px">Không có danh mục con.</p>
+                        @endforelse
+                    </div>
                 </div>
+            @endif
 
-                <h1 class="text-3xl font-black text-slate-900">{{ $heading ?? 'Danh mục sách' }}</h1>
-                <p class="mt-2 max-w-2xl text-sm text-slate-600">
-                    Khám phá sách theo danh mục, bộ lọc và sắp xếp giống các trang nội dung khác trong hệ thống.
+            {{-- Bộ lọc --}}
+            <div class="cat-card">
+                <div class="cat-card-head">Bộ lọc</div>
+                <form method="GET" action="{{ route('catalog.categories') }}" class="cat-filter-form">
+                    @if($parentSlug) <input type="hidden" name="parent" value="{{ $parentSlug }}"> @endif
+                    @if($childSlug)  <input type="hidden" name="child"  value="{{ $childSlug }}">  @endif
+                    <input type="hidden" name="q"    value="{{ $keyword }}">
+                    <input type="hidden" name="sort" value="{{ $sortBy }}">
+                    <input type="hidden" name="view" value="{{ $viewMode }}">
+
+                    {{-- Khoảng giá --}}
+                    @if(isset($minPossiblePrice, $maxPossiblePrice))
+                        <div class="cat-filter-sec">
+                            <span class="cat-filter-lbl">Khoảng giá</span>
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px">
+                                <span>Từ</span><span>Đến</span>
+                            </div>
+                            <input id="minRange" type="range" name="min_price" class="cat-range"
+                                   min="{{ $minPossiblePrice }}" max="{{ $maxPossiblePrice }}"
+                                   value="{{ $minPrice ?? $minPossiblePrice }}">
+                            <input id="maxRange" type="range" name="max_price" class="cat-range"
+                                   min="{{ $minPossiblePrice }}" max="{{ $maxPossiblePrice }}"
+                                   value="{{ $maxPrice ?? $maxPossiblePrice }}">
+                            <div class="cat-range-vals">
+                                <span id="minRangeLabel">{{ number_format((float)($minPrice ?? $minPossiblePrice), 0, ',', '.') }}đ</span>
+                                <span id="maxRangeLabel">{{ number_format((float)($maxPrice ?? $maxPossiblePrice), 0, ',', '.') }}đ</span>
+                            </div>
+                        </div>
+                        <div class="cat-hr"></div>
+                    @endif
+
+                    {{-- Ngôn ngữ --}}
+                    @if(isset($availableLanguages) && $availableLanguages->count())
+                        <div class="cat-filter-sec">
+                            <span class="cat-filter-lbl">Ngôn ngữ</span>
+                            <select name="language" class="cat-select">
+                                <option value="">Tất cả ngôn ngữ</option>
+                                @foreach($availableLanguages as $lang)
+                                    <option value="{{ $lang }}" {{ ($languageFilter??'')===$lang ? 'selected' : '' }}>{{ $lang }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="cat-hr"></div>
+                    @endif
+
+                    {{-- Tình trạng --}}
+                    <div class="cat-filter-sec">
+                        <span class="cat-filter-lbl">Tình trạng</span>
+                        <div class="cat-radio">
+                            <label><input type="radio" name="stock" value="all"          {{ ($stockFilter??'all')==='all'          ? 'checked' : '' }}> Tất cả</label>
+                            <label><input type="radio" name="stock" value="in_stock"     {{ ($stockFilter??'')==='in_stock'         ? 'checked' : '' }}> Còn hàng</label>
+                            <label><input type="radio" name="stock" value="out_of_stock" {{ ($stockFilter??'')==='out_of_stock'     ? 'checked' : '' }}> Tạm hết hàng</label>
+                        </div>
+                    </div>
+
+                    <div class="cat-filter-btns">
+                        <button type="submit" class="cat-filter-submit">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                            Áp dụng
+                        </button>
+                        <a href="{{ $clearUrl }}" class="cat-filter-reset">Xoá lọc</a>
+                    </div>
+                </form>
+            </div>
+
+        </aside>
+
+        {{-- MAIN CONTENT --}}
+        <section>
+
+            {{-- Toolbar --}}
+            <div class="cat-toolbar">
+                <p class="cat-count">
+                    Tìm thấy <strong>{{ number_format($books->total()) }}</strong> đầu sách
+                    @if($keyword)
+                        &nbsp;cho <em>"{{ $keyword }}"</em>
+                    @endif
                 </p>
+                <div class="cat-toolbar-right">
+                    {{-- Sort --}}
+                    <form method="GET" action="{{ route('catalog.categories') }}">
+                        @if($parentSlug) <input type="hidden" name="parent" value="{{ $parentSlug }}"> @endif
+                        @if($childSlug)  <input type="hidden" name="child"  value="{{ $childSlug }}">  @endif
+                        <input type="hidden" name="q"         value="{{ $keyword }}">
+                        <input type="hidden" name="view"      value="{{ $viewMode }}">
+                        <input type="hidden" name="min_price" value="{{ $minPrice ?? '' }}">
+                        <input type="hidden" name="max_price" value="{{ $maxPrice ?? '' }}">
+                        <input type="hidden" name="language"  value="{{ $languageFilter ?? '' }}">
+                        <input type="hidden" name="stock"     value="{{ $stockFilter ?? '' }}">
+                        <select name="sort" class="cat-sort" onchange="this.form.submit()">
+                            <option value="newest"     {{ $sortBy==='newest'     ? 'selected':'' }}>Mới nhất</option>
+                            <option value="popular"    {{ $sortBy==='popular'    ? 'selected':'' }}>Phổ biến</option>
+                            <option value="price_asc"  {{ $sortBy==='price_asc'  ? 'selected':'' }}>Giá tăng dần</option>
+                            <option value="price_desc" {{ $sortBy==='price_desc' ? 'selected':'' }}>Giá giảm dần</option>
+                            <option value="title_asc"  {{ $sortBy==='title_asc'  ? 'selected':'' }}>Tên A–Z</option>
+                        </select>
+                    </form>
 
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">
-                        <strong class="text-slate-900">{{ $totalCategories }}</strong> danh mục
-                    </span>
-                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">
-                        <strong class="text-slate-900">{{ number_format($totalBooks) }}</strong> đầu sách
-                    </span>
+                    {{-- View toggle --}}
+                    @php
+                        $gQ = array_filter(array_merge($queryBase,['parent'=>$parentSlug,'child'=>$childSlug,'view'=>'grid','page'=>null]),fn($v)=>$v!==null&&$v!=='');
+                        $lQ = array_filter(array_merge($queryBase,['parent'=>$parentSlug,'child'=>$childSlug,'view'=>'list','page'=>null]),fn($v)=>$v!==null&&$v!=='');
+                    @endphp
+                    <div class="cat-view">
+                        <a href="{{ route('catalog.categories', $gQ) }}"
+                           class="{{ $viewMode==='grid' ? 'active':'' }}"
+                           title="Dạng lưới">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        </a>
+                        <a href="{{ route('catalog.categories', $lQ) }}"
+                           class="{{ $viewMode==='list' ? 'active':'' }}"
+                           title="Dạng danh sách">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('catalog.categories') }}" class="w-full max-w-xl">
-                @if($parentSlug) <input type="hidden" name="parent" value="{{ $parentSlug }}"> @endif
-                @if($childSlug) <input type="hidden" name="child" value="{{ $childSlug }}"> @endif
-                <div class="flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <input
-                        type="search"
-                        name="q"
-                        value="{{ $keyword }}"
-                        placeholder="Tìm sách, tác giả, ISBN..."
-                        class="w-full border-0 bg-transparent px-4 py-3 text-sm text-slate-700 outline-none"
-                    >
-                    <button type="submit" class="bg-slate-900 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700">
-                        Tìm nhanh
-                    </button>
+            {{-- Books --}}
+            @if($books->count() === 0)
+                <div class="cat-empty">
+                    <svg width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <h3>Không tìm thấy sách phù hợp</h3>
+                    <p>Thử thay đổi bộ lọc hoặc dùng từ khoá khác.</p>
+                    <a href="{{ $clearUrl }}" class="cat-empty-btn">Xoá bộ lọc</a>
                 </div>
-            </form>
-        </section>
 
-        <div class="cat-parents">
-            @php
-                $allQuery = array_filter(array_merge($queryBase, [
-                    'parent' => null,
-                    'child' => null,
-                    'page' => null,
-                ]), fn ($v) => $v !== null && $v !== '');
-            @endphp
-
-            <a href="{{ route('catalog.categories', $allQuery) }}" class="cat-parent-pill {{ $isViewingAll ? 'active' : '' }}">
-                Tất cả
-                <span class="cnt">{{ $parentCategories->sum('children_count') }}</span>
-            </a>
-
-            @foreach($parentCategories as $parent)
-                @php
-                    $parentQuery = array_filter(array_merge($queryBase, [
-                        'parent' => $parent->slug,
-                        'child' => null,
-                        'page' => null,
-                    ]), fn ($v) => $v !== null && $v !== '');
-                @endphp
-                <a href="{{ route('catalog.categories', $parentQuery) }}" class="cat-parent-pill {{ $selectedParent?->id === $parent->id ? 'active' : '' }}">
-                    {{ $parent->name }}
-                    <span class="cnt">{{ $parent->children_count }}</span>
-                </a>
-            @endforeach
-        </div>
-
-        <button class="cat-sidebar-toggle" id="cat-sidebar-toggle" type="button" aria-expanded="false">
-            <span>Bộ lọc &amp; danh mục con</span>
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-        </button>
-
-        <div class="cat-layout">
-            <aside class="cat-sidebar" id="cat-sidebar">
-                @if($selectedParent)
-                    <div class="cat-card">
-                        <p class="cat-card-title">Danh mục con</p>
-                        <div class="cat-child-list">
-                            @php
-                                $allChildQuery = array_filter(array_merge($queryBase, [
-                                    'parent' => $selectedParent->slug,
-                                    'child' => null,
-                                    'page' => null,
-                                ]), fn ($v) => $v !== null && $v !== '');
-                            @endphp
-                            <a href="{{ route('catalog.categories', $allChildQuery) }}" class="cat-child-link {{ !$selectedChild ? 'active' : '' }}">
-                                <span>Tất cả trong {{ $selectedParent->name }}</span>
-                            </a>
-
-                            @forelse($childCategories as $child)
-                                @php
-                                    $childQuery = array_filter(array_merge($queryBase, [
-                                        'parent' => $selectedParent->slug,
-                                        'child' => $child->slug,
-                                        'page' => null,
-                                    ]), fn ($v) => $v !== null && $v !== '');
-                                @endphp
-                                <a href="{{ route('catalog.categories', $childQuery) }}" class="cat-child-link {{ $selectedChild?->id === $child->id ? 'active' : '' }}">
-                                    <span>{{ $child->name }}</span>
-                                    <span class="cat-child-cnt">{{ $child->books_count }}</span>
-                                </a>
-                            @empty
-                                <p style="font-size:13px; color:#aaa; padding: 8px 12px; margin:0">
-                                    Không có danh mục con.
-                                </p>
-                            @endforelse
-                        </div>
-                    </div>
-                @endif
-            </aside>
-
-            <section>
-                <div class="cat-toolbar">
-                    <p class="cat-toolbar-count">
-                        Tìm thấy <strong>{{ $books->total() }}</strong> sách
-                        @if($keyword)
-                            <span> cho từ khóa <strong>{{ $keyword }}</strong></span>
-                        @endif
-                    </p>
-
-                    <div class="cat-toolbar-right">
-                        <form method="GET" action="{{ route('catalog.categories') }}" class="flex items-center gap-2">
-                            @if($parentSlug) <input type="hidden" name="parent" value="{{ $parentSlug }}"> @endif
-                            @if($childSlug) <input type="hidden" name="child" value="{{ $childSlug }}"> @endif
-                            <input type="hidden" name="q" value="{{ $keyword }}">
-                            <input type="hidden" name="view" value="{{ $viewMode }}">
-                            <select name="sort" class="cat-sort-select" onchange="this.form.submit()">
-                                <option value="newest" {{ $sortBy === 'newest' ? 'selected' : '' }}>Mới nhất</option>
-                                <option value="price_asc" {{ $sortBy === 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
-                                <option value="price_desc" {{ $sortBy === 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
-                                <option value="title_asc" {{ $sortBy === 'title_asc' ? 'selected' : '' }}>Tên A–Z</option>
-                            </select>
-                        </form>
-
+            @elseif($viewMode === 'list')
+                {{-- LIST ──────────────────────────────────── --}}
+                <div class="cat-list">
+                    @foreach($books as $book)
                         @php
-                            $gridQuery = array_filter(array_merge($queryBase, [
-                                'parent' => $parentSlug,
-                                'child' => $childSlug,
-                                'view' => 'grid',
-                                'page' => null,
-                            ]), fn ($v) => $v !== null && $v !== '');
-
-                            $listQuery = array_filter(array_merge($queryBase, [
-                                'parent' => $parentSlug,
-                                'child' => $childSlug,
-                                'view' => 'list',
-                                'page' => null,
-                            ]), fn ($v) => $v !== null && $v !== '');
+                            $cover = null;
+                            if(!empty($book->cover_image))
+                                $cover = str_starts_with($book->cover_image,'http') ? $book->cover_image : asset('storage/'.$book->cover_image);
+                            $hasDis = $book->discount_price && $book->discount_price < $book->price;
+                            $disPct = $hasDis ? round(((float)$book->price - (float)$book->discount_price)/(float)$book->price*100) : 0;
+                            $init   = mb_strtoupper(mb_substr($book->title,0,1));
                         @endphp
-
-                        <div class="cat-view-toggle">
-                            <a href="{{ route('catalog.categories', $gridQuery) }}" class="cat-view-btn {{ $viewMode === 'grid' ? 'active' : '' }}" title="Dạng lưới">▦</a>
-                            <a href="{{ route('catalog.categories', $listQuery) }}" class="cat-view-btn {{ $viewMode === 'list' ? 'active' : '' }}" title="Dạng danh sách">☰</a>
-                        </div>
-                    </div>
-                </div>
-
-                @if($books->count() === 0)
-                    <div class="cat-empty">
-                        <div class="cat-empty-icon">
-                            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:#c9bfa8">
-                                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                        </div>
-                        <h3>Không tìm thấy sách phù hợp</h3>
-                        <p>Thử thay đổi bộ lọc hoặc tìm với từ khoá khác.</p>
-                        <a href="{{ $clearFilterUrl }}" class="cat-btn-primary" style="display:inline-flex;width:auto;padding:10px 28px">Xoá bộ lọc</a>
-                    </div>
-                @elseif($viewMode === 'list')
-                    <div class="cat-list">
-                        @foreach($books as $book)
-                            @php
-                                $cover = null;
-                                if (! empty($book->cover_image)) {
-                                    $cover = str_starts_with($book->cover_image, 'http://') || str_starts_with($book->cover_image, 'https://')
-                                        ? $book->cover_image
-                                        : asset('storage/'.$book->cover_image);
-                                }
-                                $hasDiscount = $book->discount_price && $book->discount_price < $book->price;
-                                $discountPercent = $hasDiscount ? round(((float) $book->price - (float) $book->discount_price) / (float) $book->price * 100) : 0;
-                                $initial = mb_strtoupper(mb_substr($book->title, 0, 1));
-                            @endphp
-
-                            <article class="cat-list-card">
-                                <div class="cat-list-thumb">
-                                    @if($cover)
-                                        <img src="{{ $cover }}" alt="{{ $book->title }}">
-                                    @else
-                                        <span class="cat-list-thumb-placeholder">{{ $initial }}</span>
-                                    @endif
-                                    @if($hasDiscount)
-                                        <span class="cat-stock-badge out">-{{ $discountPercent }}%</span>
-                                    @endif
-                                </div>
-
-                                <div class="cat-list-body">
-                                    <div>
-                                        <a href="{{ route('catalog.book', $book->slug) }}" class="cat-list-title">{{ $book->title }}</a>
-                                        <p class="cat-list-author">{{ $book->authors->pluck('name')->join(', ') ?: 'Đang cập nhật tác giả' }}</p>
-                                        <p class="cat-list-desc">{{ $book->description ?: 'Chưa có mô tả cho đầu sách này.' }}</p>
-                                    </div>
-
-                                    <div class="cat-list-footer">
-                                        <div>
-                                            <div class="cat-book-price">{{ number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') }}đ</div>
-                                            @if($hasDiscount)
-                                                <div class="cat-book-orig">{{ number_format((float) $book->price, 0, ',', '.') }}đ</div>
-                                            @endif
-                                        </div>
-                                        <a href="{{ route('catalog.book', $book->slug) }}" class="cat-detail-btn">Xem chi tiết</a>
-                                    </div>
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="cat-grid">
-                        @foreach($books as $book)
-                            @php
-                                $cover = null;
-                                if (! empty($book->cover_image)) {
-                                    $cover = str_starts_with($book->cover_image, 'http://') || str_starts_with($book->cover_image, 'https://')
-                                        ? $book->cover_image
-                                        : asset('storage/'.$book->cover_image);
-                                }
-                                $hasDiscount = $book->discount_price && $book->discount_price < $book->price;
-                                $discountPercent = $hasDiscount ? round(((float) $book->price - (float) $book->discount_price) / (float) $book->price * 100) : 0;
-                                $initial = mb_strtoupper(mb_substr($book->title, 0, 1));
-                            @endphp
-
-                            <article class="cat-book-card">
-                                <div class="cat-book-thumb">
-                                    @if($cover)
-                                        <img src="{{ $cover }}" alt="{{ $book->title }}">
-                                    @else
-                                        <span class="cat-book-thumb-placeholder">{{ $initial }}</span>
-                                    @endif
-                                    @if($hasDiscount)
-                                        <span class="cat-stock-badge out">-{{ $discountPercent }}%</span>
-                                    @endif
-                                    <span class="cat-stock-badge {{ $book->stock_quantity > 0 ? 'in' : 'out' }}" style="top:40px;">
-                                        {{ $book->stock_quantity > 0 ? 'Còn hàng' : 'Tạm hết' }}
+                        <article class="cat-lcard">
+                            <div class="cat-lcard-img">
+                                @if($cover)<img src="{{ $cover }}" alt="{{ $book->title }}" loading="lazy">
+                                @else<span class="cat-lcard-placeholder">{{ $init }}</span>@endif
+                                <div class="cat-gcard-badges">
+                                    @if($hasDis) <span class="cb-badge cb-badge-discount">-{{ $disPct }}%</span> @endif
+                                    <span class="cb-badge {{ $book->stock_quantity>0 ? 'cb-badge-stock-in':'cb-badge-stock-out' }}">
+                                        {{ $book->stock_quantity>0 ? 'Còn hàng':'Tạm hết' }}
                                     </span>
                                 </div>
-
-                                <div class="cat-book-body">
-                                    <a href="{{ route('catalog.book', $book->slug) }}" style="text-decoration:none">
-                                        <p class="cat-book-title">{{ $book->title }}</p>
-                                    </a>
-                                    <p class="cat-book-author">{{ $book->authors->pluck('name')->first() ?: 'Đang cập nhật' }}</p>
-                                    <div class="cat-book-footer">
-                                        <div>
-                                            <div class="cat-book-price">{{ number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') }}đ</div>
-                                            @if($hasDiscount)
-                                                <div class="cat-book-orig">{{ number_format((float) $book->price, 0, ',', '.') }}đ</div>
-                                            @endif
-                                        </div>
-                                        <a href="{{ route('catalog.book', $book->slug) }}" class="cat-detail-btn">Chi tiết</a>
-                                    </div>
+                            </div>
+                            <div class="cat-lcard-body">
+                                <div>
+                                    <a href="{{ route('catalog.book',$book->slug) }}" class="cat-lcard-title">{{ $book->title }}</a>
+                                    <p class="cat-lcard-author">{{ $book->authors->pluck('name')->join(', ') ?: 'Đang cập nhật tác giả' }}</p>
+                                    <p class="cat-lcard-desc">{{ $book->description ?: 'Chưa có mô tả cho đầu sách này.' }}</p>
                                 </div>
-                            </article>
-                        @endforeach
-                    </div>
-                @endif
+                                <div class="cat-lcard-foot">
+                                    <div>
+                                        <div class="cat-price">{{ number_format((float)($book->discount_price??$book->price),0,',','.') }}đ</div>
+                                        @if($hasDis)<div class="cat-price-orig">{{ number_format((float)$book->price,0,',','.') }}đ</div>@endif
+                                    </div>
+                                    <a href="{{ route('catalog.book',$book->slug) }}" class="cat-detail-btn">Xem chi tiết</a>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
 
-                @if($books->hasPages())
-                    <div class="cat-pagination">
-                        {{ $books->links('pagination::tailwind') }}
-                    </div>
-                @endif
-            </section>
-        </div>
-    </main>
+            @else
+                {{-- GRID ──────────────────────────────────── --}}
+                <div class="cat-grid">
+                    @foreach($books as $book)
+                        @php
+                            $cover = null;
+                            if(!empty($book->cover_image))
+                                $cover = str_starts_with($book->cover_image,'http') ? $book->cover_image : asset('storage/'.$book->cover_image);
+                            $hasDis = $book->discount_price && $book->discount_price < $book->price;
+                            $disPct = $hasDis ? round(((float)$book->price - (float)$book->discount_price)/(float)$book->price*100) : 0;
+                            $init   = mb_strtoupper(mb_substr($book->title,0,1));
+                        @endphp
+                        <article class="cat-gcard">
+                            <div class="cat-gcard-img">
+                                @if($cover)<img src="{{ $cover }}" alt="{{ $book->title }}" loading="lazy">
+                                @else<span class="cat-gcard-placeholder">{{ $init }}</span>@endif
+                                <div class="cat-gcard-badges">
+                                    @if($hasDis) <span class="cb-badge cb-badge-discount">-{{ $disPct }}%</span> @endif
+                                    <span class="cb-badge {{ $book->stock_quantity>0 ? 'cb-badge-stock-in':'cb-badge-stock-out' }}">
+                                        {{ $book->stock_quantity>0 ? 'Còn hàng':'Tạm hết' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="cat-gcard-body">
+                                <a href="{{ route('catalog.book',$book->slug) }}" style="text-decoration:none">
+                                    <p class="cat-gcard-title">{{ $book->title }}</p>
+                                </a>
+                                <p class="cat-gcard-author">{{ $book->authors->pluck('name')->first() ?: 'Đang cập nhật' }}</p>
+                                <div class="cat-gcard-foot">
+                                    <div>
+                                        <div class="cat-price">{{ number_format((float)($book->discount_price??$book->price),0,',','.') }}đ</div>
+                                        @if($hasDis)<div class="cat-price-orig">{{ number_format((float)$book->price,0,',','.') }}đ</div>@endif
+                                    </div>
+                                    <a href="{{ route('catalog.book',$book->slug) }}" class="cat-detail-btn">Chi tiết</a>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @endif
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const btn = document.getElementById('cat-sidebar-toggle');
-        const sidebar = document.getElementById('cat-sidebar');
-        if (!btn || !sidebar) return;
+            {{-- Pagination --}}
+            @if($books->hasPages())
+                <div class="cat-pagination">
+                    {{ $books->links() }}
+                </div>
+            @endif
 
-        btn.addEventListener('click', function () {
-            const open = sidebar.classList.toggle('open');
-            btn.setAttribute('aria-expanded', String(open));
-            const icon = btn.querySelector('svg');
-            if (icon) icon.style.transform = open ? 'rotate(180deg)' : '';
-        });
+        </section>
+    </div>{{-- /.cat-layout --}}
+</div>{{-- /.cat-wrap --}}
+
+<script>
+/* ── Price range ──────────────────────────────────────────── */
+(function(){
+    const min = document.getElementById('minRange');
+    const max = document.getElementById('maxRange');
+    const minL = document.getElementById('minRangeLabel');
+    const maxL = document.getElementById('maxRangeLabel');
+    if(!min||!max) return;
+    const fmt = v => Number(v).toLocaleString('vi-VN')+'đ';
+    const sync = () => {
+        let a = parseInt(min.value,10), b = parseInt(max.value,10);
+        if(a>b){ if(document.activeElement===min){b=a;max.value=b;}else{a=b;min.value=a;} }
+        minL.textContent = fmt(a); maxL.textContent = fmt(b);
+    };
+    min.addEventListener('input',sync);
+    max.addEventListener('input',sync);
+    sync();
+})();
+
+/* ── Mobile sidebar toggle ────────────────────────────────── */
+document.addEventListener('DOMContentLoaded',function(){
+    const btn  = document.getElementById('cat-toggle');
+    const side = document.getElementById('cat-sidebar');
+    if(!btn||!side) return;
+    btn.addEventListener('click',function(){
+        const open = side.classList.toggle('open');
+        btn.classList.toggle('open',open);
+        btn.setAttribute('aria-expanded',String(open));
     });
-    </script>
+});
+</script>
 
-</body>
-</html>
+@endsection

@@ -234,7 +234,7 @@ class CatalogController extends Controller
             ->limit(4)
             ->get();
 
-        return view('catalog.book-detail', [
+        return view('catalog.show', [
             'book' => $book,
             'relatedBooks' => $relatedBooks,
         ]);

@@ -15,7 +15,7 @@ if (auth()->check()) {
 }
 
 $isHome    = request()->routeIs('home');
-$isCatalog = request()->routeIs('catalog.*');
+$isCatalog = request()->routeIs('catalog.*') || request()->routeIs('admin.categories*');
 $isOrders  = request()->routeIs('orders.*');
 $isAccount = request()->routeIs('account.*');
 

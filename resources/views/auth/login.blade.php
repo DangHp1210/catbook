@@ -1,4 +1,9 @@
-<x-layouts.guest title="Đăng nhập | CatBook">
+@extends('layouts.app')
+
+@section('title','Đăng nhập | CatBook')
+
+@section('content')
+<x-layouts.guest>
     <div class="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_20px_60px_rgba(13,27,16,0.08)] sm:p-10">
         <div class="mb-8 text-center">
             <p class="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">Chào mừng trở lại</p>
@@ -38,3 +43,4 @@
         </p>
     </div>
 </x-layouts.guest>
+@endsection

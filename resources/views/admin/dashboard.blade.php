@@ -1,4 +1,4 @@
-@extends('admin.layout', ['title' => 'Dashboard Admin'])
+@extends('layouts.admin', ['title' => 'Dashboard Admin'])
 
 @section('content')
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

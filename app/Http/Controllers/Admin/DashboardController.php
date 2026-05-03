@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -276,21 +277,26 @@ class DashboardController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
 
-        $categories = Category::query()
-            ->with('parent')
-            ->withCount('books')
+        $allCategories = Category::query()
+            ->with('parent:id,name,slug,parent_id')
+            ->withCount(['books', 'children'])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%");
             })
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'parent_id']);
 
-        $parents = Category::query()->orderBy('name')->get(['id', 'name']);
+        $categories = $this->buildCategoryTree($allCategories);
+
+        $categoryOptions = Category::query()
+            ->with('parent:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'parent_id']);
 
         return view('admin.categories', [
             'categories' => $categories,
-            'parents' => $parents,
+            'allCategories' => $allCategories,
+            'categoryOptions' => $categoryOptions,
             'q' => $q,
         ]);
     }
@@ -526,6 +532,32 @@ class DashboardController extends Controller
         }
 
         return $resolvedIds->unique()->values()->all();
+    }
+
+    /**
+     * @param Collection<int, Category> $categories
+     * @return Collection<int, Category>
+     */
+    private function buildCategoryTree(Collection $categories): Collection
+    {
+        $grouped = $categories->groupBy(function (Category $category): string {
+            return $category->parent_id === null ? '__root__' : (string) $category->parent_id;
+        });
+
+        $walk = function (string $parentKey, int $depth) use (&$walk, $grouped): Collection {
+            $rows = collect();
+
+            foreach (($grouped->get($parentKey) ?? collect())->sortBy('name') as $category) {
+                $category->depth = $depth;
+                $category->has_children = ($grouped->get((string) $category->id) ?? collect())->isNotEmpty();
+                $rows->push($category);
+                $rows = $rows->merge($walk((string) $category->id, $depth + 1));
+            }
+
+            return $rows;
+        };
+
+        return $walk('__root__', 0);
     }
 
     public function orders(Request $request): View

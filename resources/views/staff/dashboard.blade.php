@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard Nhân viên - Catbook</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="cb-site text-slate-900">
-    <x-navbar />
+@extends('layouts.admin')
 
-    <main class="cb-page space-y-4">
+@section('title','Bảng điều khiển Nhân viên')
+
+@section('content')
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h1 class="text-2xl font-bold text-slate-900">Bảng điều khiển Nhân viên</h1>
             <p class="mt-2 text-sm text-slate-500">Truy cập nhanh các chức năng vận hành được cấp quyền cho nhân viên.</p>
@@ -51,6 +44,4 @@
                 <p class="mt-4 text-sm font-semibold text-cyan-600">Mở chức năng</p>
             </a>
         </section>
-    </main>
-</body>
-</html>
+@endsection

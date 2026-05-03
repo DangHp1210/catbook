@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sửa địa chỉ</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="cb-site text-slate-800">
-    <x-navbar />
-    <main class="cb-page">
+@extends('layouts.app')
+
+@section('title','Sửa địa chỉ')
+
+@section('content')
         <div class="max-w-2xl mx-auto p-6">
             <h1 class="text-2xl font-black mb-4">Sửa địa chỉ</h1>
 
@@ -40,6 +34,4 @@
                 </div>
             </form>
         </div>
-    </main>
-</body>
-</html>
+@endsection

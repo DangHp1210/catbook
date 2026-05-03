@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard - Catbook</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="cb-site text-slate-900">
-    <main class="cb-page">
-        <x-navbar />
+@extends('layouts.app')
 
+@section('title','Dashboard')
+
+@section('content')
         <div class="mb-8 mt-6 rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Catbook</p>
             <h1 class="mt-2 text-2xl font-bold text-slate-900">Dashboard</h1>
@@ -33,6 +26,4 @@
                 </ul>
             </div>
         </section>
-    </main>
-</body>
-</html>
+@endsection

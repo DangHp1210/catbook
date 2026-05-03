@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Catbook | Checkout</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="cb-site text-slate-800">
-    <x-navbar />
+@extends('layouts.app')
 
-    <main class="cb-page">
+@section('title','Checkout')
+
+@section('content')
         <div class="mb-6">
             <p class="text-xs uppercase tracking-[0.16em] text-slate-500">Thanh toán</p>
             <h1 class="mt-1 text-3xl font-black text-slate-900">Xác nhận đơn hàng</h1>
@@ -115,6 +108,4 @@
                 </div>
             </aside>
         </section>
-    </main>
-</body>
-</html>
+@endsection

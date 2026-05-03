@@ -1,4 +1,4 @@
-@extends('admin.layout', ['title' => 'Thống kê doanh thu'])
+@extends('layouts.admin', ['title' => 'Thống kê doanh thu'])
 
 @section('content')
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

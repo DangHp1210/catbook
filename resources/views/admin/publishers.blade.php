@@ -1,4 +1,4 @@
-@extends('admin.layout', ['title' => 'Quản lý nhà xuất bản'])
+@extends('layouts.admin', ['title' => 'Quản lý nhà xuất bản'])
 
 @section('content')
     @php

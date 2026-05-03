@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Category;
-use App\Models\CartItem;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -39,14 +39,11 @@ class HomeController extends Controller
             ->limit(4)
             ->get();
 
-        // Calculate cart count for authenticated user (use user's cart relation)
-        $cartCount = 0;
-        if (auth()->check()) {
-            $cart = auth()->user()->cart()->with('items')->first();
-            $cartCount = $cart ? (int) $cart->items->sum('quantity') : 0;
-        }
+        $cartCount = Auth::check()
+            ? (int) (Auth::user()?->cart?->items()->sum('quantity') ?? 0)
+            : 0;
 
-        return view('welcome', [
+        return view('home.index', [
             'featuredBooks' => $featuredBooks,
             'newArrivals' => $newArrivals,
             'topCategories' => $topCategories,

@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Catbook | Thông tin tài khoản</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="cb-site text-slate-800">
-    <x-navbar />
+@extends('layouts.app')
 
-    <main class="cb-page">
+@section('title','Thông tin tài khoản')
+
+@section('content')
         <section class="grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div class="flex items-center gap-4">
@@ -81,6 +74,4 @@
                 </div>
             </section>
         </section>
-    </main>
-</body>
-</html>
+@endsection

@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Catbook | Lịch sử đơn hàng</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="cb-site text-slate-800">
-    <x-navbar />
+@extends('layouts.app')
 
-    <main class="cb-page">
+@section('title','Lịch sử đơn hàng')
+
+@section('content')
         <div class="mb-6 flex items-center justify-between">
             <div>
                 <h1 class="mt-1 text-3xl font-black text-slate-900">Lịch sử đơn hàng của bạn</h1>
@@ -189,6 +182,4 @@
                 </div>
             @endif
         @endif
-    </main>
-</body>
-</html>
+@endsection

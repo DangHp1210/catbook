@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Catbook | Giỏ hàng</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="cb-site text-slate-800">
-    <x-navbar />
+@extends('layouts.app')
 
-    <main class="cb-page">
+@section('title','Giỏ hàng')
+
+@section('content')
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-3xl font-black text-slate-900">Giỏ hàng của bạn</h1>
             <a href="{{ route('catalog.categories') }}" class="text-sm font-semibold text-orange-600 hover:text-orange-700">Tiếp tục mua sách</a>
@@ -122,6 +115,4 @@
                 </aside>
             </section>
         @endif
-    </main>
-</body>
-</html>
+    @endsection

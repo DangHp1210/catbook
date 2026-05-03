@@ -1,14 +1,4 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? config('app.name', 'CatBook') }}</title>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <style>
+<style>
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
@@ -414,8 +404,6 @@
             .cb-auth-benefits { grid-template-columns: 1fr; }
         }
     </style>
-</head>
-<body>
     <x-navbar />
 
     <main class="cb-auth-page">
@@ -471,5 +459,3 @@
             </section>
         </div>
     </main>
-</body>
-</html>

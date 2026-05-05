@@ -3,6 +3,8 @@
 @section('content')
     @php
         $openCreateModal = old('_form') === 'create-publisher';
+        $openEditModal = old('_form') === 'edit-publisher';
+        $editingPublisher = $openEditModal ? $publishers->firstWhere('id', (int) old('_publisher_id')) : null;
     @endphp
 
     <div class="grid gap-5 xl:grid-cols-[1.2fr_2fr]">
@@ -47,15 +49,18 @@
                                 </td>
                                 <td class="px-3 py-3 text-slate-700">{{ $publisher->books_count }}</td>
                                 <td class="px-3 py-3 space-y-2">
-                                    <form method="POST" action="{{ route('admin.publishers.update', $publisher) }}" class="space-y-2">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input name="name" value="{{ $publisher->name }}" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm" required>
-                                        <input name="phone" value="{{ $publisher->phone }}" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm">
-                                        <input name="website" value="{{ $publisher->website }}" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm">
-                                        <textarea name="address" rows="2" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm">{{ $publisher->address }}</textarea>
-                                        <button class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">Lưu</button>
-                                    </form>
+                                    <button
+                                        type="button"
+                                        class="openEditPublisherModal rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
+                                        data-id="{{ $publisher->id }}"
+                                        data-name="{{ $publisher->name }}"
+                                        data-phone="{{ $publisher->phone }}"
+                                        data-website="{{ $publisher->website }}"
+                                        data-address="{{ $publisher->address }}"
+                                        data-update-url="{{ route('admin.publishers.update', $publisher) }}"
+                                    >
+                                        Sửa NXB
+                                    </button>
                                     <form method="POST" action="{{ route('admin.publishers.destroy', $publisher) }}">
                                         @csrf
                                         @method('DELETE')
@@ -112,35 +117,125 @@
         </div>
     </div>
 
+    <div id="editPublisherModal" class="fixed inset-0 z-[60] {{ $openEditModal ? 'flex' : 'hidden' }} items-center justify-center bg-slate-950/55 px-3">
+        <div class="w-full max-w-xl rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-lg font-bold text-slate-900">Sửa nhà xuất bản</h2>
+                <button type="button" id="closeEditPublisherModal" class="rounded-md border border-slate-300 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-100">Đóng</button>
+            </div>
+
+            <form id="editPublisherForm" method="POST" action="{{ $editingPublisher ? route('admin.publishers.update', $editingPublisher) : '#' }}" class="mt-3 space-y-3">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="_form" value="edit-publisher">
+                <input type="hidden" name="_publisher_id" id="editPublisherId" value="{{ old('_publisher_id') }}">
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-600">Tên nhà xuất bản</label>
+                    <input id="editPublisherName" name="name" value="{{ old('name', $editingPublisher?->name) }}" placeholder="Tên nhà xuất bản" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" required>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-600">Số điện thoại</label>
+                    <input id="editPublisherPhone" name="phone" value="{{ old('phone', $editingPublisher?->phone) }}" placeholder="Số điện thoại" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-600">Website</label>
+                    <input id="editPublisherWebsite" name="website" value="{{ old('website', $editingPublisher?->website) }}" placeholder="Website (https://...)" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-600">Địa chỉ</label>
+                    <textarea id="editPublisherAddress" name="address" rows="3" placeholder="Địa chỉ" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">{{ old('address', $editingPublisher?->address) }}</textarea>
+                </div>
+                <div class="flex items-center justify-end gap-2">
+                    <button type="button" id="cancelEditPublisherModal" class="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100">Hủy</button>
+                    <button class="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800">Cập nhật NXB</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         (function () {
-            const modal = document.getElementById('createPublisherModal');
-            const openBtn = document.getElementById('openCreatePublisherModal');
-            const closeBtn = document.getElementById('closeCreatePublisherModal');
-            const cancelBtn = document.getElementById('cancelCreatePublisherModal');
+            const createModal = document.getElementById('createPublisherModal');
+            const openCreateBtn = document.getElementById('openCreatePublisherModal');
+            const closeCreateBtn = document.getElementById('closeCreatePublisherModal');
+            const cancelCreateBtn = document.getElementById('cancelCreatePublisherModal');
 
-            if (!modal || !openBtn || !closeBtn || !cancelBtn) {
-                return;
+            const editModal = document.getElementById('editPublisherModal');
+            const editForm = document.getElementById('editPublisherForm');
+            const closeEditBtn = document.getElementById('closeEditPublisherModal');
+            const cancelEditBtn = document.getElementById('cancelEditPublisherModal');
+
+            const editPublisherId = document.getElementById('editPublisherId');
+            const editPublisherName = document.getElementById('editPublisherName');
+            const editPublisherPhone = document.getElementById('editPublisherPhone');
+            const editPublisherWebsite = document.getElementById('editPublisherWebsite');
+            const editPublisherAddress = document.getElementById('editPublisherAddress');
+            const openEditButtons = document.querySelectorAll('.openEditPublisherModal');
+
+            if (createModal && openCreateBtn && closeCreateBtn && cancelCreateBtn) {
+                const openCreateModal = () => {
+                    createModal.classList.remove('hidden');
+                    createModal.classList.add('flex');
+                };
+
+                const closeCreateModal = () => {
+                    createModal.classList.remove('flex');
+                    createModal.classList.add('hidden');
+                };
+
+                openCreateBtn.addEventListener('click', openCreateModal);
+                closeCreateBtn.addEventListener('click', closeCreateModal);
+                cancelCreateBtn.addEventListener('click', closeCreateModal);
+                createModal.addEventListener('click', (event) => {
+                    if (event.target === createModal) {
+                        closeCreateModal();
+                    }
+                });
             }
 
-            const openModal = () => {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            };
+            if (
+                editModal && editForm && closeEditBtn && cancelEditBtn &&
+                editPublisherId && editPublisherName && editPublisherPhone && editPublisherWebsite && editPublisherAddress
+            ) {
+                const openEditModal = (publisher) => {
+                    editPublisherId.value = publisher.id || '';
+                    editPublisherName.value = publisher.name || '';
+                    editPublisherPhone.value = publisher.phone || '';
+                    editPublisherWebsite.value = publisher.website || '';
+                    editPublisherAddress.value = publisher.address || '';
+                    editForm.setAttribute('action', publisher.updateUrl || '#');
 
-            const closeModal = () => {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-            };
+                    editModal.classList.remove('hidden');
+                    editModal.classList.add('flex');
+                };
 
-            openBtn.addEventListener('click', openModal);
-            closeBtn.addEventListener('click', closeModal);
-            cancelBtn.addEventListener('click', closeModal);
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
+                const closeEditModal = () => {
+                    editModal.classList.remove('flex');
+                    editModal.classList.add('hidden');
+                };
+
+                openEditButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        openEditModal({
+                            id: button.dataset.id,
+                            name: button.dataset.name,
+                            phone: button.dataset.phone,
+                            website: button.dataset.website,
+                            address: button.dataset.address,
+                            updateUrl: button.dataset.updateUrl,
+                        });
+                    });
+                });
+
+                closeEditBtn.addEventListener('click', closeEditModal);
+                cancelEditBtn.addEventListener('click', closeEditModal);
+                editModal.addEventListener('click', (event) => {
+                    if (event.target === editModal) {
+                        closeEditModal();
+                    }
+                });
+            }
         })();
     </script>
 @endsection

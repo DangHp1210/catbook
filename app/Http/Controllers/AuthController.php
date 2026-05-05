@@ -7,12 +7,24 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\FacebookProvider;
+use Throwable;
 
 class AuthController extends Controller
 {
+    /**
+     * @return array<int, string>
+     */
+    private function supportedProviders(): array
+    {
+        return ['google', 'facebook'];
+    }
+
     public function showLogin(): View
     {
         return view('auth.login');
@@ -75,6 +87,90 @@ class AuthController extends Controller
                 ->withErrors(['email' => 'Tài khoản của bạn đang chờ duyệt hoặc đã bị khóa.'])
                 ->onlyInput('email');
         }
+
+        return redirect()->intended(route('home'));
+    }
+
+    public function redirectToProvider(string $provider): RedirectResponse
+    {
+        abort_unless(in_array($provider, $this->supportedProviders(), true), 404);
+
+        if ($provider === 'facebook') {
+            /** @var \Laravel\Socialite\Two\FacebookProvider $driver */
+            $driver = Socialite::buildProvider(FacebookProvider::class, config('services.facebook'));
+            $driver->setScopes(['public_profile']);
+
+            return $driver->redirect();
+        }
+
+        return Socialite::driver($provider)->redirect();
+    }
+
+    public function handleProviderCallback(Request $request, string $provider): RedirectResponse
+    {
+        abort_unless(in_array($provider, $this->supportedProviders(), true), 404);
+
+        try {
+            $socialUser = Socialite::driver($provider)->user();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Không thể đăng nhập bằng tài khoản ' . ucfirst($provider) . ' lúc này.'])
+                ->withInput();
+        }
+
+        $email = $socialUser->getEmail();
+
+        if (! $email && $provider === 'facebook') {
+            $email = sprintf('facebook_%s@social.catbook.local', $socialUser->getId());
+        }
+
+        if (! $email) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Tài khoản ' . ucfirst($provider) . ' chưa cung cấp email.'])
+                ->withInput();
+        }
+
+        $user = User::query()
+            ->where('email', $email)
+            ->orWhere(function ($query) use ($provider, $socialUser) {
+                $query->where('provider', $provider)
+                    ->where('provider_id', $socialUser->getId());
+            })
+            ->first();
+
+        if (! $user) {
+            $user = User::create([
+                'full_name' => $socialUser->getName() ?: Str::before($email, '@'),
+                'email' => $email,
+                'password' => Hash::make(Str::random(32)),
+                'phone' => null,
+                'avatar_url' => $socialUser->getAvatar(),
+                'provider' => $provider,
+                'provider_id' => $socialUser->getId(),
+                'role' => 'customer',
+                'status' => 'active',
+            ]);
+        } else {
+            $user->forceFill([
+                'provider' => $user->provider ?: $provider,
+                'provider_id' => $user->provider_id ?: $socialUser->getId(),
+                'avatar_url' => $user->avatar_url ?: $socialUser->getAvatar(),
+            ])->save();
+        }
+
+        if ($user->status !== 'active') {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Tài khoản của bạn đang chờ duyệt hoặc đã bị khóa.'])
+                ->withInput();
+        }
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
 
         return redirect()->intended(route('home'));
     }

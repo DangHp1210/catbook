@@ -29,8 +29,8 @@
                                     <button class="cb-btn-ghost" type="submit">Đặt mặc định</button>
                                 </form>
                             @endunless
-                            <a href="{{ route('account.addresses.edit', $address) }}" class="cb-btn-ghost">Sửa</a>
-                            <form method="POST" action="{{ route('account.addresses.destroy', $address) }}" onsubmit="return confirm('Xác nhận xóa địa chỉ này?')">
+                            <button type="button" class="cb-btn-ghost edit-address-btn" data-address-id="{{ $address->id }}" data-receiver-name="{{ $address->receiver_name }}" data-receiver-phone="{{ $address->receiver_phone }}" data-address-line="{{ $address->address_line }}" data-ward="{{ $address->ward }}" data-district="{{ $address->district }}" data-province="{{ $address->province }}">Sửa</button>
+                            <form method="POST" action="{{ route('account.addresses.destroy', $address) }}" onsubmit="return confirm('Xác nhận xóa địa chỉ này?')" style="display:inline">
                                 @csrf
                                 @method('DELETE')
                                 <button class="cb-btn-ghost text-rose-600" type="submit">Xóa</button>
@@ -43,8 +43,10 @@
             @endforelse
         </div>
 
-        <!-- Add Address Modal -->
-        <div id="add-address-modal" class="hidden fixed inset-0 z-50 items-center justify-center">
+        {{-- ════════════════════════════════════════════
+             Add Address Modal
+        ════════════════════════════════════════════ --}}
+        <div id="add-address-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
             <div id="add-address-backdrop" class="absolute inset-0 bg-black/40"></div>
             <div class="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-lg">
                 <div class="flex items-start justify-between">
@@ -71,27 +73,101 @@
             </div>
         </div>
 
+        {{-- ════════════════════════════════════════════
+             Edit Address Modal
+        ════════════════════════════════════════════ --}}
+        <div id="edit-address-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+            <div id="edit-address-backdrop" class="absolute inset-0 bg-black/40"></div>
+            <div class="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-lg">
+                <div class="flex items-start justify-between">
+                    <h3 class="text-lg font-bold text-slate-900">Sửa địa chỉ</h3>
+                    <button type="button" id="edit-address-close" class="text-slate-500">✕</button>
+                </div>
+
+                <form id="edit-address-form" method="POST" class="mt-4">
+                    @csrf
+                    @method('PATCH')
+                    <div class="grid gap-3">
+                        <input id="edit_receiver_name" name="receiver_name" placeholder="Tên người nhận" class="border rounded px-3 py-2" required>
+                        <input id="edit_receiver_phone" name="receiver_phone" placeholder="Số điện thoại" class="border rounded px-3 py-2" required>
+                        <textarea id="edit_address_line" name="address_line" placeholder="Địa chỉ cụ thể" class="border rounded px-3 py-2" required></textarea>
+                        <input id="edit_ward" name="ward" placeholder="Phường/Xã" class="border rounded px-3 py-2">
+                        <input id="edit_district" name="district" placeholder="Quận/Huyện" class="border rounded px-3 py-2">
+                        <input id="edit_province" name="province" placeholder="Tỉnh/Thành phố" class="border rounded px-3 py-2">
+                        <div class="flex gap-2 justify-end">
+                            <button type="button" id="edit-address-cancel" class="cb-btn-ghost">Hủy</button>
+                            <button type="submit" class="cb-btn-solid">Lưu</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const openBtn = document.getElementById('open-add-address');
-                const modal = document.getElementById('add-address-modal');
-                const backdrop = document.getElementById('add-address-backdrop');
-                const closeBtn = document.getElementById('add-address-close');
-                const cancelBtn = document.getElementById('add-address-cancel');
+                // Add Address Modal
+                const addOpenBtn = document.getElementById('open-add-address');
+                const addModal = document.getElementById('add-address-modal');
+                const addBackdrop = document.getElementById('add-address-backdrop');
+                const addCloseBtn = document.getElementById('add-address-close');
+                const addCancelBtn = document.getElementById('add-address-cancel');
 
-                function openModal() {
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
+                function openAddModal() {
+                    addModal.classList.remove('hidden');
+                    addModal.classList.add('flex');
                 }
-                function closeModal() {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
+                function closeAddModal() {
+                    addModal.classList.add('hidden');
+                    addModal.classList.remove('flex');
                 }
 
-                openBtn.addEventListener('click', openModal);
-                closeBtn.addEventListener('click', closeModal);
-                cancelBtn.addEventListener('click', closeModal);
-                backdrop.addEventListener('click', closeModal);
+                addOpenBtn.addEventListener('click', openAddModal);
+                addCloseBtn.addEventListener('click', closeAddModal);
+                addCancelBtn.addEventListener('click', closeAddModal);
+                addBackdrop.addEventListener('click', closeAddModal);
+
+                // Edit Address Modal
+                const editModal = document.getElementById('edit-address-modal');
+                const editBackdrop = document.getElementById('edit-address-backdrop');
+                const editCloseBtn = document.getElementById('edit-address-close');
+                const editCancelBtn = document.getElementById('edit-address-cancel');
+                const editBtns = document.querySelectorAll('.edit-address-btn');
+
+                function openEditModal(addressId, data) {
+                    document.getElementById('edit_receiver_name').value = data.receiverName;
+                    document.getElementById('edit_receiver_phone').value = data.receiverPhone;
+                    document.getElementById('edit_address_line').value = data.addressLine;
+                    document.getElementById('edit_ward').value = data.ward;
+                    document.getElementById('edit_district').value = data.district;
+                    document.getElementById('edit_province').value = data.province;
+                    document.getElementById('edit-address-form').action = `{{ route('account.addresses.index') }}/${addressId}`;
+                    
+                    editModal.classList.remove('hidden');
+                    editModal.classList.add('flex');
+                }
+                function closeEditModal() {
+                    editModal.classList.add('hidden');
+                    editModal.classList.remove('flex');
+                }
+
+                editBtns.forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const addressId = this.dataset.addressId;
+                        const data = {
+                            receiverName: this.dataset.receiverName,
+                            receiverPhone: this.dataset.receiverPhone,
+                            addressLine: this.dataset.addressLine,
+                            ward: this.dataset.ward,
+                            district: this.dataset.district,
+                            province: this.dataset.province
+                        };
+                        openEditModal(addressId, data);
+                    });
+                });
+
+                editCloseBtn.addEventListener('click', closeEditModal);
+                editCancelBtn.addEventListener('click', closeEditModal);
+                editBackdrop.addEventListener('click', closeEditModal);
             });
         </script>
 @endsection

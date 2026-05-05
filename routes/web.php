@@ -9,6 +9,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -36,6 +37,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
+    // Payment routes
+    Route::get('/payment/vnpay', [PaymentController::class, 'createPayment'])->name('payment.vnpay');
+    Route::get('/payment/momo', [PaymentController::class, 'createMomoPayment'])->name('payment.momo');
+
     Route::get('/tai-khoan', function () {
         $user = request()->user();
         $user->loadCount(['addresses', 'reviews', 'chatSessions']);
@@ -51,12 +56,12 @@ Route::middleware('auth')->group(function () {
     })->name('account.show');
 
     Route::post('/tai-khoan/avatar', [AccountController::class, 'updateAvatar'])->name('account.avatar.update');
+    Route::patch('/tai-khoan/thong-tin', [AccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::patch('/tai-khoan/doi-mat-khau', [AccountController::class, 'changePassword'])->name('account.password.update');
 
     // Address management
     Route::get('/tai-khoan/dia-chi', [\App\Http\Controllers\UserAddressController::class, 'index'])->name('account.addresses.index');
-    Route::get('/tai-khoan/dia-chi/them', [\App\Http\Controllers\UserAddressController::class, 'create'])->name('account.addresses.create');
     Route::post('/tai-khoan/dia-chi', [\App\Http\Controllers\UserAddressController::class, 'store'])->name('account.addresses.store');
-    Route::get('/tai-khoan/dia-chi/{address}/sua', [\App\Http\Controllers\UserAddressController::class, 'edit'])->name('account.addresses.edit');
     Route::patch('/tai-khoan/dia-chi/{address}', [\App\Http\Controllers\UserAddressController::class, 'update'])->name('account.addresses.update');
     Route::delete('/tai-khoan/dia-chi/{address}', [\App\Http\Controllers\UserAddressController::class, 'destroy'])->name('account.addresses.destroy');
     Route::post('/tai-khoan/dia-chi/{address}/mac-dinh', [\App\Http\Controllers\UserAddressController::class, 'setDefault'])->name('account.addresses.set_default');
@@ -105,3 +110,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
+// Route nhận kết quả trả về từ VNPay
+Route::get('/vnpay-return', [PaymentController::class, 'vnpayReturn'])->name('vnpay.return');
+
+// Route nhận kết quả trả về từ MoMo
+Route::get('/momo-return', [PaymentController::class, 'momoReturn'])->name('momo.return');
+
+// Webhook từ MoMo (IPN) - không cần auth
+Route::post('/momo-ipn', [PaymentController::class, 'momoWebhook'])->name('momo.webhook');

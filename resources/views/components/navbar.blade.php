@@ -55,7 +55,10 @@ if (auth()->check()) {
     <nav class="cb-nav">
 
         {{-- Logo --}}
-        <a href="{{ route('home') }}" class="cb-logo">Cat<span>Book</span></a>
+       <a href="{{ route('home') }}" class="cb-logo">
+            <img src="{{ asset('images/logocatbook.jpg') }}" alt="CatBook Logo" class="cb-logo-img">
+            <span class="cb-logo-text">Cat<span>Book</span></span>
+        </a>
 
         {{-- Desktop links --}}
         <div class="cb-nav-links">
@@ -239,16 +242,26 @@ if (auth()->check()) {
 
 /* ── Logo ── */
 .cb-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.cb-logo-img {
+    height: 40px;
+    width: auto;
+    display: block;
+}
+.cb-logo-text {
     font-family: var(--cb-font-serif);
     font-size: 22px;
     font-weight: 900;
     color: var(--cb-brand-text);
     letter-spacing: -0.5px;
-    text-decoration: none;
-    white-space: nowrap;
-    flex-shrink: 0;
 }
-.cb-logo span { color: var(--cb-brand-accent); }
+.cb-logo-text span { color: var(--cb-brand-accent); }
 
 /* ── Desktop nav links ── */
 .cb-nav-links { display: flex; gap: 28px; align-items: center; }

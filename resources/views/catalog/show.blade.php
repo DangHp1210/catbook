@@ -396,6 +396,7 @@ body {
 .bd-rel-title {
     font-family: var(--cb-sans); font-size: 13px; font-weight: 600; color: var(--cb-text);
     line-height: 1.4;
+    line-clamp: 2;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     margin-bottom: 4px; transition: color .15s;
 }
@@ -465,33 +466,6 @@ body {
             @endif
         </div>
 
-        {{-- Meta chips --}}
-        <div class="bd-chips">
-            @if($book->page_count)
-                <div class="bd-chip">
-                    <div class="bd-chip-lbl">Số trang</div>
-                    <div class="bd-chip-val">{{ number_format($book->page_count) }}</div>
-                </div>
-            @endif
-            @if($book->language)
-                <div class="bd-chip">
-                    <div class="bd-chip-lbl">Ngôn ngữ</div>
-                    <div class="bd-chip-val">{{ $book->language }}</div>
-                </div>
-            @endif
-            @if($book->publication_year)
-                <div class="bd-chip">
-                    <div class="bd-chip-lbl">Năm XB</div>
-                    <div class="bd-chip-val">{{ $book->publication_year }}</div>
-                </div>
-            @endif
-            @if($book->isbn)
-                <div class="bd-chip" style="grid-column:1/-1">
-                    <div class="bd-chip-lbl">ISBN</div>
-                    <div class="bd-chip-val" style="font-size:12px;letter-spacing:.4px">{{ $book->isbn }}</div>
-                </div>
-            @endif
-        </div>
     </div>
 
     {{-- ── RIGHT: info ─────────────────────────────────── --}}

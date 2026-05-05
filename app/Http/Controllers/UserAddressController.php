@@ -18,11 +18,6 @@ class UserAddressController extends Controller
         ]);
     }
 
-    public function create(): RedirectResponse
-    {
-        return redirect()->route('account.addresses.index');
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -54,17 +49,6 @@ class UserAddressController extends Controller
         ]);
 
         return redirect()->route('account.addresses.index')->with('success', 'Đã thêm địa chỉ.');
-    }
-
-    public function edit(Request $request, UserAddress $address): View
-    {
-        if ($address->user_id !== $request->user()->id) {
-            abort(403);
-        }
-
-        return view('account.addresses.edit', [
-            'address' => $address,
-        ]);
     }
 
     public function update(Request $request, UserAddress $address): RedirectResponse

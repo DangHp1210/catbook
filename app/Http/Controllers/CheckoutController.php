@@ -135,7 +135,17 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        return redirect()->route('orders.index')->with('success', 'Đặt hàng thành công. Mã đơn: '.$order->order_code);
+        // Handle online payment methods (VNPay & MoMo)
+        if ($validated['payment_method'] === 'vnpay') {
+            return redirect()->route('payment.vnpay', ['order_id' => $order->id]);
+        }
+
+        if ($validated['payment_method'] === 'momo') {
+            return redirect()->route('payment.momo', ['order_id' => $order->id]);
+        }
+
+        // For COD and bank transfer, show order confirmation
+        return redirect()->route('orders.show', $order)->with('success', 'Đặt hàng thành công. Mã đơn: '.$order->order_code);
     }
 
     private function shippingFee(float $subtotal): float

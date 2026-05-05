@@ -29,8 +29,22 @@
                             <p class="text-slate-500">{{ $user->email }}</p>
                             <p class="text-slate-400">{{ $user->phone ?: '---' }}</p>
                         </td>
-                        <td class="px-3 py-3 text-slate-700">{{ $user->role }}</td>
-                        <td class="px-3 py-3 text-slate-700">{{ $user->status }}</td>
+                        <td class="px-3 py-3 text-slate-700">
+                            {{ match($user->role) {
+                                'customer' => 'Khách hàng',
+                                'staff' => 'Nhân viên',
+                                'admin' => 'Quản trị viên',
+                                default => $user->role,
+                            } }}
+                        </td>
+                        <td class="px-3 py-3 text-slate-700">
+                            {{ match($user->status) {
+                                'active' => 'Hoạt động',
+                                'blocked' => 'Bị khóa',
+                                'pending' => 'Chờ duyệt',
+                                default => $user->status,
+                            } }}
+                        </td>
                         <td class="px-3 py-3 text-slate-700">{{ $user->orders_count }}</td>
                         <td class="px-3 py-3">
                             <form method="POST" action="{{ route('admin.users.update', $user) }}" class="space-y-2">
@@ -38,12 +52,26 @@
                                 @method('PATCH')
                                 <select name="role" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm">
                                     @foreach (['customer', 'staff', 'admin'] as $role)
-                                        <option value="{{ $role }}" @selected($user->role === $role)>{{ $role }}</option>
+                                        <option value="{{ $role }}" @selected($user->role === $role)>
+                                            {{ match($role) {
+                                                'customer' => 'Khách hàng',
+                                                'staff' => 'Nhân viên',
+                                                'admin' => 'Quản trị viên',
+                                                default => $role,
+                                            } }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <select name="status" class="w-full rounded-lg border border-slate-300 px-2 py-1 text-sm">
                                     @foreach (['active', 'blocked', 'pending'] as $status)
-                                        <option value="{{ $status }}" @selected($user->status === $status)>{{ $status }}</option>
+                                        <option value="{{ $status }}" @selected($user->status === $status)>
+                                            {{ match($status) {
+                                                'active' => 'Hoạt động',
+                                                'blocked' => 'Bị khóa',
+                                                'pending' => 'Chờ duyệt',
+                                                default => $status,
+                                            } }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <button class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">Lưu</button>

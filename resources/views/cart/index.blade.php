@@ -113,6 +113,7 @@
     font-family: var(--cb-sans); font-size: 15px; font-weight: 600;
     color: var(--cb-text); text-decoration: none; line-height: 1.4;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    line-clamp: 2;
     transition: color .15s;
 }
 .ct-item-title:hover { color: var(--cb-accent); }

@@ -1,436 +1,677 @@
 @extends('layouts.admin', ['title' => 'Quản lý danh mục'])
 
 @section('content')
-	@php
-		$q = $q ?? trim((string) request()->query('q', ''));
-		$categories = $categories ?? collect();
-		$allCategories = $allCategories ?? collect();
-		$categoryOptions = $categoryOptions ?? collect();
 
-		$totalCategories = $allCategories->count();
-		$rootCategories = $allCategories->whereNull('parent_id')->count();
-		$leafCategories = $allCategories->filter(fn ($category) => ! (bool) ($category->has_children ?? false))->count();
-		$categoriesWithBooks = $allCategories->filter(fn ($category) => (int) ($category->books_count ?? 0) > 0)->count();
+@php
+    $q = $q ?? trim((string) request()->query('q', ''));
+    $categories = $categories ?? collect();
+    $allCategories = $allCategories ?? collect();
+    $categoryOptions = $categoryOptions ?? collect();
 
-		$openCreateModal = old('_form') === 'create-category';
-		$openEditCategoryId = old('_form') === 'update-category' ? (int) old('_category_id') : null;
-		$editingCategory = $openEditCategoryId ? $allCategories->firstWhere('id', $openEditCategoryId) : null;
+    $totalCategories     = $allCategories->count();
+    $rootCategories      = $allCategories->whereNull('parent_id')->count();
+    $leafCategories      = $allCategories->filter(fn($c) => !(bool)($c->has_children ?? false))->count();
+    $categoriesWithBooks = $allCategories->filter(fn($c) => (int)($c->books_count ?? 0) > 0)->count();
 
-		$createSelectedParentId = old('parent_id') !== null && old('parent_id') !== '' ? (int) old('parent_id') : null;
-		$createSelectedParent = $createSelectedParentId ? $allCategories->firstWhere('id', $createSelectedParentId) : null;
+    $openCreateModal    = old('_form') === 'create-category';
+    $openEditCategoryId = old('_form') === 'update-category' ? (int) old('_category_id') : null;
+    $editingCategory    = $openEditCategoryId ? $allCategories->firstWhere('id', $openEditCategoryId) : null;
 
-		$editSelectedParentId = old('parent_id') !== null && old('parent_id') !== ''
-			? (int) old('parent_id')
-			: ($editingCategory?->parent_id ? (int) $editingCategory->parent_id : null);
-		$editSelectedParent = $editSelectedParentId ? $allCategories->firstWhere('id', $editSelectedParentId) : null;
-	@endphp
+    $createSelectedParentId = old('parent_id') !== null && old('parent_id') !== '' ? (int) old('parent_id') : null;
+    $createSelectedParent   = $createSelectedParentId ? $allCategories->firstWhere('id', $createSelectedParentId) : null;
 
-	<style>
-		.admin-modal {
-			position: fixed;
-			inset: 0;
-			z-index: 60;
-			display: flex;
-			align-items: flex-start;
-			justify-content: center;
-			overflow-y: auto;
-			padding: 24px 16px;
-			background: rgba(15, 23, 42, 0.45);
-			backdrop-filter: blur(4px);
-		}
+    $editSelectedParentId = old('parent_id') !== null && old('parent_id') !== ''
+        ? (int) old('parent_id')
+        : ($editingCategory?->parent_id ? (int) $editingCategory->parent_id : null);
+    $editSelectedParent = $editSelectedParentId ? $allCategories->firstWhere('id', $editSelectedParentId) : null;
+@endphp
 
-		.admin-modal.hidden {
-			display: none;
-		}
+<style>
+/* ─── Design tokens ───────────────────────────────────── */
+:root {
+    --cb-bg:           #f8f6f1;
+    --cb-border:       #e8e3d8;
+    --cb-text:         #1a1a1a;
+    --cb-muted:        #777;
+    --cb-white:        #ffffff;
+    --cb-accent:       #2d6a4f;
+    --cb-accent-dark:  #1b4332;
+    --cb-accent-light: #d8f3dc;
+    --cb-serif:        'Playfair Display', Georgia, serif;
+    --cb-sans:         'DM Sans', system-ui, sans-serif;
+}
+body {
+        font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+        background: var(--cb-bg);
+        color: var(--cb-text);
+        margin: 0;
+}
+/* ─── Page header ─────────────────────────────────────── */
+.ca-header {
+    background: var(--cb-white); border: 1px solid var(--cb-border);
+    border-radius: 18px; padding: 20px 26px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
+    position: relative; overflow: hidden;
+}
+.ca-header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #f59e0b, var(--cb-accent));
+}
+.ca-header-title {
+    font-family: var(--cb-serif); font-size: 22px; font-weight: 900;
+    color: #0d1b10; letter-spacing: -.5px; margin: 0 0 3px;
+}
+.ca-header-sub { font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted); }
+.ca-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-		.admin-modal-content {
-			width: 100%;
-			max-width: 640px;
-			overflow: hidden;
-			border-radius: 20px;
-			background: #fff;
-			box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
-		}
+/* Search */
+.ca-search-wrap {
+    display: flex; border: 1.5px solid var(--cb-border); border-radius: 10px;
+    overflow: hidden; background: var(--cb-white); transition: border-color .2s;
+}
+.ca-search-wrap:focus-within { border-color: var(--cb-accent); }
+.ca-search-icon { padding: 0 10px 0 12px; display: flex; align-items: center; color: var(--cb-muted); }
+.ca-search-input {
+    font-family: var(--cb-sans); font-size: 13px; border: none; outline: none;
+    background: transparent; color: var(--cb-text); padding: 9px 14px 9px 0; width: 220px;
+}
+.ca-search-input::placeholder { color: #c0b8b0; }
 
-		.admin-modal-header {
-			display: flex;
-			align-items: flex-start;
-			justify-content: space-between;
-			gap: 16px;
-			border-bottom: 1px solid #e2e8f0;
-			padding: 20px 24px;
-		}
+/* Add button */
+.ca-btn-add {
+    font-family: var(--cb-sans); font-size: 13px; font-weight: 600;
+    padding: 10px 18px; border-radius: 10px; border: none;
+    background: var(--cb-text); color: #fff; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: background .2s; white-space: nowrap;
+}
+.ca-btn-add:hover { background: var(--cb-accent); }
 
-		.admin-modal-header h2 {
-			margin: 0;
-			font-size: 18px;
-			font-weight: 800;
-			color: #0f172a;
-		}
+/* ─── Stats strip ─────────────────────────────────────── */
+.ca-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;
+}
+@media (max-width: 800px) { .ca-stats { grid-template-columns: repeat(2, 1fr); } }
 
-		.admin-modal-header p {
-			margin: 4px 0 0;
-			font-size: 14px;
-			color: #64748b;
-		}
+.ca-stat {
+    background: var(--cb-white); border: 1px solid var(--cb-border);
+    border-radius: 14px; padding: 14px 18px; position: relative; overflow: hidden;
+}
+.ca-stat::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.ca-stat-total::before   { background: #f59e0b; }
+.ca-stat-root::before    { background: var(--cb-accent); }
+.ca-stat-leaf::before    { background: #8b5cf6; }
+.ca-stat-books::before   { background: #0ea5e9; }
+.ca-stat-lbl {
+    font-family: var(--cb-sans); font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; color: #b0a898; margin-bottom: 6px;
+}
+.ca-stat-val {
+    font-family: var(--cb-serif); font-size: 26px; font-weight: 900;
+    color: var(--cb-text); line-height: 1;
+}
 
-		.admin-modal-close {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			width: 36px;
-			height: 36px;
-			border: 0;
-			border-radius: 999px;
-			background: #f8fafc;
-			color: #64748b;
-			cursor: pointer;
-		}
+/* ─── Tree card ───────────────────────────────────────── */
+.ca-tree-card {
+    background: var(--cb-white); border: 1px solid var(--cb-border);
+    border-radius: 18px; overflow: hidden; margin-bottom: 16px;
+}
+.ca-tree-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; border-bottom: 1px solid var(--cb-border);
+    flex-wrap: wrap; gap: 8px;
+}
+.ca-tree-toolbar-title {
+    font-family: var(--cb-sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.3px; text-transform: uppercase; color: #b0a898;
+}
+.ca-tree-legend {
+    display: flex; align-items: center; gap: 16px;
+    font-family: var(--cb-sans); font-size: 11px; color: var(--cb-muted);
+}
+.ca-legend-item { display: flex; align-items: center; gap: 5px; }
+.ca-legend-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
 
-		.admin-modal-body {
-			display: flex;
-			flex-direction: column;
-			gap: 16px;
-			padding: 24px;
-		}
+/* ─── Tree table ──────────────────────────────────────── */
+.ca-table { width: 100%; border-collapse: collapse; font-family: var(--cb-sans); }
+.ca-table thead tr { border-bottom: 1px solid var(--cb-border); }
+.ca-table th {
+    padding: 10px 18px; font-size: 11px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase; color: #b0a898; text-align: left;
+}
+.ca-table tbody tr {
+    border-bottom: 1px solid var(--cb-border); transition: background .15s;
+}
+.ca-table tbody tr:last-child { border-bottom: none; }
+.ca-table tbody tr:hover { background: #fdfcfa; }
+.ca-table td { padding: 12px 18px; vertical-align: middle; }
 
-		.admin-modal-footer {
-			display: flex;
-			justify-content: flex-end;
-			gap: 12px;
-			border-top: 1px solid #e2e8f0;
-			padding-top: 16px;
-		}
+/* Tree indent visuals */
+.ca-row-wrap { display: flex; align-items: center; gap: 0; }
+.ca-indent-unit { width: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.ca-tree-line-v {
+    width: 1px; height: 100%; min-height: 20px;
+    background: var(--cb-border); margin: 0 auto;
+}
+.ca-tree-branch {
+    position: relative; width: 24px; height: 20px; flex-shrink: 0;
+    display: flex; align-items: center;
+}
+.ca-tree-branch::before {
+    content: ''; position: absolute;
+    left: 50%; top: 0; width: 1px; height: 50%;
+    background: var(--cb-border);
+}
+.ca-tree-branch::after {
+    content: ''; position: absolute;
+    left: 50%; top: 50%; width: 50%; height: 1px;
+    background: var(--cb-border);
+}
 
-		.admin-form-group {
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-		}
+/* Node dot */
+.ca-node-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid;
+}
+.ca-node-dot.root { background: #f59e0b; border-color: #d97706; }
+.ca-node-dot.parent { background: var(--cb-accent-light); border-color: var(--cb-accent); }
+.ca-node-dot.leaf { background: var(--cb-bg); border-color: var(--cb-border); }
 
-		.admin-form-label {
-			font-size: 14px;
-			font-weight: 700;
-			color: #0f172a;
-		}
+/* Name + meta */
+.ca-name-wrap { margin-left: 10px; }
+.ca-name {
+    font-size: 14px; font-weight: 600; color: var(--cb-text);
+}
+.ca-name.root-name { font-family: 'Roboto', sans-serif;font-size: 16px; }
+.ca-meta { font-size: 10px; color: var(--cb-muted); margin-top: 2px; }
+.ca-meta code { display: none; }
 
-		.admin-form-input {
-			width: 100%;
-			border: 1px solid #e2e8f0;
-			border-radius: 14px;
-			background: #fff;
-			padding: 12px 14px;
-			font-size: 14px;
-			color: #0f172a;
-			outline: none;
-		}
+/* Badges */
+.ca-badge {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 999px;
+}
+.ca-badge-children { background: var(--cb-accent-light); color: var(--cb-accent); }
+.ca-badge-leaf     { background: var(--cb-bg); color: var(--cb-muted); border: 1px solid var(--cb-border); }
+.ca-badge-books    { background: #e0f2fe; color: #0284c7; }
+.ca-badge-no-books { background: var(--cb-bg); color: var(--cb-muted); border: 1px solid var(--cb-border); }
 
-		.admin-form-input:focus {
-			border-color: #f97316;
-			box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
-		}
+/* Action buttons */
+.ca-btn-edit {
+    font-family: var(--cb-sans); font-size: 12px; font-weight: 600;
+    padding: 6px 13px; border-radius: 8px;
+    border: 1.5px solid var(--cb-border); background: var(--cb-white);
+    color: var(--cb-text); cursor: pointer; transition: all .18s;
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.ca-btn-edit:hover { border-color: var(--cb-accent); color: var(--cb-accent); }
+.ca-btn-del {
+    font-family: var(--cb-sans); font-size: 12px; font-weight: 600;
+    padding: 6px 13px; border-radius: 8px;
+    border: 1.5px solid #fecdd3; background: transparent;
+    color: #dc2626; cursor: pointer; transition: background .18s;
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.ca-btn-del:hover { background: #fff1f2; }
 
-		@media (max-width: 640px) {
-			.admin-modal {
-				padding: 12px;
-			}
+/* Empty state */
+.ca-empty {
+    padding: 56px 32px; text-align: center;
+}
+.ca-empty h3 {
+    font-family: var(--cb-serif); font-size: 20px; font-weight: 700;
+    color: var(--cb-text); margin-bottom: 6px;
+}
+.ca-empty p { font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted); }
 
-			.admin-modal-content {
-				border-radius: 16px;
-			}
+/* ─── Modal shared ────────────────────────────────────── */
+.ca-modal-wrap {
+    position: fixed; inset: 0; z-index: 60;
+    display: none; /* default hidden — .is-open shows it */
+    align-items: flex-start; justify-content: center;
+    padding: 32px 16px; overflow-y: auto;
+    background: rgba(13,27,16,.52);
+    backdrop-filter: blur(3px);
+}
+.ca-modal-wrap.is-open { display: flex; }
 
-			.admin-modal-header,
-			.admin-modal-body {
-				padding-left: 16px;
-				padding-right: 16px;
-			}
+.ca-modal {
+    background: var(--cb-white); border-radius: 20px;
+    width: 100%; max-width: 540px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.16);
+    overflow: hidden; position: relative;
+    margin: auto 0; /* vertical centering fallback */
+}
+.ca-modal-head {
+    padding: 20px 26px 16px;
+    border-bottom: 1px solid var(--cb-border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    position: relative;
+}
+.ca-modal-head::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #f59e0b, var(--cb-accent));
+}
+.ca-modal-title { font-family: var(--cb-serif); font-size: 20px; font-weight: 700; color: var(--cb-text); margin: 0; }
+.ca-modal-sub   { font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted); margin: 4px 0 0; }
+.ca-modal-close {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1.5px solid var(--cb-border); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--cb-muted); transition: all .18s; flex-shrink: 0;
+}
+.ca-modal-close:hover { border-color: var(--cb-text); color: var(--cb-text); }
 
-			.admin-modal-footer {
-				flex-direction: column;
-			}
+.ca-modal-body { padding: 20px 26px; display: flex; flex-direction: column; gap: 16px; }
+.ca-modal-foot {
+    padding: 0 26px 22px;
+    display: flex; justify-content: flex-end; gap: 10px;
+}
 
-			.admin-modal-footer > * {
-				width: 100%;
-			}
-		}
-	</style>
+/* Form fields */
+.ca-field { display: flex; flex-direction: column; gap: 6px; }
+.ca-field-label {
+    font-family: var(--cb-sans); font-size: 12px; font-weight: 600; color: var(--cb-text);
+}
+.ca-field-input {
+    font-family: var(--cb-sans); font-size: 13px;
+    padding: 10px 14px; border: 1.5px solid var(--cb-border);
+    border-radius: 9px; background: var(--cb-white); color: var(--cb-text);
+    outline: none; transition: border-color .2s, box-shadow .2s;
+    width: 100%; box-sizing: border-box; appearance: none;
+}
+.ca-field-input:focus {
+    border-color: var(--cb-accent);
+    box-shadow: 0 0 0 3px rgba(45,106,79,.09);
+}
 
-	<div class="space-y-6">
-		<div class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
-			<div>
-				<h1 class="text-xl font-bold text-slate-900">Quản lý danh mục</h1>
-				<p class="mt-1 text-sm text-slate-500">Thêm, sửa, xóa và xem cây danh mục theo dữ liệu trong database.</p>
-			</div>
+/* Modal buttons */
+.ca-modal-submit {
+    font-family: var(--cb-sans); font-size: 13px; font-weight: 600;
+    padding: 10px 22px; border-radius: 9px; border: none;
+    background: var(--cb-text); color: #fff; cursor: pointer;
+    transition: background .2s; display: inline-flex; align-items: center; gap: 7px;
+}
+.ca-modal-submit:hover { background: var(--cb-accent); }
+.ca-modal-cancel {
+    font-family: var(--cb-sans); font-size: 13px; font-weight: 500;
+    padding: 10px 18px; border-radius: 9px;
+    border: 1.5px solid var(--cb-border); background: transparent;
+    color: var(--cb-muted); cursor: pointer; transition: all .18s;
+}
+.ca-modal-cancel:hover { border-color: var(--cb-text); color: var(--cb-text); }
 
-			<div class="flex flex-wrap items-center gap-3">
-				<form method="GET" action="{{ route('admin.categories.index') }}" class="relative w-full sm:w-72">
-					<svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-					</svg>
-					<input
-						type="search"
-						name="q"
-						value="{{ $q }}"
-						placeholder="Tìm danh mục..."
-						class="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 pl-9 pr-4 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-					>
-				</form>
+/* Category type tag in select */
+.ca-parent-hint {
+    font-family: var(--cb-sans); font-size: 11px; color: var(--cb-muted); margin-top: 4px;
+}
+</style>
 
-				<button
-					type="button"
-					id="openCreateCategoryModal"
-					class="flex items-center justify-center whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-				>
-					<svg class="mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-					</svg>
-					Thêm danh mục
-				</button>
-			</div>
-		</div>
+{{-- ── Page header ──────────────────────────────────────── --}}
+<div class="ca-header">
+    <div>
+        <h1 class="ca-header-title">Quản lý danh mục</h1>
+        <p class="ca-header-sub">Xem cây phân cấp, thêm mới và chỉnh sửa danh mục.</p>
+    </div>
+    <div class="ca-header-right">
+        <form method="GET" action="{{ route('admin.categories.index') }}">
+            <div class="ca-search-wrap">
+                <span class="ca-search-icon">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </span>
+                <input name="q" value="{{ $q }}"
+                       placeholder="Tìm danh mục..."
+                       class="ca-search-input">
+            </div>
+        </form>
+        <button type="button" id="openCreateCategoryModal" class="ca-btn-add">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Thêm danh mục
+        </button>
+    </div>
+</div>
 
-		<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-			<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tổng danh mục</p>
-				<p class="mt-2 text-2xl font-bold text-slate-900">{{ $totalCategories }}</p>
-			</div>
-			<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Danh mục gốc</p>
-				<p class="mt-2 text-2xl font-bold text-slate-900">{{ $rootCategories }}</p>
-			</div>
-			<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Danh mục lá</p>
-				<p class="mt-2 text-2xl font-bold text-slate-900">{{ $leafCategories }}</p>
-			</div>
-			<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Có gắn sách</p>
-				<p class="mt-2 text-2xl font-bold text-slate-900">{{ $categoriesWithBooks }}</p>
-			</div>
-		</div>
+{{-- ── Stats ─────────────────────────────────────────────── --}}
+<div class="ca-stats">
+    <div class="ca-stat ca-stat-total">
+        <p class="ca-stat-lbl">Tổng danh mục</p>
+        <p class="ca-stat-val">{{ $totalCategories }}</p>
+    </div>
+    <div class="ca-stat ca-stat-root">
+        <p class="ca-stat-lbl">Danh mục gốc</p>
+        <p class="ca-stat-val">{{ $rootCategories }}</p>
+    </div>
+    <div class="ca-stat ca-stat-leaf">
+        <p class="ca-stat-lbl">Danh mục lá</p>
+        <p class="ca-stat-val">{{ $leafCategories }}</p>
+    </div>
+    <div class="ca-stat ca-stat-books">
+        <p class="ca-stat-lbl">Có gắn sách</p>
+        <p class="ca-stat-val">{{ $categoriesWithBooks }}</p>
+    </div>
+</div>
 
-		<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-			<div class="overflow-x-auto">
-				<table class="min-w-[980px] w-full text-left text-sm whitespace-nowrap">
-					<thead class="bg-slate-50 text-slate-600">
-						<tr>
-							<th class="px-5 py-4 font-semibold">Danh mục</th>
-							<th class="px-5 py-4 font-semibold">Sách</th>
-							<th class="px-5 py-4 font-semibold">Con</th>
-							<th class="px-5 py-4 font-semibold text-right">Hành động</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-slate-100 text-slate-700">
-						@forelse($categories as $category)
-							<tr class="transition-colors hover:bg-slate-50/60">
-								<td class="px-5 py-4 align-top">
-									<div class="flex items-start gap-3">
-										<div class="flex shrink-0 items-center pt-0.5">
-											@for($depth = 0; $depth < (int) ($category->depth ?? 0); $depth++)
-												<span class="inline-block w-4"></span>
-											@endfor
-											<span class="inline-flex h-2.5 w-2.5 rounded-full {{ (int) ($category->children_count ?? 0) > 0 ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
-										</div>
-										<div class="min-w-0">
-											<div class="flex flex-wrap items-center gap-2">
-												<span class="font-semibold text-slate-900">{{ $category->name }}</span>
-												@if((int) ($category->children_count ?? 0) > 0)
-													<span class="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600">{{ $category->children_count }} con</span>
-												@else
-													<span class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">Lá</span>
-												@endif
-											</div>
-											<div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-												@if($category->parent)
-													<span>Cha: {{ $category->parent->name }}</span>
-												@else
-													<span>Gốc</span>
-												@endif
-											</div>
-										</div>
-									</div>
-								</td>
-								<td class="px-5 py-4 align-top">
-									<span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">{{ (int) ($category->books_count ?? 0) }} sách</span>
-								</td>
-								<td class="px-5 py-4 align-top">
-									<span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">{{ (int) ($category->children_count ?? 0) }}</span>
-								</td>
-								<td class="px-5 py-4 align-top">
-									<div class="flex items-center justify-end gap-2">
-										<button
-											type="button"
-											class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-											data-edit-category="true"
-											data-category-id="{{ $category->id }}"
-											data-category-name="{{ e($category->name) }}"
-											data-category-parent-id="{{ $category->parent_id ?? '' }}"
-										>
-											Sửa
-										</button>
+{{-- ── Tree table ────────────────────────────────────────── --}}
+<div class="ca-tree-card">
+    <div class="ca-tree-toolbar">
+        <span class="ca-tree-toolbar-title">Cây danh mục</span>
+        <div class="ca-tree-legend">
+            <span class="ca-legend-item">
+                <span class="ca-legend-dot" style="background:#f59e0b;border:2px solid #d97706"></span>
+                Danh mục gốc
+            </span>
+            <span class="ca-legend-item">
+                <span class="ca-legend-dot" style="background:var(--cb-accent-light);border:2px solid var(--cb-accent)"></span>
+                Có danh mục con
+            </span>
+            <span class="ca-legend-item">
+                <span class="ca-legend-dot" style="background:var(--cb-bg);border:2px solid var(--cb-border)"></span>
+                Danh mục lá
+            </span>
+        </div>
+    </div>
 
-										<form method="POST" action="{{ route('admin.categories.destroy', $category) }}" class="inline-block" onsubmit="return confirm('Xóa danh mục này?');">
-											@csrf
-											@method('DELETE')
-											<button type="submit" class="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-600 shadow-sm transition-colors hover:bg-rose-100 hover:text-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-1">Xóa</button>
-										</form>
-									</div>
-								</td>
-							</tr>
-						@empty
-							<tr>
-								<td colspan="4" class="px-5 py-10">
-									<div class="text-center">
-										<p class="text-sm font-semibold text-slate-700">Không có danh mục</p>
-										<p class="mt-1 text-sm text-slate-500">Hãy tạo danh mục đầu tiên để bắt đầu.</p>
-									</div>
-								</td>
-							</tr>
-						@endforelse
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
+    <div style="overflow-x:auto">
+        <table class="ca-table">
+            <thead>
+                <tr>
+                    <th style="min-width:320px">Danh mục</th>
+                    <th>Sách</th>
+                    <th>Danh mục con</th>
+                    <th style="text-align:right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($categories as $category)
+                    @php
+                        $depth    = (int)($category->depth ?? 0);
+                        $hasKids  = (int)($category->children_count ?? 0) > 0;
+                        $isRoot   = $depth === 0;
+                        $dotClass = $isRoot ? 'root' : ($hasKids ? 'parent' : 'leaf');
+                        $nameClass = $isRoot ? 'root-name' : '';
+                    @endphp
+                    <tr>
+                        {{-- Tree cell --}}
+                        <td>
+                            <div class="ca-row-wrap">
+                                {{-- Indent levels --}}
+                                @for($d = 0; $d < $depth; $d++)
+                                    <div class="ca-indent-unit">
+                                        @if($d === $depth - 1)
+                                            <div class="ca-tree-branch"></div>
+                                        @else
+                                            <div style="width:1px;height:100%;min-height:20px;background:var(--cb-border);margin:0 auto"></div>
+                                        @endif
+                                    </div>
+                                @endfor
 
-	<div id="createCategoryModal" class="admin-modal {{ $openCreateModal ? '' : 'hidden' }}">
-		<div class="admin-modal-content">
-			<div class="admin-modal-header">
-				<div>
-					<h2>Thêm danh mục mới</h2>
-					<p>Tạo danh mục gốc hoặc gán vào danh mục cha.</p>
-				</div>
-				<button type="button" id="closeCreateCategoryModal" class="admin-modal-close">✕</button>
-			</div>
+                                {{-- Node dot --}}
+                                <div class="ca-node-dot {{ $dotClass }}"></div>
 
-			<form method="POST" action="{{ route('admin.categories.store') }}" class="admin-modal-body">
-				@csrf
-				<input type="hidden" name="_form" value="create-category">
+                                {{-- Name --}}
+                                <div class="ca-name-wrap">
+                                    <div class="ca-name {{ $nameClass }}">{{ $category->name }}</div>
+                                    <div class="ca-meta">
+                                        @if($category->parent)
+                                            <span>Cha: {{ $category->parent->name }}</span>
+                                        @else
+                                            <span>Danh mục gốc</span>
+                                        @endif
+                                        &nbsp;·&nbsp;
+                                        <code style="font-size:10px;color:var(--cb-muted);background:var(--cb-bg);padding:1px 5px;border-radius:4px">
+                                            {{ $category->slug ?? '—' }}
+                                        </code>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
 
-				<div class="admin-form-group">
-					<label class="admin-form-label">Tên danh mục</label>
-					<input type="text" name="name" value="{{ old('name') }}" class="admin-form-input" placeholder="Nhập tên danh mục" required>
-				</div>
+                        {{-- Books count --}}
+                        <td>
+                            @php $bk = (int)($category->books_count ?? 0); @endphp
+                            <span class="ca-badge {{ $bk > 0 ? 'ca-badge-books' : 'ca-badge-no-books' }}">
+                                {{ $bk }} sách
+                            </span>
+                        </td>
 
-				<div class="admin-form-group">
-					<label class="admin-form-label">Danh mục cha</label>
-					<select name="parent_id" class="admin-form-input">
-						<option value="">Danh mục gốc</option>
-						@foreach($allCategories as $option)
-							<option value="{{ $option->id }}" @selected((string) $createSelectedParentId === (string) $option->id)>
-								{{ str_repeat('— ', (int) ($option->depth ?? 0)) }}{{ $option->name }}
-							</option>
-						@endforeach
-					</select>
-				</div>
+                        {{-- Children count --}}
+                        <td>
+                            @php $ck = (int)($category->children_count ?? 0); @endphp
+                            @if($ck > 0)
+                                <span class="ca-badge ca-badge-children">{{ $ck }} con</span>
+                            @else
+                                <span class="ca-badge ca-badge-leaf">Lá</span>
+                            @endif
+                        </td>
 
-				<div class="admin-modal-footer">
-					<button type="button" id="cancelCreateCategoryModal" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50">Hủy</button>
-					<button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">Tạo danh mục</button>
-				</div>
-			</form>
-		</div>
-	</div>
+                        {{-- Actions --}}
+                        <td style="text-align:right">
+                            <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+                                <button type="button"
+                                        class="ca-btn-edit"
+                                        data-edit-category="true"
+                                        data-category-id="{{ $category->id }}"
+                                        data-category-name="{{ e($category->name) }}"
+                                        data-category-parent-id="{{ $category->parent_id ?? '' }}">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                    Sửa
+                                </button>
 
-	<div id="editCategoryModal" class="admin-modal {{ $editingCategory ? '' : 'hidden' }}">
-		<div class="admin-modal-content">
-			<div class="admin-modal-header">
-				<div>
-					<h2>Sửa danh mục</h2>
-					<p>Cập nhật tên, slug và danh mục cha.</p>
-				</div>
-				<button type="button" id="closeEditCategoryModal" class="admin-modal-close">✕</button>
-			</div>
+                                <form method="POST"
+                                      action="{{ route('admin.categories.destroy', $category) }}"
+                                      class="inline-block"
+                                      onsubmit="return confirm('Xoá danh mục này?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="ca-btn-del">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                                        </svg>
+                                        Xoá
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4">
+                            <div class="ca-empty">
+                                <svg width="48" height="48" fill="none" stroke="var(--cb-border)" stroke-width="1.4" viewBox="0 0 24 24" style="margin:0 auto 14px">
+                                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                                </svg>
+                                <h3>Không có danh mục phù hợp</h3>
+                                <p>Thử thay đổi từ khoá hoặc thêm danh mục mới.</p>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 
-			<form method="POST" action="{{ $editingCategory ? route('admin.categories.update', $editingCategory) : '#' }}" id="editCategoryForm" class="admin-modal-body">
-				@csrf
-				@method('PATCH')
-				<input type="hidden" name="_form" value="update-category">
-				<input type="hidden" name="_category_id" value="{{ $editingCategory?->id }}">
+{{-- ════════════════════════════════════════════════════════
+     CREATE MODAL
+════════════════════════════════════════════════════════ --}}
+<div id="createCategoryModal" class="ca-modal-wrap {{ $openCreateModal ? 'is-open' : '' }}">
+    <div class="ca-modal">
+        <div class="ca-modal-head">
+            <div>
+                <h2 class="ca-modal-title">Thêm danh mục mới</h2>
+                <p class="ca-modal-sub">Tạo danh mục gốc hoặc gán vào danh mục cha.</p>
+            </div>
+            <button type="button" id="closeCreateCategoryModal" class="ca-modal-close">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
 
-				<div class="admin-form-group">
-					<label class="admin-form-label">Tên danh mục</label>
-					<input type="text" name="name" value="{{ $editingCategory ? old('name', $editingCategory->name) : '' }}" class="admin-form-input" placeholder="Nhập tên danh mục" required>
-				</div>
+        <form method="POST" action="{{ route('admin.categories.store') }}">
+            @csrf
+            <input type="hidden" name="_form" value="create-category">
 
-				<div class="admin-form-group">
-					<label class="admin-form-label">Danh mục cha</label>
-					<select name="parent_id" class="admin-form-input">
-						<option value="">Danh mục gốc</option>
-						@foreach($allCategories as $option)
-							@continue($editingCategory && (int) $option->id === (int) $editingCategory->id)
-							<option value="{{ $option->id }}" @selected((string) $editSelectedParentId === (string) $option->id)>
-								{{ str_repeat('— ', (int) ($option->depth ?? 0)) }}{{ $option->name }}
-							</option>
-						@endforeach
-					</select>
-				</div>
+            <div class="ca-modal-body">
+                <div class="ca-field">
+                    <label class="ca-field-label">Tên danh mục</label>
+                    <input type="text" name="name" value="{{ old('name') }}"
+                           class="ca-field-input" placeholder="Nhập tên danh mục" required>
+                </div>
 
-				<div class="admin-modal-footer">
-					<button type="button" id="cancelEditCategoryModal" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50">Hủy</button>
-					<button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">Lưu thay đổi</button>
-				</div>
-			</form>
-		</div>
-	</div>
+                <div class="ca-field">
+                    <label class="ca-field-label">Danh mục cha</label>
+                    <select name="parent_id" class="ca-field-input">
+                        <option value="">— Danh mục gốc (không có cha)</option>
+                        @foreach($allCategories as $option)
+                            <option value="{{ $option->id }}"
+                                    @selected((string)$createSelectedParentId === (string)$option->id)>
+                                {{ str_repeat('— ', (int)($option->depth ?? 0)) }}{{ $option->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span class="ca-parent-hint">Để trống nếu muốn tạo danh mục gốc.</span>
+                </div>
+            </div>
 
-	<script>
-		(function () {
-			const createModal = document.getElementById('createCategoryModal');
-			const editModal = document.getElementById('editCategoryModal');
-			const openCreateButton = document.getElementById('openCreateCategoryModal');
-			const closeCreateButton = document.getElementById('closeCreateCategoryModal');
-			const cancelCreateButton = document.getElementById('cancelCreateCategoryModal');
-			const closeEditButton = document.getElementById('closeEditCategoryModal');
-			const cancelEditButton = document.getElementById('cancelEditCategoryModal');
-			const editForm = document.getElementById('editCategoryForm');
-			const editButtons = document.querySelectorAll('[data-edit-category="true"]');
+            <div class="ca-modal-foot">
+                <button type="button" id="cancelCreateCategoryModal" class="ca-modal-cancel">Huỷ</button>
+                <button type="submit" class="ca-modal-submit">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Tạo danh mục
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-			const openModal = (modal) => modal?.classList.remove('hidden');
-			const closeModal = (modal) => modal?.classList.add('hidden');
+{{-- ════════════════════════════════════════════════════════
+     EDIT MODAL
+════════════════════════════════════════════════════════ --}}
+<div id="editCategoryModal" class="ca-modal-wrap {{ $editingCategory ? 'is-open' : '' }}">
+    <div class="ca-modal">
+        <div class="ca-modal-head">
+            <div>
+                <h2 class="ca-modal-title">Chỉnh sửa danh mục</h2>
+                <p class="ca-modal-sub">Cập nhật tên và danh mục cha.</p>
+            </div>
+            <button type="button" id="closeEditCategoryModal" class="ca-modal-close">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
 
-			if (openCreateButton) {
-				openCreateButton.addEventListener('click', () => openModal(createModal));
-			}
+        <form method="POST"
+              action="{{ $editingCategory ? route('admin.categories.update', $editingCategory) : '#' }}"
+              id="editCategoryForm">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="_form"        value="update-category">
+            <input type="hidden" name="_category_id" value="{{ $editingCategory?->id }}">
 
-			if (closeCreateButton) {
-				closeCreateButton.addEventListener('click', () => closeModal(createModal));
-			}
+            <div class="ca-modal-body">
+                <div class="ca-field">
+                    <label class="ca-field-label">Tên danh mục</label>
+                    <input type="text" name="name"
+                           value="{{ $editingCategory ? old('name', $editingCategory->name) : '' }}"
+                           class="ca-field-input" placeholder="Nhập tên danh mục" required>
+                </div>
 
-			if (cancelCreateButton) {
-				cancelCreateButton.addEventListener('click', () => closeModal(createModal));
-			}
+                <div class="ca-field">
+                    <label class="ca-field-label">Danh mục cha</label>
+                    <select name="parent_id" class="ca-field-input">
+                        <option value="">— Danh mục gốc (không có cha)</option>
+                        @foreach($allCategories as $option)
+                            @continue($editingCategory && (int)$option->id === (int)$editingCategory->id)
+                            <option value="{{ $option->id }}"
+                                    @selected((string)$editSelectedParentId === (string)$option->id)>
+                                {{ str_repeat('— ', (int)($option->depth ?? 0)) }}{{ $option->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span class="ca-parent-hint">Để trống nếu muốn đặt làm danh mục gốc.</span>
+                </div>
+            </div>
 
-			if (closeEditButton) {
-				closeEditButton.addEventListener('click', () => closeModal(editModal));
-			}
+            <div class="ca-modal-foot">
+                <button type="button" id="cancelEditCategoryModal" class="ca-modal-cancel">Huỷ</button>
+                <button type="submit" class="ca-modal-submit">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-			if (cancelEditButton) {
-				cancelEditButton.addEventListener('click', () => closeModal(editModal));
-			}
+{{-- ── JavaScript (logic giữ nguyên từ file gốc) ───────────── --}}
+<script>
+(function () {
+    const createModal = document.getElementById('createCategoryModal');
+    const editModal   = document.getElementById('editCategoryModal');
+    const editForm    = document.getElementById('editCategoryForm');
 
-			editButtons.forEach((button) => {
-				button.addEventListener('click', () => {
-					if (!editForm) return;
+    const openModal  = m => m?.classList.add('is-open');
+    const closeModal = m => m?.classList.remove('is-open');
 
-					const categoryId = button.dataset.categoryId || '';
-					const categoryName = button.dataset.categoryName || '';
-					const categoryParentId = button.dataset.categoryParentId || '';
+    document.getElementById('openCreateCategoryModal')
+        ?.addEventListener('click', () => openModal(createModal));
+    document.getElementById('closeCreateCategoryModal')
+        ?.addEventListener('click', () => closeModal(createModal));
+    document.getElementById('cancelCreateCategoryModal')
+        ?.addEventListener('click', () => closeModal(createModal));
 
-					editForm.action = `/admin/categories/${categoryId}`;
-					editForm.querySelector('input[name="_category_id"]').value = categoryId;
-					editForm.querySelector('input[name="name"]').value = categoryName;
-					editForm.querySelector('select[name="parent_id"]').value = categoryParentId;
+    document.getElementById('closeEditCategoryModal')
+        ?.addEventListener('click', () => closeModal(editModal));
+    document.getElementById('cancelEditCategoryModal')
+        ?.addEventListener('click', () => closeModal(editModal));
 
-					openModal(editModal);
-				});
-			});
+    /* Click outside to close */
+    [createModal, editModal].forEach(m => {
+        m?.addEventListener('click', e => { if (e.target === m) closeModal(m); });
+    });
 
-			document.addEventListener('keydown', (event) => {
-				if (event.key === 'Escape') {
-					closeModal(createModal);
-					closeModal(editModal);
-				}
-			});
-		})();
-	</script>
+    /* Edit buttons — populate form */
+    document.querySelectorAll('[data-edit-category="true"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!editForm) return;
+            const id       = btn.dataset.categoryId       || '';
+            const name     = btn.dataset.categoryName     || '';
+            const parentId = btn.dataset.categoryParentId || '';
+
+            editForm.action = `/admin/categories/${id}`;
+            editForm.querySelector('input[name="_category_id"]').value = id;
+            editForm.querySelector('input[name="name"]').value         = name;
+            editForm.querySelector('select[name="parent_id"]').value   = parentId;
+
+            openModal(editModal);
+        });
+    });
+
+    /* ESC key */
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeModal(createModal); closeModal(editModal); }
+    });
+})();
+</script>
+
 @endsection

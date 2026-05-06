@@ -297,6 +297,7 @@ body {
     font-family: var(--cb-sans); font-size: 13px; font-weight: 600;
     color: var(--cb-text); line-height: 1.4; margin-bottom: 5px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    line-clamp: 2;
 }
 .ck-item-meta {
     display: flex; align-items: center; justify-content: space-between;
@@ -507,7 +508,7 @@ body {
                     <p style="font-family:var(--cb-sans);font-size:12px;color:var(--cb-muted);margin-bottom:8px">
                         Quét mã QR để chuyển khoản nhanh:
                     </p>
-                    <img src="{{ asset('images/QRCode.jpg') }}" alt="QR chuyển khoản">
+                    <img src="{{ asset('images/QRCode.png') }}" alt="QR chuyển khoản">
                     <p class="ck-qr-note">Hoặc chuyển theo thông tin trên hoá đơn sau khi đặt hàng.</p>
                 </div>
 

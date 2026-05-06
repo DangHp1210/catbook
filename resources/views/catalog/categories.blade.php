@@ -531,6 +531,7 @@
         line-height: 1.4;
         display: -webkit-box;
         -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        line-clamp: 2;
         overflow: hidden;
         margin-bottom: 4px;
         transition: color .15s;
@@ -782,7 +783,7 @@
                         @endphp
                         <a href="{{ route('catalog.categories', $acQ) }}"
                            class="cat-child-link {{ !$selectedChild ? 'active' : '' }}">
-                            <span>Tất cả trong {{ $selectedParent->name }}</span>
+                            <span> {{ $selectedParent->name }}</span>
                         </a>
                         @forelse($childCategories as $child)
                             @php
@@ -790,7 +791,7 @@
                             @endphp
                             <a href="{{ route('catalog.categories', $cQ) }}"
                                class="cat-child-link {{ $selectedChild?->id===$child->id ? 'active' : '' }}">
-                                <span>{{ $child->name }}</span>
+                                <span>&raquo; {{ $child->name }}</span>
                                 <span class="cat-child-badge">{{ $child->books_count }}</span>
                             </a>
                         @empty

@@ -381,7 +381,7 @@
             </div>
 
             @php
-                $catIcons = ['📚','🧠','💼','🔬','🎨','📖','💡','🌍'];
+                $catIcons = ['📚','🧠','💼','🔬','🌍','📖','💡','🎨'];
             @endphp
             <div class="cb-cat-grid">
                 @forelse($topCategories ?? [] as $cat)

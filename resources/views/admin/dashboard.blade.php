@@ -48,7 +48,7 @@ body {
 .ad-heading {
     font-family: var(--cb-serif);
     font-size: 32px; font-weight: 900; color: #0d1b10;
-    letter-spacing: -1px; line-height: 1.08; margin: 0;
+    letter-spacing: -0.5px; line-height: 1.08; margin: 0;
 }
 .ad-heading em { font-style: italic; color: var(--cb-accent); }
 

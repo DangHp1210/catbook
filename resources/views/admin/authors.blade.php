@@ -1,7 +1,7 @@
 @extends('layouts.admin', ['title' => 'Quản lý tác giả'])
-
+ 
 @section('content')
-
+ 
 <style>
 /* ─── Design tokens ───────────────────────────────────── */
 :root {
@@ -16,7 +16,12 @@
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
-
+body {
+        font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+        background: var(--cb-bg);
+        color: var(--cb-text);
+        margin: 0;
+}
 /* ─── Page header ─────────────────────────────────────── */
 .au-header {
     background: var(--cb-white); border: 1px solid var(--cb-border);
@@ -24,6 +29,8 @@
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
     position: relative; overflow: hidden;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
 .au-header::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -37,9 +44,9 @@
 .au-header-sub {
     font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted);
 }
-
+ 
 .au-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
+ 
 /* Search input */
 .au-search-wrap {
     display: flex; border: 1.5px solid var(--cb-border); border-radius: 10px;
@@ -56,7 +63,7 @@
     width: 240px;
 }
 .au-search-input::placeholder { color: #c0b8b0; }
-
+ 
 /* Add button */
 .au-btn-add {
     font-family: var(--cb-sans); font-size: 13px; font-weight: 600;
@@ -66,13 +73,15 @@
     transition: background .2s; white-space: nowrap;
 }
 .au-btn-add:hover { background: var(--cb-accent); }
-
+ 
 /* ─── Table card ──────────────────────────────────────── */
 .au-table-card {
     background: var(--cb-white); border: 1px solid var(--cb-border);
     border-radius: 18px; overflow: hidden; margin-bottom: 16px;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
-
+ 
 .au-table { width: 100%; border-collapse: collapse; font-family: var(--cb-sans); }
 .au-table thead tr {
     border-bottom: 1px solid var(--cb-border);
@@ -89,7 +98,7 @@
 .au-table tbody tr:last-child { border-bottom: none; }
 .au-table tbody tr:hover { background: #fdfcfa; }
 .au-table td { padding: 14px 18px; vertical-align: top; }
-
+ 
 /* Author cell */
 .au-author-cell { display: flex; align-items: flex-start; gap: 12px; }
 .au-avatar {
@@ -109,7 +118,7 @@
     line-clamp: 2;
     max-width: 380px;
 }
-
+ 
 /* Book count badge */
 .au-count-badge {
     display: inline-flex; align-items: center;
@@ -117,7 +126,7 @@
     padding: 3px 12px; border-radius: 999px;
     background: var(--cb-accent-light); color: var(--cb-accent);
 }
-
+ 
 /* Action buttons */
 .au-action-group { display: flex; flex-direction: column; gap: 6px; }
 .au-btn-edit {
@@ -138,7 +147,7 @@
     display: inline-flex; align-items: center; gap: 5px;
 }
 .au-btn-del:hover { background: #fff1f2; }
-
+ 
 /* Empty state */
 .au-empty {
     padding: 56px 32px; text-align: center;
@@ -149,14 +158,16 @@
     color: var(--cb-text); margin-bottom: 6px;
 }
 .au-empty p { font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted); }
-
+ 
 /* ─── Modal shared ────────────────────────────────────── */
 .au-modal-wrap {
     position: fixed; inset: 0; z-index: 60;
-    display: flex; align-items: center; justify-content: center; padding: 16px;
+    display: none; /* hidden by default — JS adds .is-open */
+    align-items: center; justify-content: center; padding: 16px;
     background: rgba(13,27,16,.55);
     backdrop-filter: blur(3px);
 }
+.au-modal-wrap.is-open { display: flex; }
 .au-modal {
     background: var(--cb-white); border-radius: 20px;
     width: 100%; max-width: 520px;
@@ -188,7 +199,7 @@
     padding: 0 26px 22px;
     display: flex; justify-content: flex-end; gap: 10px;
 }
-
+ 
 /* Form fields inside modal */
 .au-field { display: flex; flex-direction: column; gap: 6px; }
 .au-field-label {
@@ -209,7 +220,7 @@
 .au-field-hint {
     font-family: var(--cb-sans); font-size: 11px; color: var(--cb-muted);
 }
-
+ 
 /* Modal buttons */
 .au-modal-submit {
     font-family: var(--cb-sans); font-size: 13px; font-weight: 600;
@@ -225,16 +236,13 @@
     color: var(--cb-muted); cursor: pointer; transition: all .18s;
 }
 .au-modal-cancel:hover { border-color: var(--cb-text); color: var(--cb-text); }
-
-/* Hide modals when .hidden class is applied */
-.au-modal-wrap.hidden { display: none !important; }
 </style>
-
+ 
 @php
     $openCreateModal  = old('_form') === 'create-author';
     $openEditAuthorId = old('_form') === 'update-author' ? (int) old('_author_id') : null;
 @endphp
-
+ 
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="au-header">
     <div>
@@ -255,7 +263,7 @@
                        class="au-search-input">
             </div>
         </form>
-
+ 
         {{-- Add button --}}
         <button type="button" id="openCreateAuthorModal" class="au-btn-add">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -265,7 +273,7 @@
         </button>
     </div>
 </div>
-
+ 
 {{-- ── Authors table ─────────────────────────────────────── --}}
 <div class="au-table-card">
     <div style="overflow-x:auto">
@@ -306,12 +314,12 @@
                                 </div>
                             </div>
                         </td>
-
+ 
                         {{-- Book count --}}
                         <td>
                             <span class="au-count-badge">{{ $author->books_count }} cuốn</span>
                         </td>
-
+ 
                         {{-- Actions --}}
                         <td>
                             <div class="au-action-group">
@@ -324,7 +332,7 @@
                                     </svg>
                                     Chỉnh sửa
                                 </button>
-
+ 
                                 <form method="POST"
                                       action="{{ route('admin.authors.destroy', $author) }}"
                                       onsubmit="return confirm('Bạn chắc chắn muốn xóa tác giả này?')">
@@ -342,62 +350,7 @@
                             </div>
                         </td>
                     </tr>
-
-                    {{-- Edit modal (per author) --}}
-                    <div id="editAuthorModal-{{ $author->id }}"
-                         class="au-modal-wrap {{ $openEditAuthorId === $author->id ? '' : 'hidden' }}">
-                        <div class="au-modal">
-                            <div class="au-modal-head">
-                                <span class="au-modal-title">Chỉnh sửa tác giả</span>
-                                <button type="button" data-edit-close="{{ $author->id }}" class="au-modal-close">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <form method="POST"
-                                  action="{{ route('admin.authors.update', $author) }}"
-                                  enctype="multipart/form-data">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="_form"      value="update-author">
-                                <input type="hidden" name="_author_id" value="{{ $author->id }}">
-
-                                <div class="au-modal-body">
-                                    <div class="au-field">
-                                        <label class="au-field-label">Tên tác giả</label>
-                                        <input name="name" type="text" required
-                                               class="au-field-input"
-                                               placeholder="Họ tên đầy đủ"
-                                               value="{{ $openEditAuthorId === $author->id ? old('name') : $author->name }}">
-                                    </div>
-                                    <div class="au-field">
-                                        <label class="au-field-label">Ảnh đại diện</label>
-                                        <input name="avatar_file" type="file" accept="image/*" class="au-field-input">
-                                        <span class="au-field-hint">Để trống nếu muốn giữ ảnh hiện tại.</span>
-                                    </div>
-                                    <div class="au-field">
-                                        <label class="au-field-label">Tiểu sử</label>
-                                        <textarea name="bio" rows="4"
-                                                  class="au-field-input"
-                                                  placeholder="Mô tả ngắn về tác giả (tuỳ chọn)">{{ $openEditAuthorId === $author->id ? old('bio') : $author->bio }}</textarea>
-                                    </div>
-                                </div>
-
-                                <div class="au-modal-foot">
-                                    <button type="button" data-edit-close="{{ $author->id }}" class="au-modal-cancel">Huỷ</button>
-                                    <button type="submit" class="au-modal-submit">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        Lưu thay đổi
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
+ 
                 @empty
                     <tr>
                         <td colspan="3">
@@ -419,16 +372,73 @@
     </div>
 </div>
 
+@foreach($authors as $author)
+    {{-- Edit modal (per author) --}}
+    <div id="editAuthorModal-{{ $author->id }}"
+         class="au-modal-wrap {{ $openEditAuthorId === $author->id ? 'is-open' : '' }}">
+        <div class="au-modal">
+            <div class="au-modal-head">
+                <span class="au-modal-title">Chỉnh sửa tác giả</span>
+                <button type="button" data-edit-close="{{ $author->id }}" class="au-modal-close">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form method="POST"
+                  action="{{ route('admin.authors.update', $author) }}"
+                  enctype="multipart/form-data">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="_form"      value="update-author">
+                <input type="hidden" name="_author_id" value="{{ $author->id }}">
+
+                <div class="au-modal-body">
+                    <div class="au-field">
+                        <label class="au-field-label">Tên tác giả</label>
+                        <input name="name" type="text" required
+                               class="au-field-input"
+                               placeholder="Họ tên đầy đủ"
+                               value="{{ $openEditAuthorId === $author->id ? old('name') : $author->name }}">
+                    </div>
+                    <div class="au-field">
+                        <label class="au-field-label">Ảnh đại diện</label>
+                        <input name="avatar_file" type="file" accept="image/*" class="au-field-input">
+                        <span class="au-field-hint">Để trống nếu muốn giữ ảnh hiện tại.</span>
+                    </div>
+                    <div class="au-field">
+                        <label class="au-field-label">Tiểu sử</label>
+                        <textarea name="bio" rows="4"
+                                  class="au-field-input"
+                                  placeholder="Mô tả ngắn về tác giả (tuỳ chọn)">{{ $openEditAuthorId === $author->id ? old('bio') : $author->bio }}</textarea>
+                    </div>
+                </div>
+
+                <div class="au-modal-foot">
+                    <button type="button" data-edit-close="{{ $author->id }}" class="au-modal-cancel">Huỷ</button>
+                    <button type="submit" class="au-modal-submit">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+ 
 {{-- Pagination --}}
 <div style="display:flex;justify-content:center">
     {{ $authors->links() }}
 </div>
-
+ 
 {{-- ════════════════════════════════════════════════════════
      CREATE MODAL
 ════════════════════════════════════════════════════════ --}}
 <div id="createAuthorModal"
-     class="au-modal-wrap {{ $openCreateModal ? '' : 'hidden' }}">
+     class="au-modal-wrap {{ $openCreateModal ? 'is-open' : '' }}">
     <div class="au-modal">
         <div class="au-modal-head">
             <span class="au-modal-title">Thêm tác giả mới</span>
@@ -438,11 +448,11 @@
                 </svg>
             </button>
         </div>
-
+ 
         <form method="POST" action="{{ route('admin.authors.store') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="_form" value="create-author">
-
+ 
             <div class="au-modal-body">
                 <div class="au-field">
                     <label class="au-field-label">Tên tác giả</label>
@@ -462,7 +472,7 @@
                               placeholder="Mô tả ngắn về tác giả (tuỳ chọn)">{{ old('bio') }}</textarea>
                 </div>
             </div>
-
+ 
             <div class="au-modal-foot">
                 <button type="button" id="cancelCreateAuthorModal" class="au-modal-cancel">Huỷ</button>
                 <button type="submit" class="au-modal-submit">
@@ -475,7 +485,7 @@
         </form>
     </div>
 </div>
-
+ 
 {{-- ── JavaScript (logic giữ nguyên) ──────────────────────── --}}
 <script>
 (function () {
@@ -484,43 +494,44 @@
     const openBtn   = document.getElementById('openCreateAuthorModal');
     const closeBtn  = document.getElementById('closeCreateAuthorModal');
     const cancelBtn = document.getElementById('cancelCreateAuthorModal');
-
+ 
     if (!modal || !openBtn || !closeBtn || !cancelBtn) return;
-
-    const openModal  = () => modal.classList.remove('hidden');
-    const closeModal = () => modal.classList.add('hidden');
-
+ 
+    const openModal  = () => modal.classList.add('is-open');
+    const closeModal = () => modal.classList.remove('is-open');
+ 
     openBtn.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-
+ 
     /* Edit modals */
     document.querySelectorAll('[data-edit-open]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-edit-open');
-            document.getElementById(`editAuthorModal-${id}`)?.classList.remove('hidden');
+            document.getElementById(`editAuthorModal-${id}`)?.classList.add('is-open');
         });
     });
-
+ 
     document.querySelectorAll('[data-edit-close]').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-edit-close');
-            document.getElementById(`editAuthorModal-${id}`)?.classList.add('hidden');
+            document.getElementById(`editAuthorModal-${id}`)?.classList.remove('is-open');
         });
     });
-
+ 
     document.querySelectorAll('[id^="editAuthorModal-"]').forEach(m => {
-        m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); });
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('is-open'); });
     });
-
+ 
     /* ESC key closes any open modal */
     document.addEventListener('keydown', e => {
         if (e.key !== 'Escape') return;
         closeModal();
-        document.querySelectorAll('[id^="editAuthorModal-"]').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('[id^="editAuthorModal-"]').forEach(m => m.classList.remove('is-open'));
     });
 })();
 </script>
-
+ 
 @endsection
+ 

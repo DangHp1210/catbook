@@ -70,6 +70,8 @@ if (auth()->check()) {
         {{-- Right actions --}}
         <div class="cb-nav-right">
 
+            <x-realtime-notification />
+
             {{-- Giỏ hàng --}}
             <a href="{{ route('cart.index') }}" class="cb-cart-icon" title="Giỏ hàng">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
@@ -287,7 +289,7 @@ if (auth()->check()) {
     position: relative;
     width: 38px; height: 38px;
     border-radius: 50%;
-    border: 1.5px solid #ddd;
+    border: 1.5px solid #a0a1a0;
     background: transparent;
     display: flex; align-items: center; justify-content: center;
     text-decoration: none;
@@ -295,7 +297,7 @@ if (auth()->check()) {
     transition: border-color 0.2s;
     flex-shrink: 0;
 }
-.cb-cart-icon:hover { border-color: var(--cb-brand-text); }
+.cb-cart-icon:hover {border-color: var(--cb-brand-accent, #2d6a4f);}
 .cb-cart-badge {
     position: absolute; top: -5px; right: -5px;
     background: var(--cb-brand-accent);

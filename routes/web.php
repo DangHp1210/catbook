@@ -10,6 +10,12 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\PaymentController;
+use App\Models\Author;
+use App\Models\Book;
+use App\Models\Category;
+use App\Models\Order;
+use App\Models\Publisher;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -105,7 +111,21 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:staff,admin')->group(function () {
         Route::get('/staff', function () {
-            return view('staff.dashboard');
+            $stats = [
+                'users' => User::query()->count(),
+                'books' => Book::query()->count(),
+                'authors' => Author::query()->count(),
+                'categories' => Category::query()->count(),
+                'publishers' => Publisher::query()->count(),
+                'orders' => Order::query()->count(),
+                'revenue' => (float) Order::query()
+                    ->whereIn('order_status', ['confirmed', 'shipping', 'completed'])
+                    ->sum('total_amount'),
+            ];
+
+            return view('staff.dashboard', [
+                'stats' => $stats,
+            ]);
         })->name('staff.panel');
     });
 

@@ -41,10 +41,10 @@
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
 body {
-        font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
-        background: var(--cb-bg);
-        color: var(--cb-text);
-        margin: 0;
+    font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    margin: 0;
 }
 /* ─── Page header ─────────────────────────────────────── */
 .ca-header {
@@ -53,6 +53,8 @@ body {
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
     position: relative; overflow: hidden;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
 .ca-header::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -91,6 +93,8 @@ body {
 /* ─── Stats strip ─────────────────────────────────────── */
 .ca-stats {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
 @media (max-width: 800px) { .ca-stats { grid-template-columns: repeat(2, 1fr); } }
 
@@ -118,6 +122,8 @@ body {
 .ca-tree-card {
     background: var(--cb-white); border: 1px solid var(--cb-border);
     border-radius: 18px; overflow: hidden; margin-bottom: 16px;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
 .ca-tree-toolbar {
     display: flex; align-items: center; justify-content: space-between;

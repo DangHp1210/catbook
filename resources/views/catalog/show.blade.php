@@ -99,8 +99,8 @@ body {
 
 /* Khai báo thêm một số biến màu sắc cho giao diện tươi sáng hơn (có thể tùy chỉnh) */
 :root {
-    --cb-primary-light: #e2e0dd; /* Nền cam nhạt cho icon */
-    --cb-primary-text: #1c1c1c;  /* Chữ cam đậm cho tiêu đề */
+    --cb-primary-light: #e2e0dd;
+    --cb-primary-text: #1c1c1c;
     --cb-text-main: #1f2937;
     --cb-text-muted: #4b5563;
     --cb-border-light: #f1f5f9;
@@ -109,6 +109,7 @@ body {
 /* Khung ngoài của thẻ */
 .bd-perks {
     margin-top: 16px;
+    background: var(--cb-white, #ffffff);
     border: 1px solid var(--cb-border, #e2e8f0);
     border-radius: 16px; /* Bo góc mềm mại hơn */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); /* Đổ bóng nhẹ */
@@ -135,7 +136,7 @@ body {
 
 /* Thêm icon nhỏ trang trí vào tiêu đề cho hợp vibe CatBook */
 .bd-perks-head::before {
-    content: '👉'; 
+    content: '😻'; 
     font-size: 16px;
 }
 
@@ -149,7 +150,7 @@ body {
 /* Từng mục đặc quyền */
 .bd-perk-item {
     display: flex; 
-    align-items: center; /* Căn giữa theo chiều dọc đẹp hơn */
+    align-items: center;
     gap: 14px;
     padding: 12px 14px;
     border-radius: 10px;

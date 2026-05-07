@@ -16,10 +16,10 @@
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
 body {
-        font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
-        background: var(--cb-bg);
-        color: var(--cb-text);
-        margin: 0;
+    font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    margin: 0;
 }
 /* ─── Page header ─────────────────────────────────────── */
 .ad-header {
@@ -46,7 +46,7 @@ body {
     50%{ opacity:.5; transform:scale(1.5); }
 }
 .ad-heading {
-    font-family: var(--cb-serif);
+    font-family: normal;
     font-size: 32px; font-weight: 900; color: #0d1b10;
     letter-spacing: -0.5px; line-height: 1.08; margin: 0;
 }

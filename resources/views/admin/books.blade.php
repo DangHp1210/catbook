@@ -48,10 +48,10 @@
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
 body {
-        font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
-        background: var(--cb-bg);
-        color: var(--cb-text);
-        margin: 0;
+    font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    margin: 0;
 }
 /* ─── Page header ─────────────────────────────────────── */
 .bk-header {
@@ -60,6 +60,8 @@ body {
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
     position: relative; overflow: hidden;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
 .bk-header::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -96,6 +98,8 @@ body {
 .bk-table-card {
     background: var(--cb-white); border: 1px solid var(--cb-border);
     border-radius: 18px; overflow: hidden; margin-bottom: 16px;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
 .bk-table { width: 100%; border-collapse: collapse; font-family: var(--cb-sans); }
 .bk-table thead tr { border-bottom: 1px solid var(--cb-border); }

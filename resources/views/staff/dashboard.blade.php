@@ -1,4 +1,4 @@
-@extends('layouts.admin', ['title' => 'Dashboard Nhân viên'])
+@extends('layouts.admin', ['title' => 'Dashboard Admin'])
 
 @section('content')
 <style>
@@ -250,7 +250,7 @@ body {
 <div class="ad-grid">
 
     {{-- Books --}}
-    <a href="{{ route('admin.books.index') }}" class="ad-card ad-card-books">
+    <a href="{{ route('staff.books.index') }}" class="ad-card ad-card-books">
         <div class="ad-card-top">
             <div class="ad-card-icon">📚</div>
             <span class="ad-card-badge">{{ number_format($stats['books']) }}</span>
@@ -268,7 +268,7 @@ body {
     </a>
 
     {{-- Authors --}}
-    <a href="{{ route('admin.authors.index') }}" class="ad-card ad-card-authors">
+    <a href="{{ route('staff.authors.index') }}" class="ad-card ad-card-authors">
         <div class="ad-card-top">
             <div class="ad-card-icon">✍️</div>
             <span class="ad-card-badge">{{ number_format($stats['authors']) }}</span>
@@ -286,7 +286,7 @@ body {
     </a>
 
     {{-- Categories --}}
-    <a href="{{ route('admin.categories.index') }}" class="ad-card ad-card-cats">
+    <a href="{{ route('staff.categories.index') }}" class="ad-card ad-card-cats">
         <div class="ad-card-top">
             <div class="ad-card-icon">🗂️</div>
             <span class="ad-card-badge">{{ number_format($stats['categories']) }}</span>
@@ -304,7 +304,7 @@ body {
     </a>
 
     {{-- Publishers --}}
-    <a href="{{ route('admin.publishers.index') }}" class="ad-card ad-card-pubs">
+    <a href="{{ route('staff.publishers.index') }}" class="ad-card ad-card-pubs">
         <div class="ad-card-top">
             <div class="ad-card-icon">🏢</div>
             <span class="ad-card-badge">{{ number_format($stats['publishers']) }}</span>
@@ -322,7 +322,7 @@ body {
     </a>
 
     {{-- Orders --}}
-    <a href="{{ route('admin.orders.index') }}" class="ad-card ad-card-orders">
+    <a href="{{ route('staff.orders.index') }}" class="ad-card ad-card-orders">
         <div class="ad-card-top">
             <div class="ad-card-icon">📦</div>
             <span class="ad-card-badge">{{ number_format($stats['orders']) }}</span>

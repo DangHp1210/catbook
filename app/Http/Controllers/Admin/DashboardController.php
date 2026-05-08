@@ -584,6 +584,15 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function previewOrder(Order $order)
+    {
+        $order->load(['user', 'items.book.authors']);
+
+        return view('admin.partials.order_detail', [
+            'order' => $order,
+        ]);
+    }
+
     public function updateOrder(Request $request, Order $order): RedirectResponse
     {
         $data = $request->validate([

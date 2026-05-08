@@ -22,7 +22,7 @@
     $selectedCreateAuthors      = collect(old('author_ids', []))->filter(fn($id)=>is_numeric($id))->map(fn($id)=>(int)$id)->all();
     $selectedCreateAuthorNames  = collect(old('author_names', []))->map(fn($n)=>trim((string)$n))->filter()->values()->all();
     $selectedEditAuthors        = collect(old('author_ids', $editingBook ? $editingBook->authors->pluck('id')->all() : []))->filter(fn($id)=>is_numeric($id))->map(fn($id)=>(int)$id)->all();
-    $selectedEditAuthorNames    = collect(old('author_names', []))->map(fn($n)=>trim((string)$n))->filter()->values()->all();
+    $selectedEditAuthorNames    = collect(old('author_names', $editingBook ? $editingBook->authors->pluck('name')->all() : []))->map(fn($n)=>trim((string)$n))->filter()->values()->all();
 
     $createAuthorItems = collect($selectedCreateAuthors)->map(fn($id)=>($a=$authorsById->get($id))?['type'=>'existing','id'=>(int)$a->id,'name'=>$a->name]:null)->filter()->values()->all();
     $createAuthorItems = array_merge($createAuthorItems, collect($selectedCreateAuthorNames)->map(fn($n)=>['type'=>'new','id'=>null,'name'=>$n])->values()->all());
@@ -60,7 +60,7 @@ body {
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
     position: relative; overflow: hidden;
-    max-width: 1300px;
+    max-width: 1315px;
     margin: 0 auto 16px;
 }
 .bk-header::before {
@@ -98,7 +98,7 @@ body {
 .bk-table-card {
     background: var(--cb-white); border: 1px solid var(--cb-border);
     border-radius: 18px; overflow: hidden; margin-bottom: 16px;
-    max-width: 1300px;
+    max-width: 1315px;
     margin: 0 auto 16px;
 }
 .bk-table { width: 100%; border-collapse: collapse; font-family: var(--cb-sans); }
@@ -384,9 +384,11 @@ body {
 
                         {{-- Price & stock --}}
                         <td>
-                            <p class="bk-price">{{ number_format($book->price, 0, ',', '.') }}đ</p>
                             @if($book->discount_price)
-                                <p class="bk-price-orig">{{ number_format($book->discount_price, 0, ',', '.') }}đ</p>
+                                <p class="bk-price">{{ number_format($book->discount_price, 0, ',', '.') }}đ</p>
+                                <p class="bk-price-orig">{{ number_format($book->price, 0, ',', '.') }}đ</p>
+                            @else
+                                <p class="bk-price">{{ number_format($book->price, 0, ',', '.') }}đ</p>
                             @endif
                             @php $sq = $book->stock_quantity; @endphp
                             <p class="bk-stock {{ $sq > 10 ? 'ok' : ($sq > 0 ? 'low' : 'out') }}">
@@ -419,7 +421,9 @@ body {
                                         data-book-language="{{ e($book->language ?? '') }}"
                                         data-book-publication-year="{{ $book->publication_year ?? '' }}"
                                         data-book-status="{{ $book->status }}"
-                                        data-book-publisher-id="{{ $book->publisher_id ?? '' }}">
+                                        data-book-publisher-id="{{ $book->publisher_id ?? '' }}"
+                                        data-book-category-ids='@json($book->categories->pluck("id")->map(fn($id)=>(int)$id)->values()->all())'
+                                        data-book-author-items='@json($book->authors->map(fn($author)=>["type"=>"existing","id"=>(int)$author->id,"name"=>$author->name])->values()->all())'>
                                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -717,7 +721,7 @@ body {
 
                     <div class="bk-col-2 bk-field">
                         <label class="bk-label">Danh mục <span style="font-weight:400;color:var(--cb-muted)">(giữ Ctrl/Cmd để chọn nhiều)</span></label>
-                        <select name="category_ids[]" multiple class="bk-input" size="6">
+                        <select name="category_ids[]" multiple class="bk-input" size="6" data-edit-categories-select>
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}" @selected(in_array((int)$cat->id,$selectedEditCategories,true))>{{ $cat->name }}</option>
                             @endforeach
@@ -728,6 +732,7 @@ body {
                         <label class="bk-label">Tác giả</label>
                         <div class="author-picker"
                              data-author-picker
+                             data-edit-author-picker
                              data-search-url="{{ route('admin.books.authors.search') }}"
                              data-author-items='@json($editAuthorItems)'>
                             <div class="author-picker-tags" data-author-tags></div>
@@ -804,6 +809,37 @@ body {
             editForm.querySelector('input[name="publication_year"]').value = d.bookPublicationYear || '';
             editForm.querySelector('select[name="status"]').value          = d.bookStatus     || 'available';
             editForm.querySelector('select[name="publisher_id"]').value    = d.bookPublisherId|| '';
+
+            const selectedCategoryIds = (() => {
+                try {
+                    const arr = JSON.parse(d.bookCategoryIds || '[]');
+                    return Array.isArray(arr) ? arr.map(v => String(v)) : [];
+                } catch {
+                    return [];
+                }
+            })();
+            const categorySelect = editForm.querySelector('[data-edit-categories-select]');
+            if (categorySelect) {
+                Array.from(categorySelect.options).forEach(option => {
+                    option.selected = selectedCategoryIds.includes(String(option.value));
+                });
+            }
+
+            const authorItems = (() => {
+                try {
+                    const arr = JSON.parse(d.bookAuthorItems || '[]');
+                    return Array.isArray(arr) ? arr : [];
+                } catch {
+                    return [];
+                }
+            })();
+            const editPicker = editForm.querySelector('[data-edit-author-picker]');
+            const editTags = editPicker?.querySelector('[data-author-tags]');
+            if (editTags) {
+                editTags.innerHTML = '';
+                authorItems.forEach(item => renderTag(editPicker, item));
+            }
+
             openModal(editModal);
         });
     });

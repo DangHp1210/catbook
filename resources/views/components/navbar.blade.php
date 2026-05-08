@@ -56,7 +56,7 @@ if (auth()->check()) {
 
         {{-- Logo --}}
        <a href="{{ route('home') }}" class="cb-logo">
-            <img src="{{ asset('images/logocatbook.jpg') }}" alt="CatBook Logo" class="cb-logo-img">
+            <img src="{{ asset('images/LogoCatbook.png') }}" alt="CatBook Logo" class="cb-logo-img">
             <span class="cb-logo-text">Cat<span>Book</span></span>
         </a>
 
@@ -69,7 +69,6 @@ if (auth()->check()) {
 
         {{-- Right actions --}}
         <div class="cb-nav-right">
-
             <x-realtime-notification />
 
             {{-- Giỏ hàng --}}

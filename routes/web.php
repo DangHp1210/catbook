@@ -74,16 +74,62 @@ Route::middleware('auth')->group(function () {
     Route::delete('/tai-khoan/dia-chi/{address}', [\App\Http\Controllers\UserAddressController::class, 'destroy'])->name('account.addresses.destroy');
     Route::post('/tai-khoan/dia-chi/{address}/mac-dinh', [\App\Http\Controllers\UserAddressController::class, 'setDefault'])->name('account.addresses.set_default');
 
-    Route::middleware('role:staff,admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::middleware('role:admin')->group(function () {
-            Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('panel');
+    // Admin routes - prefix /admin with role:admin middleware
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        // Admin dashboard
+        Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('panel');
 
-            Route::get('/users', [AdminDashboardController::class, 'users'])->name('users.index');
-            Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('users.update');
+        // Admin-only resources
+        Route::get('/users', [AdminDashboardController::class, 'users'])->name('users.index');
+        Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('users.update');
 
-            Route::get('/revenue', [AdminDashboardController::class, 'revenue'])->name('revenue.index');
-        });
+        Route::get('/revenue', [AdminDashboardController::class, 'revenue'])->name('revenue.index');
 
+        // Shared resources (accessible to admin)
+        Route::get('/books', [AdminDashboardController::class, 'books'])->name('books.index');
+        Route::get('/books/authors/search', [AdminDashboardController::class, 'searchAuthors'])->name('books.authors.search');
+        Route::post('/books', [AdminDashboardController::class, 'storeBook'])->name('books.store');
+        Route::patch('/books/{book}', [AdminDashboardController::class, 'updateBook'])->name('books.update');
+        Route::delete('/books/{book}', [AdminDashboardController::class, 'destroyBook'])->name('books.destroy');
+
+        Route::get('/categories', [AdminDashboardController::class, 'categories'])->name('categories.index');
+        Route::post('/categories', [AdminDashboardController::class, 'storeCategory'])->name('categories.store');
+        Route::patch('/categories/{category}', [AdminDashboardController::class, 'updateCategory'])->name('categories.update');
+        Route::delete('/categories/{category}', [AdminDashboardController::class, 'destroyCategory'])->name('categories.destroy');
+
+        Route::get('/publishers', [AdminDashboardController::class, 'publishers'])->name('publishers.index');
+        Route::post('/publishers', [AdminDashboardController::class, 'storePublisher'])->name('publishers.store');
+        Route::patch('/publishers/{publisher}', [AdminDashboardController::class, 'updatePublisher'])->name('publishers.update');
+        Route::delete('/publishers/{publisher}', [AdminDashboardController::class, 'destroyPublisher'])->name('publishers.destroy');
+
+        Route::get('/authors', [AdminDashboardController::class, 'authors'])->name('authors.index');
+        Route::post('/authors', [AdminDashboardController::class, 'storeAuthor'])->name('authors.store');
+        Route::patch('/authors/{author}', [AdminDashboardController::class, 'updateAuthor'])->name('authors.update');
+        Route::delete('/authors/{author}', [AdminDashboardController::class, 'destroyAuthor'])->name('authors.destroy');
+
+        Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders.index');
+        Route::get('/orders/{order}/preview', [AdminDashboardController::class, 'previewOrder'])->name('orders.preview');
+        Route::patch('/orders/{order}', [AdminDashboardController::class, 'updateOrder'])->name('orders.update');
+    });
+
+    // Staff routes - prefix /staff with role:staff middleware
+    Route::middleware('role:staff')->prefix('staff')->name('staff.')->group(function () {
+        // Staff dashboard
+        Route::get('/', function () {
+            $stats = [
+                'books' => Book::query()->count(),
+                'authors' => Author::query()->count(),
+                'categories' => Category::query()->count(),
+                'publishers' => Publisher::query()->count(),
+                'orders' => Order::query()->count(),
+            ];
+
+            return view('staff.dashboard', [
+                'stats' => $stats,
+            ]);
+        })->name('panel');
+
+        // Shared resources (accessible to staff)
         Route::get('/books', [AdminDashboardController::class, 'books'])->name('books.index');
         Route::get('/books/authors/search', [AdminDashboardController::class, 'searchAuthors'])->name('books.authors.search');
         Route::post('/books', [AdminDashboardController::class, 'storeBook'])->name('books.store');
@@ -107,26 +153,6 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders.index');
         Route::patch('/orders/{order}', [AdminDashboardController::class, 'updateOrder'])->name('orders.update');
-    });
-
-    Route::middleware('role:staff,admin')->group(function () {
-        Route::get('/staff', function () {
-            $stats = [
-                'users' => User::query()->count(),
-                'books' => Book::query()->count(),
-                'authors' => Author::query()->count(),
-                'categories' => Category::query()->count(),
-                'publishers' => Publisher::query()->count(),
-                'orders' => Order::query()->count(),
-                'revenue' => (float) Order::query()
-                    ->whereIn('order_status', ['confirmed', 'shipping', 'completed'])
-                    ->sum('total_amount'),
-            ];
-
-            return view('staff.dashboard', [
-                'stats' => $stats,
-            ]);
-        })->name('staff.panel');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

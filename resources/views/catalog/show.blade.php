@@ -136,7 +136,7 @@ body {
 
 /* Thêm icon nhỏ trang trí vào tiêu đề cho hợp vibe CatBook */
 .bd-perks-head::before {
-    content: '😻'; 
+    content: '🙀'; 
     font-size: 16px;
 }
 

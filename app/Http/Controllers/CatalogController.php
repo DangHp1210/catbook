@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\DB;
 
 class CatalogController extends Controller
 {
-    public function categories(Request $request): View
+    public function categories(Request $request, $parentSlug = null, $childSlug = null): View
     {
-        return $this->renderCatalogPage($request, null);
+        return $this->renderCatalogPage($request, null, $parentSlug, $childSlug);
     }
 
     public function category(Request $request, Category $category): View
@@ -22,7 +22,7 @@ class CatalogController extends Controller
         return $this->renderCatalogPage($request, $category);
     }
 
-    private function renderCatalogPage(Request $request, ?Category $routeCategory): View
+    private function renderCatalogPage(Request $request, ?Category $routeCategory, ?string $routeParentSlug = null, ?string $routeChildSlug = null): View
     {
         $keyword = trim((string) $request->query('q', ''));
         $sortBy = (string) $request->query('sort', 'newest');
@@ -51,6 +51,7 @@ class CatalogController extends Controller
         $selectedParent = null;
         $selectedChild = null;
 
+        // If route provided a Category model (via /danh-muc/{category:slug}) use it
         if ($routeCategory !== null) {
             if ($routeCategory->parent_id === null) {
                 $selectedParent = $routeCategory;
@@ -60,6 +61,12 @@ class CatalogController extends Controller
             }
         }
 
+        // If route uses pretty slugs (/danh-muc/{parent}/{child}) prefer them
+        if ($selectedParent === null && $routeParentSlug !== null && $routeParentSlug !== '') {
+            $selectedParent = $parentCategories->firstWhere('slug', $routeParentSlug);
+        }
+
+        // Fallback to query parameters if not provided via route
         if ($selectedParent === null) {
             $parentSlug = trim((string) $request->query('parent', ''));
             if ($parentSlug !== '') {
@@ -74,6 +81,13 @@ class CatalogController extends Controller
                 ->withCount('books')
                 ->orderBy('name')
                 ->get();
+        }
+
+        if ($selectedChild === null && $routeChildSlug !== null && $routeChildSlug !== '') {
+            $childSlug = $routeChildSlug;
+            if ($childSlug !== '') {
+                $selectedChild = $childCategories->firstWhere('slug', $childSlug);
+            }
         }
 
         if ($selectedChild === null) {

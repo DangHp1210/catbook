@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/danh-muc', [CatalogController::class, 'categories'])->name('catalog.categories');
+Route::get('/danh-muc/{parent}/{child}', [CatalogController::class, 'categories'])->name('catalog.categories.child');
 Route::get('/danh-muc/{category:slug}', [CatalogController::class, 'category'])->name('catalog.category');
 Route::get('/sach/{book:slug}', [CatalogController::class, 'book'])->name('catalog.book');
 

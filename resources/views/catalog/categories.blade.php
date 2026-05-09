@@ -198,12 +198,9 @@
     }
     .cat-pill:hover { border-color: var(--cb-accent); color: var(--cb-accent); }
     .cat-pill.active { background: var(--cb-accent); border-color: var(--cb-accent); color: #fff; }
-    .cat-pill .n {
-        font-size: 11px; font-weight: 700;
-        padding: 1px 7px; border-radius: 999px;
-        background: rgba(0,0,0,.1);
-    }
-    .cat-pill.active .n { background: rgba(255,255,255,.25); }
+    /* hide numeric counts after category pills (UI choice) */
+    .cat-pill .n { display: none; }
+    .cat-pill.active .n { display: none; }
 
     /* ─── 2-col layout ───────────────────────────────────────── */
     .cat-layout {
@@ -683,8 +680,7 @@
                     <a href="{{ route('catalog.categories') }}">Danh mục</a>
                     <span class="cat-breadcrumb-sep">/</span>
                     @if($selectedChild)
-                        @php $ppQ = array_filter(array_merge($queryBase,['parent'=>$parentSlug,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='') @endphp
-                        <a href="{{ route('catalog.categories', $ppQ) }}">{{ $selectedParent->name }}</a>
+                        <a href="{{ route('catalog.category', $selectedParent) }}">{{ $selectedParent->name }}</a>
                         <span class="cat-breadcrumb-sep">/</span>
                         <span style="color:var(--cb-text)">{{ $selectedChild->name }}</span>
                     @else
@@ -741,7 +737,7 @@
         @php
             $allQ = array_filter(array_merge($queryBase,['parent'=>null,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
         @endphp
-        <a href="{{ route('catalog.categories', $allQ) }}"
+        <a href="{{ route('catalog.categories') }}"
            class="cat-pill {{ !$selectedParent ? 'active' : '' }}">
             Tất cả
             <span class="n">{{ $parentCategories->sum('children_count') }}</span>
@@ -750,8 +746,8 @@
             @php
                 $pQ = array_filter(array_merge($queryBase,['parent'=>$par->slug,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
             @endphp
-            <a href="{{ route('catalog.categories', $pQ) }}"
-               class="cat-pill {{ $selectedParent?->id===$par->id ? 'active' : '' }}">
+                <a href="{{ route('catalog.category', $par) }}"
+                    class="cat-pill {{ $selectedParent?->id===$par->id ? 'active' : '' }}">
                 {{ $par->name }}
                 <span class="n">{{ $par->children_count }}</span>
             </a>
@@ -781,16 +777,16 @@
                         @php
                             $acQ = array_filter(array_merge($queryBase,['parent'=>$selectedParent->slug,'child'=>null,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
                         @endphp
-                        <a href="{{ route('catalog.categories', $acQ) }}"
-                           class="cat-child-link {{ !$selectedChild ? 'active' : '' }}">
+                                <a href="{{ route('catalog.category', $selectedParent) }}"
+                                    class="cat-child-link {{ !$selectedChild ? 'active' : '' }}">
                             <span> {{ $selectedParent->name }}</span>
                         </a>
                         @forelse($childCategories as $child)
                             @php
                                 $cQ = array_filter(array_merge($queryBase,['parent'=>$selectedParent->slug,'child'=>$child->slug,'page'=>null]),fn($v)=>$v!==null&&$v!=='');
                             @endphp
-                            <a href="{{ route('catalog.categories', $cQ) }}"
-                               class="cat-child-link {{ $selectedChild?->id===$child->id ? 'active' : '' }}">
+                                     <a href="{{ url('/danh-muc/'.$selectedParent->slug.'/'.$child->slug) }}"
+                                         class="cat-child-link {{ $selectedChild?->id===$child->id ? 'active' : '' }}">
                                 <span>&raquo; {{ $child->name }}</span>
                                 <span class="cat-child-badge">{{ $child->books_count }}</span>
                             </a>
@@ -811,26 +807,26 @@
                     <input type="hidden" name="sort" value="{{ $sortBy }}">
                     <input type="hidden" name="view" value="{{ $viewMode }}">
 
-                    {{-- Khoảng giá --}}
-                    @if(isset($minPossiblePrice, $maxPossiblePrice))
-                        <div class="cat-filter-sec">
-                            <span class="cat-filter-lbl">Khoảng giá</span>
-                            <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px">
-                                <span>Từ</span><span>Đến</span>
+                        {{-- Khoảng giá --}}
+                        @if(isset($minPossiblePrice, $maxPossiblePrice))
+                            <div class="cat-filter-sec">
+                                <span class="cat-filter-lbl">Khoảng giá</span>
+                                <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px">
+                                    <span>Từ</span><span>Đến</span>
+                                </div>
+                                <input id="minRange" type="range" name="min_price" class="cat-range"
+                                       min="{{ $minPossiblePrice }}" max="{{ $maxPossiblePrice }}"
+                                       value="{{ $minPrice ?? $minPossiblePrice }}">
+                                <input id="maxRange" type="range" name="max_price" class="cat-range"
+                                       min="{{ $minPossiblePrice }}" max="{{ $maxPossiblePrice }}"
+                                       value="{{ $maxPrice ?? $maxPossiblePrice }}">
+                                <div class="cat-range-vals">
+                                    <span id="minRangeLabel">{{ number_format((float)($minPrice ?? $minPossiblePrice), 0, ',', '.') }}đ</span>
+                                    <span id="maxRangeLabel">{{ number_format((float)($maxPrice ?? $maxPossiblePrice), 0, ',', '.') }}đ</span>
+                                </div>
                             </div>
-                            <input id="minRange" type="range" name="min_price" class="cat-range"
-                                   min="{{ $minPossiblePrice }}" max="{{ $maxPossiblePrice }}"
-                                   value="{{ $minPrice ?? $minPossiblePrice }}">
-                            <input id="maxRange" type="range" name="max_price" class="cat-range"
-                                   min="{{ $minPossiblePrice }}" max="{{ $maxPossiblePrice }}"
-                                   value="{{ $maxPrice ?? $maxPossiblePrice }}">
-                            <div class="cat-range-vals">
-                                <span id="minRangeLabel">{{ number_format((float)($minPrice ?? $minPossiblePrice), 0, ',', '.') }}đ</span>
-                                <span id="maxRangeLabel">{{ number_format((float)($maxPrice ?? $maxPossiblePrice), 0, ',', '.') }}đ</span>
-                            </div>
-                        </div>
-                        <div class="cat-hr"></div>
-                    @endif
+                            <div class="cat-hr"></div>
+                        @endif
 
                     {{-- Ngôn ngữ --}}
                     @if(isset($availableLanguages) && $availableLanguages->count())
@@ -1024,6 +1020,7 @@
 </div>{{-- /.cat-wrap --}}
 
 <script>
+/* ── Price ranges (checkboxes) ────────────────────────────── */
 /* ── Price range ──────────────────────────────────────────── */
 (function(){
     const min = document.getElementById('minRange');

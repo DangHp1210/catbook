@@ -183,6 +183,7 @@ body {
     border-top: 1px dashed rgba(45,106,79,0.3);
     margin-top: 12px; padding-top: 14px;
     font-weight: 900; font-size: 20px; color: var(--cb-accent);
+    font-family: var(--cb-serif, Georgia, serif);
 }
 
 /* Bảng sản phẩm */
@@ -462,7 +463,7 @@ body {
                                                 </div>
                                                 <div class="or-info-row">
                                                     <span class="lbl">Địa chỉ:</span>
-                                                    <span class="val">{{ $order->recipient_address }}</span>
+                                                    <span class="val">{{ $order->shipping_address }}</span>
                                                 </div>
                                                 @if(!empty($order->note))
                                                 <div class="or-info-row">

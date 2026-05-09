@@ -39,9 +39,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/gio-hang/items/{item}', [CartController::class, 'update'])->name('cart.items.update');
     Route::delete('/gio-hang/items/{item}', [CartController::class, 'destroy'])->name('cart.items.destroy');
     Route::get('/don-hang', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::patch('/don-hang/{order}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
-    Route::post('/don-hang/{order}/danh-gia/{book:slug}', [ReviewController::class, 'store'])->name('orders.reviews.store');
+    Route::get('/don-hang/{order:order_code}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/don-hang/{order:order_code}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/don-hang/{order:order_code}/danh-gia/{book:slug}', [ReviewController::class, 'store'])->name('orders.reviews.store');
     Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 

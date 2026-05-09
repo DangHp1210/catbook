@@ -24,7 +24,7 @@ body {
         margin: 0;
 }
 /* ─── Page wrapper ────────────────────────────────────── */
-.ad-wrap { max-width: 720px; margin: 0 auto; }
+.ad-wrap { max-width: 1250px; margin: 0 auto; }
 
 /* ─── Page header ─────────────────────────────────────── */
 .ad-header {

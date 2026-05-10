@@ -248,7 +248,14 @@ body {
     box-shadow: 0 0 0 3px rgba(45,106,79,.09);
 }
 .bk-input::placeholder { color: #c0b8b0; }
-
+.bk-input:-webkit-autofill,
+.bk-input:-webkit-autofill:hover,
+.bk-input:-webkit-autofill:focus,
+.bk-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--cb-white) inset !important;
+    -webkit-text-fill-color: var(--cb-text) !important;
+    caret-color: var(--cb-text);
+}
 /* Section separator inside form */
 .bk-form-sep {
     grid-column: 1 / -1; height: 1px;
@@ -415,10 +422,12 @@ body {
                                         data-book-isbn="{{ e($book->isbn ?? '') }}"
                                         data-book-description="{{ e($book->description ?? '') }}"
                                         data-book-price="{{ $book->price }}"
+                                        data-book-purchase-price="{{ $book->purchase_price ?? '' }}"
                                         data-book-discount-price="{{ $book->discount_price ?? '' }}"
                                         data-book-stock-quantity="{{ $book->stock_quantity }}"
                                         data-book-page-count="{{ $book->page_count ?? '' }}"
                                         data-book-language="{{ e($book->language ?? '') }}"
+                                        data-book-format="{{ e($book->books_format ?? '') }}"
                                         data-book-publication-year="{{ $book->publication_year ?? '' }}"
                                         data-book-status="{{ $book->status }}"
                                         data-book-publisher-id="{{ $book->publisher_id ?? '' }}"
@@ -509,7 +518,7 @@ body {
                     </div>
 
                     <div class="bk-field">
-                        <label class="bk-label">ISBN</label>
+                        <label class="bk-label">ISBN<span class="bk-req">*</span></label>
                         <input type="text" name="isbn" value="{{ old('isbn') }}" class="bk-input" placeholder="Tuỳ chọn">
                     </div>
                     <div class="bk-field">
@@ -533,6 +542,10 @@ body {
                     <div class="bk-field">
                         <label class="bk-label">Giá bán <span class="bk-req">*</span></label>
                         <input type="number" name="price" min="0" step="1000" value="{{ old('price') }}" required class="bk-input" placeholder="VND">
+                    </div>
+                    <div class="bk-field">
+                        <label class="bk-label">Giá nhập<span class="bk-req">*</span></label>
+                        <input type="number" name="purchase_price" min="0" step="0.01" value="{{ old('purchase_price') }}" class="bk-input" placeholder="VND">
                     </div>
                     <div class="bk-field">
                         <label class="bk-label">Giá khuyến mãi</label>
@@ -561,6 +574,10 @@ body {
                     <div class="bk-field">
                         <label class="bk-label">Ngôn ngữ</label>
                         <input type="text" name="language" value="{{ old('language') }}" class="bk-input" placeholder="Tiếng Việt / English...">
+                    </div>
+                    <div class="bk-field">
+                        <label class="bk-label">Hình thức</label>
+                        <input type="text" name="books_format" value="{{ old('books_format') }}" class="bk-input" placeholder="Bìa cứng / Bìa mềm / Ebook...">
                     </div>
                     <div class="bk-field">
                         <label class="bk-label">Năm xuất bản</label>
@@ -678,6 +695,11 @@ body {
                                value="{{ $editingBook ? old('price', $editingBook->price) : '' }}">
                     </div>
                     <div class="bk-field">
+                        <label class="bk-label">Giá nhập</label>
+                        <input type="number" name="purchase_price" min="0" step="0.01" class="bk-input"
+                               value="{{ $editingBook ? old('purchase_price', $editingBook->purchase_price) : '' }}">
+                    </div>
+                    <div class="bk-field">
                         <label class="bk-label">Giá khuyến mãi</label>
                         <input type="number" name="discount_price" min="0" step="1000" class="bk-input"
                                value="{{ $editingBook ? old('discount_price', $editingBook->discount_price) : '' }}">
@@ -709,6 +731,12 @@ body {
                         <label class="bk-label">Ngôn ngữ</label>
                         <input type="text" name="language" class="bk-input"
                                value="{{ $editingBook ? old('language', $editingBook->language) : '' }}">
+                    </div>
+                    <div class="bk-field">
+                        <label class="bk-label">Hình thức</label>
+                           <input type="text" name="books_format" class="bk-input"
+                               value="{{ $editingBook ? old('books_format', $editingBook->books_format) : '' }}"
+                               placeholder="Bìa cứng / Bìa mềm / Ebook...">
                     </div>
                     <div class="bk-field">
                         <label class="bk-label">Năm xuất bản</label>
@@ -802,10 +830,12 @@ body {
             editForm.querySelector('input[name="isbn"]').value             = d.bookIsbn       || '';
             editForm.querySelector('textarea[name="description"]').value   = d.bookDescription|| '';
             editForm.querySelector('input[name="price"]').value            = d.bookPrice      || '';
+            editForm.querySelector('input[name="purchase_price"]').value   = d.bookPurchasePrice || '';
             editForm.querySelector('input[name="discount_price"]').value   = d.bookDiscountPrice || '';
             editForm.querySelector('input[name="stock_quantity"]').value   = d.bookStockQuantity || '';
             editForm.querySelector('input[name="page_count"]').value       = d.bookPageCount  || '';
             editForm.querySelector('input[name="language"]').value         = d.bookLanguage   || '';
+            editForm.querySelector('input[name="books_format"]').value     = d.bookFormat     || '';
             editForm.querySelector('input[name="publication_year"]').value = d.bookPublicationYear || '';
             editForm.querySelector('select[name="status"]').value          = d.bookStatus     || 'available';
             editForm.querySelector('select[name="publisher_id"]').value    = d.bookPublisherId|| '';

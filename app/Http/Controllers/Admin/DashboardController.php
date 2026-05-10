@@ -7,6 +7,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Publisher;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -148,6 +149,8 @@ class DashboardController extends Controller
             'isbn' => ['nullable', 'string', 'max:50', Rule::unique('books', 'isbn')],
             'description' => ['nullable', 'string'],
             'cover_image_file' => ['nullable', 'image', 'max:3072'],
+            'books_format' => ['nullable', 'string', 'max:255'],
+            'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],
             'discount_price' => ['nullable', 'numeric', 'min:0', 'lte:price'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
@@ -164,6 +167,20 @@ class DashboardController extends Controller
             'author_names.*' => ['nullable', 'string', 'max:255'],
         ]);
 
+        if (isset($data['purchase_price'])) {
+            if ((float) $data['purchase_price'] >= (float) $data['price']) {
+                return back()
+                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá bán.'])
+                    ->withInput();
+            }
+
+            if (isset($data['discount_price']) && (float) $data['discount_price'] > 0 && (float) $data['purchase_price'] >= (float) $data['discount_price']) {
+                return back()
+                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá khuyến mãi.'])
+                    ->withInput();
+            }
+        }
+
         $title = trim((string) $data['title']);
         $isbnInput = trim((string) ($data['isbn'] ?? ''));
         $coverImagePath = $request->hasFile('cover_image_file')
@@ -176,6 +193,8 @@ class DashboardController extends Controller
             'isbn' => $isbnInput !== '' ? $isbnInput : null,
             'description' => $data['description'] ?? null,
             'cover_image' => $coverImagePath,
+            'books_format' => trim((string) ($data['books_format'] ?? '')) ?: null,
+            'purchase_price' => $data['purchase_price'] ?? null,
             'price' => $data['price'],
             'discount_price' => $data['discount_price'] ?? null,
             'stock_quantity' => $data['stock_quantity'],
@@ -200,6 +219,8 @@ class DashboardController extends Controller
             'isbn' => ['nullable', 'string', 'max:50', Rule::unique('books', 'isbn')->ignore($book->id)],
             'description' => ['nullable', 'string'],
             'cover_image_file' => ['nullable', 'image', 'max:3072'],
+            'books_format' => ['nullable', 'string', 'max:255'],
+            'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],
             'discount_price' => ['nullable', 'numeric', 'min:0', 'lte:price'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
@@ -215,6 +236,20 @@ class DashboardController extends Controller
             'author_names' => ['nullable', 'array'],
             'author_names.*' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (isset($data['purchase_price'])) {
+            if ((float) $data['purchase_price'] >= (float) $data['price']) {
+                return back()
+                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá bán.'])
+                    ->withInput();
+            }
+
+            if (isset($data['discount_price']) && (float) $data['discount_price'] > 0 && (float) $data['purchase_price'] >= (float) $data['discount_price']) {
+                return back()
+                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá khuyến mãi.'])
+                    ->withInput();
+            }
+        }
 
         $title = trim((string) $data['title']);
         $slugInput = trim((string) ($data['slug'] ?? ''));
@@ -239,6 +274,8 @@ class DashboardController extends Controller
             'slug' => $slugInput !== '' ? Str::slug($slugInput) : Str::slug($title),
             'isbn' => $isbnInput !== '' ? $isbnInput : null,
             'description' => $data['description'] ?? null,
+            'books_format' => trim((string) ($data['books_format'] ?? '')) ?: null,
+            'purchase_price' => $data['purchase_price'] ?? null,
             'cover_image' => $coverImagePath,
             'price' => $data['price'],
             'discount_price' => $data['discount_price'] ?? null,
@@ -622,6 +659,16 @@ class DashboardController extends Controller
         $orderCount = (int) (clone $baseQuery)->count();
         $averageOrderValue = $orderCount > 0 ? $totalRevenue / $orderCount : 0;
 
+        // Calculate total profit: SUM((order_item.unit_price - book.purchase_price) * quantity)
+        $totalProfit = (float) OrderItem::query()
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('books', 'order_items.book_id', '=', 'books.id')
+            ->whereIn('orders.order_status', ['confirmed', 'shipping', 'completed'])
+            ->whereYear('orders.created_at', $year)
+            ->when($month !== null && $month !== '', fn ($q) => $q->whereMonth('orders.created_at', (int) $month))
+            ->selectRaw('SUM((order_items.unit_price - COALESCE(books.purchase_price, 0)) * order_items.quantity) as profit')
+            ->value('profit') ?? 0;
+
         $revenueByPaymentMethod = (clone $baseQuery)
             ->select('payment_method', DB::raw('SUM(total_amount) as revenue'))
             ->groupBy('payment_method')
@@ -642,6 +689,7 @@ class DashboardController extends Controller
             'totalRevenue' => $totalRevenue,
             'orderCount' => $orderCount,
             'averageOrderValue' => $averageOrderValue,
+            'totalProfit' => $totalProfit,
             'revenueByPaymentMethod' => $revenueByPaymentMethod,
             'revenueByMonth' => $revenueByMonth,
         ]);

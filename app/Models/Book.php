@@ -18,6 +18,8 @@ class Book extends Model
         'isbn',
         'description',
         'cover_image',
+        'books_format',
+        'purchase_price',
         'price',
         'discount_price',
         'stock_quantity',
@@ -33,6 +35,7 @@ class Book extends Model
         return [
             'price' => 'decimal:2',
             'discount_price' => 'decimal:2',
+            'purchase_price' => 'decimal:2',
             'publication_year' => 'integer',
         ];
     }

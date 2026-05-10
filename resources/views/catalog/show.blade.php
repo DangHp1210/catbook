@@ -713,6 +713,10 @@ body {
                 <span class="bd-table-val">{{ $book->language ?? 'Đang cập nhật' }}</span>
             </div>
             <div class="bd-table-row">
+                <span class="bd-table-key">Hình thức</span>
+                <span class="bd-table-val">{{ $book->books_format ?? 'Đang cập nhật' }}</span>
+            </div>
+            <div class="bd-table-row">
                 <span class="bd-table-key">Năm xuất bản</span>
                 <span class="bd-table-val">{{ $book->publication_year ?? 'Đang cập nhật' }}</span>
             </div>

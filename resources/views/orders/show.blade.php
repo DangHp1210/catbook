@@ -18,7 +18,6 @@
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
 body {
-    font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
     background: var(--cb-bg);
     color: var(--cb-text);
     margin: 0;

@@ -18,7 +18,11 @@
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
-
+body {
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    margin: 0;
+}
 /* ─── Page header ─────────────────────────────────────── */
 .ct-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -274,7 +278,7 @@ body {
 </style>
 
 {{-- ── Page header ──────────────────────────────────────── --}}
-<div class="p-5 bg-white rounded-xl">
+<div class="p-5 rounded-xl">
 <div class="ct-header">
     <h1 class="ct-heading">Giỏ hàng của bạn</h1>
     <a href="{{ route('catalog.categories') }}" class="ct-continue">

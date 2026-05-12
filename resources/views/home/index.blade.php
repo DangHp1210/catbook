@@ -280,9 +280,11 @@
 
         /* ─── Footer ────────────────────────────────────────────── */
         .cb-footer {
-            background: #091a09; 
-            color: #cad0cd;
             font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+            background: var(--cb-bg);
+            color: var(--cb-text);
+            border-top: 1px solid #1e5131;
+            margin: 0;
             padding: 24px 20px 18px;
             display: block;
         }
@@ -290,9 +292,9 @@
         /* Bố cục chia cột bằng Grid */
         .cb-footer-top {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr; /* Cột Logo to gấp đôi 2 cột link */
+            grid-template-columns: 2fr 1fr 1fr;
             gap: 40px;
-            max-width: 1200px; /* Giới hạn độ rộng giống phần thân trang */
+            max-width: 1270px; /* Giới hạn độ rộng giống phần thân trang */
             margin: 0 auto 24px;
         }
 
@@ -309,13 +311,13 @@
             font-family: var(--cb-serif, 'Playfair Display', serif);
             font-size: 28px; 
             font-weight: 900; 
-            color: #ffffff;
+            color: #000000;
             margin-bottom: 16px;
         }
-        .cb-footer-logo span { color: #339457; }
+        .cb-footer-logo span { color: var(--cb-brand-accent); }
 
         .cb-footer-desc {
-            font-size: 14px; line-height: 1.6; color: #86978c;
+            font-size: 14px; line-height: 1.6; color: #202221;
             margin-bottom: 20px;
         }
 
@@ -326,7 +328,7 @@
 
         /* Cột Link liên kết */
         .cb-footer-heading {
-            color: #ffffff; font-size: 15px; font-weight: 700;
+            color: #1d1c1c; font-size: 15px; font-weight: 700;
             text-transform: uppercase; letter-spacing: 1px;
             margin: 0 0 20px 0;
         }
@@ -336,37 +338,23 @@
         }
 
         .cb-footer-links a {
-            color: #86978c; text-decoration: none; font-size: 14px; 
+            color: #202221; text-decoration: none; font-size: 14px; 
             transition: all 0.2s ease;
             width: fit-content;
         }
 
         /* Hiệu ứng trượt nhẹ sang phải và sáng chữ lên khi hover */
         .cb-footer-links a:hover {
-            color: #ffffff; 
+            color: #0a6816; 
             transform: translateX(4px); 
         }
 
         /* Phần bản quyền dưới cùng */
         .cb-footer-bottom {
             display: flex; align-items: center; justify-content: space-between;
-            max-width: 1200px; margin: 0 auto;
-            padding-top: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08); /* Dòng kẻ mờ */
-            font-size: 13px; color: #6a9e7a;
+            max-width: 1270px; margin: 0 auto;
+            font-size: 13px; color: #090909;
             flex-wrap: wrap; gap: 16px;
-        }
-
-        /* Mạng xã hội */
-        .cb-socials { display: flex; gap: 12px; }
-        .cb-socials a {
-            display: flex; align-items: center; justify-content: center;
-            width: 36px; height: 36px;
-            background: rgba(255, 255, 255, 0.05); border-radius: 50%;
-            color: #cad0cd; text-decoration: none; transition: all 0.2s ease;
-        }
-        .cb-socials a:hover {
-            background: #339457; color: #ffffff; transform: translateY(-3px);
         }
         /* Responsive cho Mobile */
         @media (max-width: 768px) {
@@ -594,10 +582,10 @@
             {{-- Phần viền dưới cùng --}}
             <div class="cb-footer-bottom">
                 <div class="cb-copyright">© {{ date('Y') }} CatBook. Tất cả các quyền được bảo lưu.</div>
-                <div class="cb-socials">
-                    {{-- Bạn có thể thay chữ FB, IG bằng thẻ <img> icon SVG sau này --}}
-                    <a href="#" aria-label="Facebook">FB</a>
-                    <a href="#" aria-label="Instagram">IG</a>
+                <div class="cb-socials"></div>
+                    <a href="#" title="Facebook" style="margin-right:105px;color:#202221;text-decoration:none;font-size:14px">Facebook</a>
+                    <a href="#" title="Twitter" style="margin-right:05px;color:#202221;text-decoration:none;font-size:14px">Twitter</a>
+                    <a href="#" title="Instagram" style="margin-right:05px;color:#202221;text-decoration:none;font-size:14px">Instagram</a>
                 </div>
             </div>
 

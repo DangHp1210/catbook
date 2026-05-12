@@ -714,7 +714,7 @@ body {
             </div>
             <div class="bd-table-row">
                 <span class="bd-table-key">Hình thức</span>
-                <span class="bd-table-val">{{ $book->books_format ?? 'Đang cập nhật' }}</span>
+                <span class="bd-table-val">{{ $book->format ?? 'Đang cập nhật' }}</span>
             </div>
             <div class="bd-table-row">
                 <span class="bd-table-key">Năm xuất bản</span>

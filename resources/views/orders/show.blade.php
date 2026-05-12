@@ -28,6 +28,9 @@ body {
 .os-header {
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 16px; flex-wrap: wrap; margin-bottom: 28px;
+    max-width: 1300px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .os-header-eyebrow {
     font-family: var(--cb-sans); font-size: 11px; font-weight: 600;
@@ -63,6 +66,8 @@ body {
     display: grid;
     grid-template-columns: 1fr 320px;
     gap: 24px; align-items: start;
+    max-width: 1300px;
+    margin: 0 auto 16px;
 }
 @media (max-width: 900px) { .os-layout { grid-template-columns: 1fr; } }
 

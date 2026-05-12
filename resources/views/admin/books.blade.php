@@ -427,7 +427,7 @@ body {
                                         data-book-stock-quantity="{{ $book->stock_quantity }}"
                                         data-book-page-count="{{ $book->page_count ?? '' }}"
                                         data-book-language="{{ e($book->language ?? '') }}"
-                                        data-book-format="{{ e($book->books_format ?? '') }}"
+                                        data-book-format="{{ e($book->format ?? '') }}"
                                         data-book-publication-year="{{ $book->publication_year ?? '' }}"
                                         data-book-status="{{ $book->status }}"
                                         data-book-publisher-id="{{ $book->publisher_id ?? '' }}"
@@ -577,7 +577,7 @@ body {
                     </div>
                     <div class="bk-field">
                         <label class="bk-label">Hình thức</label>
-                        <input type="text" name="books_format" value="{{ old('books_format') }}" class="bk-input" placeholder="Bìa cứng / Bìa mềm / Ebook...">
+                        <input type="text" name="format" value="{{ old('format') }}" class="bk-input" placeholder="Bìa cứng / Bìa mềm...">
                     </div>
                     <div class="bk-field">
                         <label class="bk-label">Năm xuất bản</label>
@@ -734,9 +734,9 @@ body {
                     </div>
                     <div class="bk-field">
                         <label class="bk-label">Hình thức</label>
-                           <input type="text" name="books_format" class="bk-input"
-                               value="{{ $editingBook ? old('books_format', $editingBook->books_format) : '' }}"
-                               placeholder="Bìa cứng / Bìa mềm / Ebook...">
+                           <input type="text" name="format" class="bk-input"
+                               value="{{ $editingBook ? old('format', $editingBook->format) : '' }}"
+                               placeholder="Bìa cứng / Bìa mềm...">
                     </div>
                     <div class="bk-field">
                         <label class="bk-label">Năm xuất bản</label>
@@ -835,7 +835,7 @@ body {
             editForm.querySelector('input[name="stock_quantity"]').value   = d.bookStockQuantity || '';
             editForm.querySelector('input[name="page_count"]').value       = d.bookPageCount  || '';
             editForm.querySelector('input[name="language"]').value         = d.bookLanguage   || '';
-            editForm.querySelector('input[name="books_format"]').value     = d.bookFormat     || '';
+            editForm.querySelector('input[name="format"]').value     = d.bookFormat     || '';
             editForm.querySelector('input[name="publication_year"]').value = d.bookPublicationYear || '';
             editForm.querySelector('select[name="status"]').value          = d.bookStatus     || 'available';
             editForm.querySelector('select[name="publisher_id"]').value    = d.bookPublisherId|| '';

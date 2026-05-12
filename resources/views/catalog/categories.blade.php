@@ -530,6 +530,7 @@
         -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         line-clamp: 2;
         overflow: hidden;
+        height: 2.8em;
         margin-bottom: 4px;
         transition: color .15s;
     }
@@ -618,35 +619,11 @@
 
     /* ─── Pagination ─────────────────────────────────────────── */
     .cat-pagination {
-        margin-top: 28px;
-        display: flex; justify-content: center;
+        margin-top: 32px;
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
-    /* Override Laravel pagination */
-    .cat-pagination nav {
-        display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: center;
-    }
-    .cat-pagination nav span,
-    .cat-pagination nav a {
-        font-family: var(--cb-sans);
-        font-size: 13px; font-weight: 500;
-        padding: 7px 13px;
-        border-radius: 9px;
-        border: 1.5px solid var(--cb-border);
-        background: var(--cb-white);
-        color: var(--cb-muted);
-        text-decoration: none;
-        transition: all .15s;
-        display: inline-flex; align-items: center; justify-content: center;
-        min-width: 36px;
-    }
-    .cat-pagination nav a:hover {
-        border-color: var(--cb-accent); color: var(--cb-accent);
-    }
-    .cat-pagination nav [aria-current="page"] > span,
-    .cat-pagination nav span[aria-current="page"] {
-        background: var(--cb-text); border-color: var(--cb-text); color: #fff;
-    }
-    .cat-pagination nav span[aria-disabled="true"] { opacity: .4; pointer-events: none; }
     </style>
 @endsection
 

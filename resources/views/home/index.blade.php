@@ -95,8 +95,7 @@
 
         /* Stats */
         .cb-hero-stats {
-            display: flex; gap: 32px; margin-top: 32px;
-            padding-top: 28px; border-top: 1px solid var(--cb-border);
+            display: none;
         }
         .cb-stat-num {
             font-family: 'Playfair Display', serif;
@@ -235,6 +234,7 @@
             font-size: 15px; font-weight: 600; color: var(--cb-text); line-height: 1.45;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
             line-clamp: 2; overflow: hidden;
+            height: 2.9em;
         }
         .cb-product-author { font-size: 12px; color: #aaa; margin-top: 6px; }
         .cb-product-footer {
@@ -280,19 +280,101 @@
 
         /* ─── Footer ────────────────────────────────────────────── */
         .cb-footer {
-            background: #0a1d0a; color: #cad0cd;
-            padding: 32px 40px; font-size: 13px;
-            display: flex; align-items: center; justify-content: space-between;
+            background: #091a09; 
+            color: #cad0cd;
+            font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+            padding: 24px 20px 18px;
+            display: block;
         }
+
+        /* Bố cục chia cột bằng Grid */
+        .cb-footer-top {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr; /* Cột Logo to gấp đôi 2 cột link */
+            gap: 40px;
+            max-width: 1200px; /* Giới hạn độ rộng giống phần thân trang */
+            margin: 0 auto 24px;
+        }
+
+        @media (max-width: 768px) {
+            .cb-footer-top { grid-template-columns: 1fr; gap: 32px; } /* Mobile xếp dọc */
+        }
+
+        /* Cột Thương hiệu */
+        .cb-footer-brand {
+            max-width: 320px;
+        }
+
         .cb-footer-logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 18px; font-weight: 900; color: #fff;
+            font-family: var(--cb-serif, 'Playfair Display', serif);
+            font-size: 28px; 
+            font-weight: 900; 
+            color: #ffffff;
+            margin-bottom: 16px;
         }
         .cb-footer-logo span { color: #339457; }
-        .cb-footer-links { display: flex; gap: 24px; }
-        .cb-footer-links a { color: #86978c; text-decoration: none; font-size: 13px; transition: color 0.2s; }
-        .cb-footer-links a:hover { color: #6a9e7a; }
 
+        .cb-footer-desc {
+            font-size: 14px; line-height: 1.6; color: #86978c;
+            margin-bottom: 20px;
+        }
+
+        .cb-footer-contact p {
+            margin: 0 0 8px 0; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* Cột Link liên kết */
+        .cb-footer-heading {
+            color: #ffffff; font-size: 15px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin: 0 0 20px 0;
+        }
+
+        .cb-footer-links {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+
+        .cb-footer-links a {
+            color: #86978c; text-decoration: none; font-size: 14px; 
+            transition: all 0.2s ease;
+            width: fit-content;
+        }
+
+        /* Hiệu ứng trượt nhẹ sang phải và sáng chữ lên khi hover */
+        .cb-footer-links a:hover {
+            color: #ffffff; 
+            transform: translateX(4px); 
+        }
+
+        /* Phần bản quyền dưới cùng */
+        .cb-footer-bottom {
+            display: flex; align-items: center; justify-content: space-between;
+            max-width: 1200px; margin: 0 auto;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08); /* Dòng kẻ mờ */
+            font-size: 13px; color: #6a9e7a;
+            flex-wrap: wrap; gap: 16px;
+        }
+
+        /* Mạng xã hội */
+        .cb-socials { display: flex; gap: 12px; }
+        .cb-socials a {
+            display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px;
+            background: rgba(255, 255, 255, 0.05); border-radius: 50%;
+            color: #cad0cd; text-decoration: none; transition: all 0.2s ease;
+        }
+        .cb-socials a:hover {
+            background: #339457; color: #ffffff; transform: translateY(-3px);
+        }
+        /* Responsive cho Mobile */
+        @media (max-width: 768px) {
+            .cb-footer { text-align: center; padding: 24px 20px 16px; }
+            .cb-footer-left { flex-direction: column; gap: 12px; }
+            .cb-copyright { border-left: none; padding-left: 0; }
+            .cb-footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+        }
         /* ─── Responsive ────────────────────────────────────────── */
         @media(max-width: 900px) {
             .cb-hero { grid-template-columns: 1fr; gap: 48px; }
@@ -443,10 +525,11 @@
                                         <span class="cb-product-orig">{{ number_format((float)$book->price, 0, ',', '.') }}đ</span>
                                     @endif
                                 </div>
-                                {{-- nút giỏ hàng: gọi route add-to-cart hoặc xử lý bằng JS --}}
-                                <button class="cb-add-btn"
-                                        onclick="event.preventDefault(); addToCart('{{ $book->slug }}')"
-                                        title="Thêm vào giỏ">+</button>
+                                {{-- nút giỏ hàng: submit POST để thêm vào giỏ --}}
+                                <button type="button" class="cb-add-btn"
+                                    data-cart-url="{{ route('cart.store', $book->slug) }}"
+                                    onclick="submitAddToCart(event, this.dataset.cartUrl)"
+                                    title="Thêm vào giỏ">+</button>
                             </div>
                         </div>
                     </a>
@@ -468,19 +551,57 @@
                 <button id="open-chat-btn" class="cb-cta-btn">Mở trợ lý AI ✦</button>
             </div>
         </div>
-    </section>
 
     {{-- ── Footer ──────────────────────────────────────────────────── --}}
-    <footer class="cb-footer">
-        <div class="cb-footer-logo">Cat<span>Book</span></div>
-        <div class="cb-footer-links">
-            <a href="#">Chính sách</a>
-            <a href="#">Liên hệ</a>
-            <a href="#">Facebook</a>
-        </div>
-        <div>© {{ date('Y') }} CatBook</div>
-    </footer>
+        <footer class="cb-footer">
+            
+            <div class="cb-footer-top">
+                {{-- Cột 1: Thông tin thương hiệu --}}
+                <div class="cb-footer-brand">
+                    <div class="cb-footer-logo">Cat<span>Book</span></div>
+                    <p class="cb-footer-desc">
+                        Tiệm sách nhỏ mang đến những giá trị lớn. Khám phá hàng ngàn đầu sách hay và 100% chính hãng cùng CatBook ngay hôm nay!
+                    </p>
+                    <div class="cb-footer-contact">
+                        <p>📞 <strong>Hotline:</strong> 1900 1210</p>
+                        <p>📧 <strong>Email:</strong> cskh@catbook.vn</p>
+                    </div>
+                </div>
 
+                {{-- Cột 2: Về chúng tôi --}}
+                <div class="cb-footer-col">
+                    <h4 class="cb-footer-heading">Về CatBook</h4>
+                    <div class="cb-footer-links">
+                        <a href="#">Giới thiệu chung</a>
+                        <a href="#">Tuyển dụng</a>
+                        <a href="#">Chính sách bảo mật</a>
+                        <a href="#">Điều khoản sử dụng</a>
+                    </div>
+                </div>
+
+                {{-- Cột 3: Hỗ trợ --}}
+                <div class="cb-footer-col">
+                    <h4 class="cb-footer-heading">Hỗ trợ khách hàng</h4>
+                    <div class="cb-footer-links">
+                        <a href="#">Hướng dẫn mua hàng</a>
+                        <a href="#">Phương thức thanh toán</a>
+                        <a href="#">Chính sách đổi trả</a>
+                        <a href="#">Tra cứu đơn hàng</a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Phần viền dưới cùng --}}
+            <div class="cb-footer-bottom">
+                <div class="cb-copyright">© {{ date('Y') }} CatBook. Tất cả các quyền được bảo lưu.</div>
+                <div class="cb-socials">
+                    {{-- Bạn có thể thay chữ FB, IG bằng thẻ <img> icon SVG sau này --}}
+                    <a href="#" aria-label="Facebook">FB</a>
+                    <a href="#" aria-label="Instagram">IG</a>
+                </div>
+            </div>
+
+        </footer>
     <script>
         // Mở chatbot
         document.getElementById('open-chat-btn')?.addEventListener('click', function () {
@@ -488,25 +609,33 @@
             if (toggle) toggle.click();
         });
 
-        // Thêm vào giỏ hàng (AJAX)
-        function addToCart(bookSlug) {
-            fetch('/gio-hang/' + bookSlug, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                },
-                body: JSON.stringify({ quantity: 1 })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    // Cập nhật badge giỏ hàng nếu cần
-                    const badge = document.querySelector('.cb-cart-badge');
-                    if (badge && data.cart_count) badge.textContent = data.cart_count;
-                }
-            })
-            .catch(console.error);
+        // Thêm vào giỏ hàng bằng form POST để tương thích response redirect từ Laravel
+        function submitAddToCart(event, actionUrl) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+            if (!csrf) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = actionUrl;
+            form.style.display = 'none';
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrf;
+
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'hidden';
+            quantityInput.name = 'quantity';
+            quantityInput.value = '1';
+
+            form.appendChild(csrfInput);
+            form.appendChild(quantityInput);
+            document.body.appendChild(form);
+            form.submit();
         }
     </script>
 @endsection

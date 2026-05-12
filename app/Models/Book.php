@@ -18,7 +18,7 @@ class Book extends Model
         'isbn',
         'description',
         'cover_image',
-        'books_format',
+        'format',
         'purchase_price',
         'price',
         'discount_price',

@@ -43,7 +43,7 @@
             <div class="h-px flex-1 bg-slate-200"></div>
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
+        <div class="grid gap-3">
             <a href="{{ route('login.provider', 'google') }}" class="inline-flex items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
                 <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
                     <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.655 32.657 29.271 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.038l5.657-5.657C34.029 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z"/>
@@ -52,14 +52,6 @@
                     <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.137 3.157-3.32 5.72-6.084 7.569l.002-.001 6.19 5.238C34.97 39.238 44 33 44 24c0-1.341-.138-2.651-.389-3.917z"/>
                 </svg>
                 Đăng nhập bằng Google
-            </a>
-
-            <a href="{{ route('login.provider', 'facebook') }}" class="inline-flex items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.099 4.388 23.094 10.125 24v-8.438H7.078v-3.49h3.047v-2.66c0-3.026 1.792-4.698 4.533-4.698 1.312 0 2.686.236 2.686.236v2.956h-1.513c-1.49 0-1.954.93-1.954 1.886v2.28h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z" fill="#1877F2"/>
-                    <path d="M16.671 15.563l.532-3.49h-3.328v-2.28c0-.955.464-1.886 1.954-1.886h1.513V4.95s-1.374-.236-2.686-.236c-2.741 0-4.533 1.672-4.533 4.698v2.66H7.078v3.49h3.047V24a12.03 12.03 0 0 0 3.75 0v-8.437h2.796Z" fill="#fff"/>
-                </svg>
-                Đăng nhập bằng Facebook
             </a>
         </div>
 

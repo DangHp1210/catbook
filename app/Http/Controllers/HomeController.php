@@ -12,10 +12,11 @@ class HomeController extends Controller
 {
     public function index(): View
     {
-        $featuredBooks = Book::query()
+        $bestSellers = Book::query()
             ->with(['authors:id,name', 'categories:id,name'])
             ->where('status', 'available')
-            ->orderByDesc('stock_quantity')
+            ->withSum('orderItems as sold_quantity', 'quantity')
+            ->orderByDesc('sold_quantity')
             ->orderByDesc('created_at')
             ->limit(6)
             ->get();
@@ -24,19 +25,17 @@ class HomeController extends Controller
             ->with(['authors:id,name'])
             ->where('status', 'available')
             ->latest()
-            ->limit(4)
+            ->limit(6)
             ->get();
 
-        $topCategories = Category::query()
-            ->withCount('books')
-            ->orderByDesc('books_count')
-            ->limit(8)
-            ->get();
-
-        $topAuthors = Author::query()
-            ->withCount('books')
-            ->orderByDesc('books_count')
-            ->limit(4)
+        $discountBooks = Book::query()
+            ->with(['authors:id,name'])
+            ->where('status', 'available')
+            ->whereNotNull('discount_price')
+            ->whereColumn('discount_price', '<', 'price')
+            ->orderByRaw('(price - discount_price) DESC')
+            ->orderByDesc('created_at')
+            ->limit(6)
             ->get();
 
         $cartCount = Auth::check()
@@ -44,10 +43,10 @@ class HomeController extends Controller
             : 0;
 
         return view('home.index', [
-            'featuredBooks' => $featuredBooks,
+            'featuredBooks' => $bestSellers,
+            'bestSellers' => $bestSellers,
             'newArrivals' => $newArrivals,
-            'topCategories' => $topCategories,
-            'topAuthors' => $topAuthors,
+            'discountBooks' => $discountBooks,
             'stats' => [
                 'books' => Book::count(),
                 'authors' => Author::count(),

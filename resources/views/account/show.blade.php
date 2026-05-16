@@ -365,34 +365,7 @@ body {
         </div>
     </div>
 
-    {{-- ── 3. Email ────────────────────────────────────────── --}}
-    <div class="ac-card">
-        <div class="ac-card-head">
-            <span class="ac-card-title">Địa chỉ Email</span>
-            <button type="button"
-                    onclick="alert('Tính năng đổi email đang phát triển')"
-                    class="ac-btn-ghost">
-                Đổi email
-            </button>
-        </div>
-        <div class="ac-card-body" style="padding-top:14px;padding-bottom:14px">
-            <div class="ac-action-row">
-                <div class="ac-action-info">
-                    <p style="font-family:var(--cb-sans);font-size:14px;font-weight:600;color:var(--cb-text)">
-                        {{ $user->email }}
-                    </p>
-                    <p class="ac-action-sub">Email dùng để đăng nhập và nhận thông báo</p>
-                </div>
-                <span style="font-family:var(--cb-sans);font-size:11px;font-weight:600;
-                             padding:3px 10px;border-radius:999px;
-                             background:var(--cb-accent-light);color:var(--cb-accent)">
-                    Đã xác thực
-                </span>
-            </div>
-        </div>
-    </div>
-
-    {{-- ── 4. Mật khẩu ─────────────────────────────────────── --}}
+    {{-- ── 3. Mật khẩu ─────────────────────────────────────── --}}
     <div class="ac-card">
         <div class="ac-card-head">
             <span class="ac-card-title">Bảo mật</span>

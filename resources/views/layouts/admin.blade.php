@@ -12,7 +12,7 @@
     @yield('styles')
 </head>
 <body class="cb-site text-slate-900">
-    <x-navbar />
+    <x-admin-navbar />
 
     <main class="cb-admin-shell">
         <section class="min-w-0 flex-1 space-y-3.5">

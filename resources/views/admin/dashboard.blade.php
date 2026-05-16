@@ -46,7 +46,7 @@ body {
 }
 .ad-heading {
     font-family: normal;
-    font-size: 32px; font-weight: 900; color: #0d1b10;
+    font-size: 38px; font-weight: 900; color: #0d1b10;
     letter-spacing: -0.5px; line-height: 1.08; margin: 0;
 }
 .ad-heading em { font-style: italic; color: var(--cb-accent); }
@@ -217,15 +217,6 @@ body {
         <p class="ad-timestamp">
             Cập nhật lần cuối: {{ now()->format('H:i — d/m/Y') }}
         </p>
-    </div>
-    <div class="ad-header-right">
-        <a href="{{ route('home') }}" class="ad-btn-outline">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-            Xem trang chủ
-        </a>
     </div>
 </div>
 

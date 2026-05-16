@@ -12,17 +12,25 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\FacebookProvider;
 use Throwable;
 
 class AuthController extends Controller
 {
+    private function homeRouteForRole(User $user): string
+    {
+        return match ($user->role) {
+            'admin' => 'admin.panel',
+            'staff' => 'staff.panel',
+            default => 'home',
+        };
+    }
+
     /**
      * @return array<int, string>
      */
     private function supportedProviders(): array
     {
-        return ['google', 'facebook'];
+        return ['google'];
     }
 
     public function showLogin(): View
@@ -88,20 +96,12 @@ class AuthController extends Controller
                 ->onlyInput('email');
         }
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(route($this->homeRouteForRole($user)));
     }
 
     public function redirectToProvider(string $provider): RedirectResponse
     {
         abort_unless(in_array($provider, $this->supportedProviders(), true), 404);
-
-        if ($provider === 'facebook') {
-            /** @var \Laravel\Socialite\Two\FacebookProvider $driver */
-            $driver = Socialite::buildProvider(FacebookProvider::class, config('services.facebook'));
-            $driver->setScopes(['public_profile']);
-
-            return $driver->redirect();
-        }
 
         return Socialite::driver($provider)->redirect();
     }
@@ -172,7 +172,7 @@ class AuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(route($this->homeRouteForRole($user)));
     }
 
     public function register(Request $request): RedirectResponse

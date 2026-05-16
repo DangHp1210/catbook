@@ -51,6 +51,37 @@ if (auth()->check()) {
 }
 </style>
 
+{{-- Banner thông báo cho Admin/Staff khi xem trang khách hàng --}}
+@if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff']))
+<div style="
+    background:#0d1b10; color:#4ade80;
+    font-family:'DM Sans',sans-serif; font-size:12px;
+    padding:6px 24px; display:flex; align-items:center;
+    justify-content:space-between; gap:16px;
+">
+    <span style="display:flex;align-items:center;gap:8px">
+        <span style="background:#2d6a4f;color:#fff;font-size:10px;
+                     font-weight:700;padding:2px 8px;border-radius:999px">
+            {{ strtoupper(auth()->user()->role) }}
+        </span>
+        Bạn đang xem trang khách hàng
+    </span>
+    <span style="display:flex;gap:16px;align-items:center">
+        @if(auth()->user()->role === 'admin')
+            <a href="{{ route('admin.panel') }}"
+               style="color:#86efac;text-decoration:none;font-weight:600">
+                ← Vào Admin Dashboard
+            </a>
+        @else
+            <a href="{{ route('staff.panel') }}"
+               style="color:#86efac;text-decoration:none;font-weight:600">
+                ← Vào Staff Dashboard
+            </a>
+        @endif
+    </span>
+</div>
+@endif
+
 <header class="cb-navbar-shell">
     <nav class="cb-nav">
 
@@ -146,27 +177,6 @@ if (auth()->check()) {
                             </svg>
                             Địa chỉ giao hàng
                         </a>
-
-                        @if(auth()->user()->role === 'admin')
-                            <div class="cb-dropdown-divider"></div>
-                            <a href="{{ route('admin.panel') }}" class="cb-dropdown-item cb-dropdown-item--admin" role="menuitem">
-                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                                    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                                </svg>
-                                Admin Dashboard
-                            </a>
-                        @elseif(auth()->user()->role === 'staff')
-                            <div class="cb-dropdown-divider"></div>
-                            <a href="{{ route('staff.panel') }}" class="cb-dropdown-item cb-dropdown-item--staff" role="menuitem">
-                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                                    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                                </svg>
-                                Staff Dashboard
-                            </a>
-                        @endif
-
                         <div class="cb-dropdown-divider"></div>
 
                         <form method="POST" action="{{ route('logout') }}" style="margin:0">

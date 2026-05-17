@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Payment;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
@@ -24,7 +27,7 @@ class PaymentController extends Controller
     }
 
     // Tạo URL thanh toán VNPay
-    public function createPayment(Request $request)
+    public function createPayment(Request $request): View|RedirectResponse
     {
         $order = Order::findOrFail($request->query('order_id'));
 
@@ -48,7 +51,7 @@ class PaymentController extends Controller
             Log::warning('vnpay.return_url_invalid', ['vnp_ReturnUrl' => $vnp_ReturnUrl]);
         }
 
-        $vnp_TxnRef = $order->order_code;
+        $vnp_TxnRef = $order->order_code . '-' . Str::upper(Str::random(8));
         $vnp_OrderInfo = "Thanh toan don hang: " . $order->order_code;
         $vnp_OrderType = "billpayment";
         $vnp_Amount = (int) ($order->total_amount * 100);
@@ -56,6 +59,7 @@ class PaymentController extends Controller
         $vnp_IpAddr = $request->ip();
 
         session()->put('vnpay_order_id', $order->id);
+        session()->put('vnpay_txn_ref', $vnp_TxnRef);
 
         $inputData = array(
             "vnp_Version" => "2.1.0",
@@ -79,7 +83,8 @@ class PaymentController extends Controller
         // Calculate HMAC-SHA512
         $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
 
-        $vnp_Url = $vnp_Url . "?" . $query . '&vnp_SecureHash=' . $vnpSecureHash;
+        $paymentUrl = $vnp_Url . "?" . $query . '&vnp_SecureHash=' . $vnpSecureHash;
+        $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=' . rawurlencode($paymentUrl);
 
         // Log for debugging
         Log::info('vnpay.createPayment', [
@@ -91,7 +96,13 @@ class PaymentController extends Controller
             'vnp_ReturnUrl_base' => $vnp_ReturnUrl,
         ]);
 
-        return redirect($vnp_Url);
+        return view('payments.vnpay-qr', [
+            'order' => $order,
+            'paymentUrl' => $paymentUrl,
+            'qrImageUrl' => $qrImageUrl,
+            'vnpTxnRef' => $vnp_TxnRef,
+            'vnpAmount' => $vnp_Amount / 100,
+        ]);
     }
 
     // Xử lý kết quả trả về từ VNPay
@@ -100,7 +111,12 @@ class PaymentController extends Controller
         $order = null;
 
         if ($request->filled('vnp_TxnRef')) {
-            $order = Order::where('order_code', $request->query('vnp_TxnRef'))->first();
+            $txnRef = (string) $request->query('vnp_TxnRef');
+            $orderCode = Str::before($txnRef, '-');
+
+            if ($orderCode !== '') {
+                $order = Order::where('order_code', $orderCode)->first();
+            }
         }
 
         if (!$order) {

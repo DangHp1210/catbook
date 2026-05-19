@@ -58,8 +58,8 @@ class PaymentController extends Controller
         $vnp_Locale = "vn";
         $vnp_IpAddr = $request->ip();
 
-        session()->put('vnpay_order_id', $order->id);
-        session()->put('vnpay_txn_ref', $vnp_TxnRef);
+        $request->session()->put('vnpay_order_id', $order->id);
+        $request->session()->put('vnpay_txn_ref', $vnp_TxnRef);
 
         $inputData = array(
             "vnp_Version" => "2.1.0",
@@ -193,7 +193,7 @@ class PaymentController extends Controller
     }
 
     // Tạo URL thanh toán MoMo
-    public function createMomoPayment(Request $request)
+    public function createMomoPayment(Request $request): View|RedirectResponse
     {
         $order = Order::findOrFail($request->query('order_id'));
 
@@ -215,8 +215,6 @@ class PaymentController extends Controller
             return redirect()->route('orders.show', $order)->with('error', 'Cấu hình MoMo không hoàn chỉnh.');
         }
 
-        session()->put('momo_order_id', $order->id);
-
         $momo_RequestId = time() . "";
         $momo_OrderInfo = "Thanh toan don hang: " . $order->order_code;
         $momo_Amount = (int) $order->total_amount; // MoMo sử dụng VND thông thường (10,000 - 50,000,000 VND)
@@ -226,6 +224,9 @@ class PaymentController extends Controller
             'order_id' => $order->id,
             'order_code' => $order->order_code,
         ]));
+
+        $request->session()->put('momo_order_id', $order->id);
+        $request->session()->put('momo_request_id', $momo_RequestId);
 
         // Build raw signature string theo đúng thứ tự (QUAN TRỌNG!)
         // Thứ tự: accessKey, amount, extraData, ipnUrl, orderId, orderInfo, partnerCode, redirectUrl, requestId, requestType
@@ -282,7 +283,23 @@ class PaymentController extends Controller
 
             // MoMo trả về resultCode = 0 khi thành công
             if ($responseData['resultCode'] == 0 && isset($responseData['payUrl'])) {
-                return redirect($responseData['payUrl']);
+                $payUrl = $responseData['payUrl'];
+                $deeplink = $responseData['deeplink']
+                    ?? $responseData['deeplinkWebInApp']
+                    ?? $responseData['qrCodeUrl']
+                    ?? $payUrl;
+                $fallbackUrl = $payUrl;
+                $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=' . rawurlencode($deeplink);
+
+                return view('payments.momo', [
+                    'order' => $order,
+                    'amount' => $momo_Amount,
+                    'payUrl' => $payUrl,
+                    'deeplink' => $deeplink,
+                    'fallbackUrl' => $fallbackUrl,
+                    'qrImageUrl' => $qrImageUrl,
+                    'expiresAt' => now()->addMinutes(15),
+                ]);
             } else {
                 $errorMessage = $responseData['message'] ?? 'Lỗi từ MoMo. Vui lòng thử lại.';
                 Log::error('momo.apiError', [
@@ -300,6 +317,23 @@ class PaymentController extends Controller
             ]);
             return redirect()->route('orders.show', $order)->with('error', 'Lỗi kết nối MoMo. Vui lòng thử lại.');
         }
+    }
+
+    // Trang trung gian cho chuyển khoản ngân hàng
+    public function createTransferPayment(Request $request): View|RedirectResponse
+    {
+        $order = Order::findOrFail($request->query('order_id'));
+
+        return view('payments.transfer', [
+            'order' => $order,
+            'amount' => (float) $order->total_amount,
+            'accountName' => 'PHAM VAN DANG',
+            'accountNumber' => '106875074961',
+            'bankName' => 'VietinBank - CN HOAN KIEM - HOI SO',
+            'qrImageUrl' => asset('images/QRCode.png'),
+            'transferContent' => $order->order_code,
+            'expiresAt' => now()->addMinutes(15),
+        ]);
     }
 
     // Xử lý kết quả trả về từ MoMo

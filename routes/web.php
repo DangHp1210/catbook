@@ -49,9 +49,15 @@ Route::middleware('auth')->group(function () {
     // Payment routes
     Route::get('/payment/vnpay', [PaymentController::class, 'createPayment'])->name('payment.vnpay');
     Route::get('/payment/momo', [PaymentController::class, 'createMomoPayment'])->name('payment.momo');
+    Route::get('/payment/transfer', [PaymentController::class, 'createTransferPayment'])->name('payment.transfer');
 
     Route::get('/tai-khoan', function () {
-        $user = request()->user();
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        if (! $user) {
+            abort(403);
+        }
+
         $user->loadCount(['addresses', 'reviews', 'chatSessions']);
         
         // Count all displayable orders (active + completed + cancelled)

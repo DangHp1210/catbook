@@ -144,7 +144,11 @@ class CheckoutController extends Controller
             return redirect()->route('payment.momo', ['order_id' => $order->id]);
         }
 
-        // For COD and bank transfer, show order confirmation
+        if ($validated['payment_method'] === 'bank_transfer') {
+            return redirect()->route('payment.transfer', ['order_id' => $order->id]);
+        }
+
+        // For COD, show order confirmation
         return redirect()->route('orders.show', $order)->with('success', 'Đặt hàng thành công. Mã đơn: '.$order->order_code);
     }
 

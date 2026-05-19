@@ -23,7 +23,7 @@ body {
     margin: 0;
 }
 /* ─── Page header ─────────────────────────────────────── */
-.ck-header { margin-bottom: 28px; }
+.ck-header { margin-bottom: 28px; margin-top: 10px; }
 .ck-eyebrow {
     display: inline-flex; align-items: center; gap: 7px;
     font-family: var(--cb-sans); font-size: 11px; font-weight: 600;
@@ -396,7 +396,7 @@ body {
     $onlineMethods = [
         'bank_transfer' => [
             'title'   => 'Chuyển khoản',
-            'desc'    => 'Quét QR hoặc chuyển khoản trực tiếp theo thông tin đơn hàng.',
+            'desc'    => 'Chuyển khoản trực tiếp theo thông tin đơn hàng.',
             'tag'     => 'Phổ biến',
             'tag_cls' => 'ck-tag-blue',
             'icon'    => 'BK',
@@ -501,16 +501,6 @@ body {
                     @endforeach
                 </div>
 
-                {{-- QR block (bank_transfer) --}}
-                <div class="ck-qr-wrap bank-qr {{ $selectedMethod !== 'bank_transfer' ? 'hidden' : '' }}"
-                     style="margin-bottom:12px">
-                    <p style="font-family:var(--cb-sans);font-size:12px;color:var(--cb-muted);margin-bottom:8px">
-                        Quét mã QR để chuyển khoản nhanh:
-                    </p>
-                    <img src="{{ asset('images/QRCode.png') }}" alt="QR chuyển khoản">
-                    <p class="ck-qr-note">Hoặc chuyển theo thông tin trên hoá đơn sau khi đặt hàng.</p>
-                </div>
-
                 {{-- COD --}}
                 <p class="ck-pay-section-title" style="margin-top:16px">Thanh toán khi nhận hàng</p>
                 <label class="ck-cod-row {{ $selectedMethod === 'cod' ? 'selected' : '' }}"
@@ -530,7 +520,7 @@ body {
                 <div class="ck-tips">
                     <p class="ck-tips-title">Gợi ý lựa chọn</p>
                     <ul>
-                        <li>Chuyển khoản phù hợp khi muốn đối soát nhanh bằng QR hoặc số tài khoản.</li>
+                        <li>Chuyển khoản phù hợp khi muốn đối soát nhanh bằng số tài khoản.</li>
                         <li>MoMo tiện cho thanh toán trên điện thoại, đặc biệt khi đặt hàng thường xuyên.</li>
                         <li>VNPay hỗ trợ nhiều ngân hàng và thẻ quốc tế, an toàn và quen thuộc.</li>
                     </ul>
@@ -630,7 +620,6 @@ body {
 document.addEventListener('DOMContentLoaded', function () {
     const cards    = document.querySelectorAll('.ck-pay-card, .ck-cod-row');
     const inputs   = document.querySelectorAll('input[name="payment_method"]');
-    const qrBlock  = document.querySelector('.bank-qr');
 
     /* ── Payment card selection ── */
     function syncSelection() {
@@ -640,10 +629,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const m = card.dataset.method;
             card.classList.toggle('selected', m === val);
         });
-
-        if (qrBlock) {
-            qrBlock.classList.toggle('hidden', val !== 'bank_transfer');
-        }
     }
 
     cards.forEach(card => {

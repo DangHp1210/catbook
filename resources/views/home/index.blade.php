@@ -546,49 +546,7 @@ body { font-family: var(--cb-sans); background: var(--cb-bg); color: var(--cb-te
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════
-     FOOTER
-══════════════════════════════════════════════════ --}}
-<footer class="cb-footer">
-    <div class="cb-footer-top">
-        <div class="cb-footer-brand">
-            <div class="cb-footer-logo">Cat<span>Book</span></div>
-            <p class="cb-footer-desc">
-                Tiệm sách nhỏ mang đến những giá trị lớn. Khám phá hàng ngàn đầu sách hay và 100% chính hãng cùng CatBook ngay hôm nay!
-            </p>
-            <div class="cb-footer-contact">
-                <p>📞 <strong>Hotline:</strong> 1900 1210</p>
-                <p>📧 <strong>Email:</strong> cskh@catbook.vn</p>
-            </div>
-        </div>
-        <div class="cb-footer-col">
-            <h4 class="cb-footer-heading">Về CatBook</h4>
-            <div class="cb-footer-links">
-                <a href="#">Giới thiệu chung</a>
-                <a href="#">Tuyển dụng</a>
-                <a href="#">Chính sách bảo mật</a>
-                <a href="#">Điều khoản sử dụng</a>
-            </div>
-        </div>
-        <div class="cb-footer-col">
-            <h4 class="cb-footer-heading">Hỗ trợ khách hàng</h4>
-            <div class="cb-footer-links">
-                <a href="#">Hướng dẫn mua hàng</a>
-                <a href="#">Phương thức thanh toán</a>
-                <a href="#">Chính sách đổi trả</a>
-                <a href="#">Tra cứu đơn hàng</a>
-            </div>
-        </div>
-    </div>
-    <div class="cb-footer-bottom">
-        <div class="cb-copyright">© {{ date('Y') }} CatBook. Tất cả các quyền được bảo lưu.</div>
-        <div class="cb-socials">
-            <a href="#" title="Facebook">Facebook</a>
-            <a href="#" title="Twitter">Twitter</a>
-            <a href="#" title="Instagram">Instagram</a>
-        </div>
-    </div>
-</footer>
+{{-- Footer is now rendered site-wide in layouts.app; removed duplicate here. --}}
 
 {{-- ══════════════════════════════════════════════════
      CHATBOT FAB

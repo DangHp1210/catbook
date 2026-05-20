@@ -21,6 +21,9 @@
 <main class="cb-page">
     @yield('content')
 </main>
+</main>
+
+<x-footer />
 
 </body>
 </html>

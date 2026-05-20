@@ -319,7 +319,7 @@
                     </div>
                     <div class="mm-step">
                         <span class="mm-step-num">3</span>
-                        Xác nhận đúng số tiền trước khi thanh toán.
+                        Xác nhận đúng <strong>số tiền</strong> trước khi thanh toán.
                     </div>
                     <div class="mm-step">
                         <span class="mm-step-num">4</span>

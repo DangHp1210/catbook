@@ -282,7 +282,7 @@ body {
                     </div>
                     <div class="vq-step">
                         <span class="vq-step-num">3</span>
-                        Kiểm tra số tiền và xác nhận thanh toán.
+                        Kiểm tra <strong>số tiền</strong> và xác nhận thanh toán.
                     </div>
                     <div class="vq-step">
                         <span class="vq-step-num">4</span>

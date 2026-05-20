@@ -623,10 +623,14 @@
         justify-content: center;
         width: 100%;
     }
+
+    .cat-page-gap { margin-bottom: 72px; }
     </style>
 @endsection
 
 @section('content')
+
+<div class="cat-page-gap">
 
 <div class="cat-wrap">
 
@@ -994,6 +998,8 @@
         </section>
     </div>{{-- /.cat-layout --}}
 </div>{{-- /.cat-wrap --}}
+
+</div>{{-- /.cat-page-gap --}}
 
 <script>
 /* ── Price ranges (checkboxes) ────────────────────────────── */

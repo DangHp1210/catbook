@@ -176,6 +176,10 @@ body {
     font-family: var(--cb-serif); font-size: 16px; font-weight: 700;
     color: var(--cb-accent); text-align: right; white-space: nowrap;
 }
+
+.oi-page-gap {
+    margin-bottom: 72px;
+}
 </style>
 
 @php
@@ -196,6 +200,8 @@ body {
         'paypal'        => 'PayPal',
     ];
 @endphp
+
+<div class="oi-page-gap">
 
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="oi-header">
@@ -444,5 +450,7 @@ body {
     @endif
 
 @endif {{-- end else --}}
+
+</div>
 
 @endsection

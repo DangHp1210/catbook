@@ -502,6 +502,11 @@ body {
 .bd-rel-card:hover .bd-rel-title { color: var(--cb-accent); }
 .bd-rel-author { font-family: var(--cb-sans); font-size: 11px; color: #aaa; margin-bottom: 8px; }
 .bd-rel-price  { font-family: var(--cb-sans); font-size: 14px; font-weight: 700; color: var(--cb-accent); }
+
+/* space before shared footer */
+.bd-related-wrap {
+    margin-bottom: 72px;
+}
 </style>
 
 {{-- ── Flash messages ──────────────────────────────────────── --}}
@@ -795,7 +800,7 @@ body {
 {{-- ════════════════════════════════════════════════════════
      RELATED BOOKS
 ════════════════════════════════════════════════════════ --}}
-<section>
+<section class="bd-related-wrap">
     <div class="bd-related-hd">
         <h2 class="bd-related-title">Sách liên quan</h2>
         <a href="{{ route('catalog.categories') }}" class="bd-related-more">Xem thêm →</a>

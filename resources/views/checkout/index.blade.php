@@ -350,7 +350,11 @@ body {
     width: 48px; height: 1.5px; background: var(--cb-border); margin: 0 6px;
 }
 .ck-step-line.done { background: var(--cb-accent); }
+
+.ck-page-gap { margin-bottom: 72px; }
 </style>
+
+<div class="ck-page-gap">
 
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="ck-header">
@@ -615,6 +619,8 @@ body {
     </aside>
 
 </div>{{-- /.ck-layout --}}
+
+</div>{{-- /.ck-page-gap --}}
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

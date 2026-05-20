@@ -10,8 +10,6 @@
     /* Giữ nguyên khoảng cách mỏng vừa chỉnh */
     padding: 24px 20px 16px; 
     /* Để các góc bo không bị lỗi lấn lề nếu bạn có dùng margin */
-    margin: 16px auto; 
-    max-width: 1280px; /* Thu gọn chiều rộng bằng với layout thân trang */
 }
 
 .cb-footer-top {

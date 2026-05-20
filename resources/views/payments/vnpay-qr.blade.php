@@ -18,9 +18,9 @@
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
 body {
-        background: var(--cb-bg);
-        color: var(--cb-text);
-        margin: 0;
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    margin: 0;
 }
 /* ─── Page wrapper ────────────────────────────────────── */
 .vq-wrap {
@@ -28,6 +28,7 @@ body {
     margin: 0 auto;
     padding: 40px 24px 64px;
 }
+.vnpay-page-gap { margin-bottom: 72px; }
 
 /* ─── Breadcrumb ──────────────────────────────────────── */
 .vq-crumb {
@@ -223,6 +224,7 @@ body {
 }
 </style>
 
+<div class="vnpay-page-gap">
 <div class="vq-wrap">
 
     {{-- Breadcrumb --}}
@@ -353,6 +355,7 @@ body {
             </div>
         </aside>
     </div>
+</div>
 </div>
 
 @endsection

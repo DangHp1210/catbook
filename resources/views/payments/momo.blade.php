@@ -23,13 +23,18 @@
     --mm-pink-light:   #fce7f3;
     --mm-pink-border:  #fbcfe8;
 }
-
+body {
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    margin: 0;
+}
 /* ─── Page wrapper ────────────────────────────────────── */
 .mm-wrap {
     max-width: 960px;
     margin: 0 auto;
     padding: 40px 24px 64px;
 }
+.momo-page-gap { margin-bottom: 72px; }
 
 /* ─── Breadcrumb ──────────────────────────────────────── */
 .mm-crumb {
@@ -250,6 +255,7 @@
 .mm-body-sep { width: 100%; height: 1px; background: var(--cb-border); }
 </style>
 
+<div class="momo-page-gap">
 <div class="mm-wrap">
 
     {{-- ── Breadcrumb ── --}}
@@ -393,6 +399,7 @@
             </div>
         </aside>
     </div>
+</div>
 </div>
 
 {{-- ── Countdown script (logic giữ nguyên) ─────────────── --}}

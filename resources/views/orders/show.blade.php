@@ -302,9 +302,12 @@ body {
     color: var(--cb-muted); cursor: pointer; transition: all .18s;
 }
 .os-modal-cancel:hover { border-color: var(--cb-text); color: var(--cb-text); }
+/* page-only gap before shared footer */
+.os-page-gap { margin-bottom: 72px; }
 </style>
 
 {{-- ── Flash messages ───────────────────────────────────── --}}
+<div class="os-page-gap">
 @if(session('success'))
     <div class="os-flash os-flash-ok">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -614,3 +617,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 @endsection
+
+</div>

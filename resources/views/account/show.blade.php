@@ -19,9 +19,9 @@
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
 body {
-        background: var(--cb-bg);
-        color: var(--cb-text);
-        margin: 0;
+    background: var(--cb-bg);
+    color: var(--cb-text);
+    margin: 0;
 }
 /* ─── Page wrapper ────────────────────────────────────── */
 .ac-wrap {
@@ -30,6 +30,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+.ac-page-gap {
+    margin-bottom: 72px;
 }
 
 /* ─── Shared card ─────────────────────────────────────── */
@@ -256,7 +260,7 @@ body {
     $initial = mb_strtoupper(mb_substr($user->full_name ?? '', 0, 1));
 @endphp
 
-<div class="ac-wrap">
+<div class="ac-wrap ac-page-gap">
 
     {{-- ── 1. Profile hero card ──────────────────────────── --}}
     <div class="ac-card ac-hero">
@@ -306,18 +310,23 @@ body {
                     <span class="ac-info-lbl">Số điện thoại</span>
                     <span class="ac-info-val">{{ $user->phone ?? 'Chưa cập nhật' }}</span>
                 </div>
-                <div class="ac-info-row">
-                    <span class="ac-info-lbl">Vai trò</span>
-                    <span>
-                        @if($user->role === 'admin')
-                            <span class="ac-role-badge ac-role-admin">Admin</span>
-                        @elseif($user->role === 'staff')
-                            <span class="ac-role-badge ac-role-staff">Staff</span>
-                        @else
-                            <span class="ac-role-badge ac-role-customer">Khách hàng</span>
-                        @endif
-                    </span>
-                </div>
+                @if($user->role === 'admin' || $user->role === 'staff')
+                    <div class="ac-info-row">
+                        <span class="ac-info-lbl">Vai trò</span>
+
+                        <span>
+                            @if($user->role === 'admin')
+                                <span class="ac-role-badge ac-role-admin">
+                                    Admin
+                                </span>
+                            @elseif($user->role === 'staff')
+                                <span class="ac-role-badge ac-role-staff">
+                                    Staff
+                                </span>
+                            @endif
+                        </span>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

@@ -13,6 +13,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @yield('styles')
+    <style>
+        html, body { height: 100%; }
+        body.cb-site { display: flex; flex-direction: column; min-height: 100vh; }
+        main.cb-page { flex: 1 0 auto; }
+    </style>
 </head>
 <body class="cb-site text-slate-800">
 
@@ -20,7 +25,6 @@
 
 <main class="cb-page">
     @yield('content')
-</main>
 </main>
 
 <x-footer />

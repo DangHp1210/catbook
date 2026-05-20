@@ -268,6 +268,7 @@ body {
     background: linear-gradient(90deg, var(--cb-accent), #4ade80);
     transition: width .4s ease;
 }
+.ct-page-gap { margin-bottom: 72px; }
 body {
         font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
         background: var(--cb-bg);
@@ -278,7 +279,7 @@ body {
 </style>
 
 {{-- ── Page header ──────────────────────────────────────── --}}
-<div class="p-5 rounded-xl">
+<div class="ct-page-gap p-5 rounded-xl">
 <div class="ct-header">
     <h1 class="ct-heading">Giỏ hàng của bạn</h1>
     <a href="{{ route('catalog.categories') }}" class="ct-continue">
@@ -500,6 +501,8 @@ body {
 
 </div>{{-- /.ct-layout --}}
 @endif
+
+</div>{{-- /.ct-page-gap --}}
 
 <script>
 /* ── Qty ± buttons ────────────────────────────────────── */

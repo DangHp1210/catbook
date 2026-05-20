@@ -244,8 +244,10 @@ body {
     color: var(--cb-muted); cursor: pointer; transition: all .18s;
 }
 .ad-modal-cancel:hover { border-color: var(--cb-text); color: var(--cb-text); }
+.ad-page-gap { margin-bottom: 72px; }
 </style>
 
+<div class="ad-page-gap">
 <div class="ad-wrap">
 
     {{-- ── Page header ──────────────────────────────────── --}}
@@ -375,6 +377,7 @@ body {
     @endforelse
 
 </div>{{-- /.ad-wrap --}}
+</div>
 
 {{-- ══════════════════════════════════════════════════════
      ADD ADDRESS MODAL

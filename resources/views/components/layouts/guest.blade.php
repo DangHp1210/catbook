@@ -1,10 +1,21 @@
 <style>
+        :root {
+            --cb-accent: #2d6a4f;
+            --cb-serif: 'Playfair Display', serif;
+            --cb-sans: 'DM Sans', sans-serif;
+            --cb-brand-text: #1a1a1a;
+            --cb-brand-muted: #777;
+            --cb-brand-border: #e8e3d8;
+            --cb-brand-accent: #2d6a4f;
+            --cb-brand-accent-soft: #d8f3dc;
+        }
+
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
             margin: 0;
-            font-family: 'DM Sans', sans-serif;
-            background: var(--cb-brand-bg);
+            font-family: var(--cb-sans);
+            background: #ffffff;
             color: var(--cb-brand-text);
         }
 
@@ -154,21 +165,22 @@
 
         .cb-auth-logo a {
             font-family: 'Playfair Display', serif;
-            font-size: 30px;
+            font-size: 24px;
             font-weight: 900;
-            color: var(--cb-brand-text);
+            color: #000;
             text-decoration: none;
             letter-spacing: -0.5px;
             line-height: 1;
         }
 
-        .cb-auth-logo a span { color: var(--cb-brand-accent); }
+        .cb-auth-logo a span { color: var(--cb-accent); }
 
         .cb-auth-logo p {
             margin: 8px 0 0;
             font-size: 13px;
-            color: #6a9e7a;
+            color: #202221;
             font-weight: 500;
+            line-height: 1.5;
         }
 
         .cb-auth-slot h1,
@@ -183,18 +195,20 @@
 
         .cb-auth-slot p.cb-auth-sub {
             font-size: 13px;
-            color: #6a9e7a;
+            color: #202221;
             text-align: center;
             margin: 0 0 28px;
+            line-height: 1.5;
         }
 
         .cb-auth-slot label {
             display: block;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
-            color: #6b7280;
+            color: #202221;
             margin-bottom: 6px;
-            letter-spacing: 0.3px;
+            letter-spacing: 0px;
+            font-family: var(--cb-sans);
         }
 
         .cb-auth-slot input[type="text"],
@@ -205,8 +219,8 @@
         .cb-auth-slot textarea {
             display: block;
             width: 100%;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
+            font-family: var(--cb-sans);
+            font-size: 13px;
             padding: 12px 16px;
             border-radius: 12px;
             background: #fff;
@@ -215,10 +229,14 @@
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
             margin-bottom: 16px;
+            line-height: 1.5;
         }
 
         .cb-auth-slot input::placeholder,
-        .cb-auth-slot textarea::placeholder { color: #b0aa9e; }
+        .cb-auth-slot textarea::placeholder { 
+            color: #b0a898;
+            font-family: var(--cb-sans);
+        }
 
         .cb-auth-slot input:focus,
         .cb-auth-slot select:focus,
@@ -236,6 +254,7 @@
             font-size: 12px;
             color: #dc2626;
             margin: -10px 0 12px;
+            font-family: var(--cb-sans);
         }
 
         .cb-auth-slot .cb-btn-primary {

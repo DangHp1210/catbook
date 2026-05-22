@@ -17,6 +17,7 @@ use App\Models\Order;
 use App\Models\Publisher;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/danh-muc', [CatalogController::class, 'categories'])->name('catalog.categories');
@@ -52,8 +53,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/payment/transfer', [PaymentController::class, 'createTransferPayment'])->name('payment.transfer');
 
     Route::get('/tai-khoan', function () {
-        /** @var \App\Models\User $user */
-        $user = auth()->user();
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
         if (! $user) {
             abort(403);
         }

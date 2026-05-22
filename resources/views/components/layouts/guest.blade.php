@@ -14,8 +14,8 @@
 
         body {
             margin: 0;
-            font-family: var(--cb-sans);
-            background: #ffffff;
+            font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+            background: var(--cb-bg);
             color: var(--cb-brand-text);
         }
 

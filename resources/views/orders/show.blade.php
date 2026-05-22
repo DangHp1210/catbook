@@ -554,8 +554,8 @@ body {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    /* ── Review base URL (logic giữ nguyên) ── */
-    const reviewBase = "{{ url('/don-hang/'.$order->id.'/danh-gia') }}";
+    /* ── Review base URL (use order_code for route model binding) ── */
+    const reviewBase = "{{ url('/don-hang/'.$order->order_code.'/danh-gia') }}";
 
     const modal       = document.getElementById('review-modal');
     const closeBtn    = document.getElementById('review-modal-close');

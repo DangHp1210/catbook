@@ -17,9 +17,8 @@
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
-body {
+html, body {
     background: var(--cb-bg);
-    color: var(--cb-text);
     margin: 0;
 }
 /* ─── Wrapper ─────────────────────────────────────────── */
@@ -350,7 +349,7 @@ body {
 
                 {{-- QR --}}
                 <div class="tp-qr-shell">
-                    <img src="{{ $qrImageUrl;  }}"
+                    <img src="{{ asset('images/QRCode.png') }}"
                          alt="QR chuyển khoản cho đơn {{ $order->order_code }}">
                 </div>
 

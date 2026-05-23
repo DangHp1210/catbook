@@ -19,8 +19,10 @@
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
 
-body { font-family: var(--cb-sans); background: var(--cb-bg); color: var(--cb-text); margin: 0; }
-
+html,body {
+    background-color: var(--cb-bg);
+    }
+    
 /* ── Hero ─────────────────────────────────────────────── */
 .cb-hero {
     max-width: 1240px; margin: 0 auto;

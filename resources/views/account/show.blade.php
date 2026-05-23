@@ -18,9 +18,8 @@
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
-body {
+html, body {
     background: var(--cb-bg);
-    color: var(--cb-text);
     margin: 0;
 }
 /* ─── Page wrapper ────────────────────────────────────── */
@@ -390,7 +389,7 @@ body {
         </div>
         <div class="ac-card-body" style="padding-top:14px;padding-bottom:14px">
             <p class="ac-action-sub">
-                Mật khẩu mạnh giúp bảo vệ tài khoản của bạn. Nên dùng ít nhất 8 ký tự gồm chữ hoa, chữ thường và số.
+                Đổi mật khẩu định kỳ giúp bảo vệ tài khoản của bạn an toàn hơn.
             </p>
         </div>
     </div>

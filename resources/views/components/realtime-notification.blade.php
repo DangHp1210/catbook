@@ -63,8 +63,8 @@
 }
 
 .cb-notify-trigger svg {
-    width: 15px;
-    height: 15px;
+    width: 22px;
+    height: 22px;
 }
 
 .cb-notify-badge {
@@ -347,9 +347,7 @@
             <div class="cb-notify-top">
                 <div>
                     <h3 class="cb-notify-title">Thông báo</h3>
-                    <p class="cb-notify-sub">Cập nhật đơn hàng, chatbot AI và ưu đãi theo thời gian thực.</p>
                 </div>
-                <button type="button" class="cb-notify-action">Đọc hết</button>
             </div>
 
             <div class="cb-notify-tabs" aria-label="Bộ lọc thông báo">

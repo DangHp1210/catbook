@@ -16,10 +16,9 @@
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
-body {
-        background: var(--cb-bg);
-        color: var(--cb-text);
-        margin: 0;
+html, body {
+    background: var(--cb-bg);
+    margin: 0;
 }
 
 /* ─── Page header ─────────────────────────────────────── */

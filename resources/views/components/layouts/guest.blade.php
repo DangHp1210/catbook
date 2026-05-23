@@ -1,17 +1,19 @@
 <style>
-        :root {
-            --cb-accent: #2d6a4f;
-            --cb-serif: 'Playfair Display', serif;
-            --cb-sans: 'DM Sans', sans-serif;
-            --cb-brand-text: #1a1a1a;
-            --cb-brand-muted: #777;
-            --cb-brand-border: #e8e3d8;
-            --cb-brand-accent: #2d6a4f;
-            --cb-brand-accent-soft: #d8f3dc;
-        }
+    :root {
+        --cb-accent: #2d6a4f;
+        --cb-serif: 'Playfair Display', serif;
+        --cb-sans: 'DM Sans', sans-serif;
+        --cb-brand-text: #1a1a1a;
+        --cb-brand-muted: #777;
+        --cb-brand-border: #e8e3d8;
+        --cb-brand-accent: #2d6a4f;
+        --cb-brand-accent-soft: #d8f3dc;
+    }
 
         *, *::before, *::after { box-sizing: border-box; }
 
+    html, body { background: #f8f6f1 !important; margin: 0; }
+    
         body {
             margin: 0;
             font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
@@ -34,22 +36,6 @@
             background-size: 28px 28px;
             pointer-events: none;
             z-index: 0;
-        }
-
-        .cb-auth-glow-l,
-        .cb-auth-glow-r {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .cb-auth-glow-l {
-            top: -110px;
-            left: -80px;
-            width: 360px;
-            height: 360px;
-            background: radial-gradient(circle, rgba(45,106,79,0.18) 0%, transparent 68%);
         }
 
         .cb-auth-glow-r {
@@ -149,11 +135,11 @@
         .cb-auth-card {
             position: relative;
             width: 100%;
-            background: rgba(255,255,255,0.92);
-            border: 1px solid var(--cb-brand-border);
+            background: transparent;
+            border: none;
             border-radius: 22px;
-            padding: 44px 44px 40px;
-            box-shadow: 0 24px 70px rgba(13,27,16,0.08);
+            padding: 0px;
+            box-shadow: none;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
@@ -425,9 +411,6 @@
     </style>
 
     <main class="cb-auth-page">
-        <div class="cb-auth-glow-l"></div>
-        <div class="cb-auth-glow-r"></div>
-
         <div class="cb-auth-layout">
             <section class="cb-auth-copy" aria-label="Giới thiệu">
                 <div class="cb-auth-eyebrow">
@@ -455,11 +438,6 @@
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                     Trang chủ
                 </a>
-
-                <div class="cb-auth-logo">
-                    <a href="{{ route('home') }}">Cat<span>Book</span></a>
-                    <p>Kho sách trực tuyến tích hợp AI</p>
-                </div>
 
                 @if(session('success'))
                     <div class="cb-alert cb-alert-success">{{ session('success') }}</div>

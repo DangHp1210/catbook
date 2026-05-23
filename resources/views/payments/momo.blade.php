@@ -23,9 +23,8 @@
     --mm-pink-light:   #fce7f3;
     --mm-pink-border:  #fbcfe8;
 }
-body {
+html, body {
     background: var(--cb-bg);
-    color: var(--cb-text);
     margin: 0;
 }
 /* ─── Page wrapper ────────────────────────────────────── */

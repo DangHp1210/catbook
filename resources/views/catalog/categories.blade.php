@@ -25,10 +25,9 @@
         --cb-shadow-lg:    0 12px 36px rgba(0,0,0,0.10);
     }
 
-    body {
-        background: var(--cb-bg);
-        color: var(--cb-text);
-        margin: 0;
+
+    html,body {
+        background-color: var(--cb-bg);
     }
 
     /* ─── Page wrapper ───────────────────────────────────────── */
@@ -683,19 +682,7 @@
                 @endif
             </h1>
 
-            <div class="cat-stats">
-                <span class="cat-stat-chip">
-                    <strong>{{ number_format($totalCategories) }}</strong> danh mục
-                </span>
-                <span class="cat-stat-chip">
-                    <strong>{{ number_format($totalBooks) }}</strong> đầu sách
-                </span>
-                @if($keyword)
-                    <span class="cat-stat-chip" style="background:#fff8e6; border-color:#f5d87a; color:#92400e">
-                        Kết quả cho: <strong>{{ $keyword }}</strong>
-                    </span>
-                @endif
-            </div>
+            {{-- stats removed per request --}}
         </div>
 
         {{-- Search --}}

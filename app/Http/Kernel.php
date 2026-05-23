@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Foundation\Http\Middleware\ValidatePostSize;
-use Illuminate\Http\Middleware\TrimStrings;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use App\Http\Middleware\RoleMiddleware;
 

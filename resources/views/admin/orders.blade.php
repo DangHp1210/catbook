@@ -37,12 +37,10 @@
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
-body {
+html, body {
     background: var(--cb-bg);
-    color: var(--cb-text);
     margin: 0;
 }
-
 /* ─── Page header ─────────────────────────────────────── */
 .or-header {
     background: var(--cb-white); border: 1px solid var(--cb-border);

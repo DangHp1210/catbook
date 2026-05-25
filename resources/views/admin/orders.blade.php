@@ -458,7 +458,7 @@ html, body {
 {{-- Order preview modal (AJAX) --}}
 <div id="orderPreviewModal" class="order-preview-modal" style="display:none;position:fixed;inset:0;z-index:80;align-items:center;justify-content:center;padding:28px;background:rgba(10,10,10,0.45)">
     <div style="max-width:900px;width:100%;max-height:90vh;overflow:auto;background:var(--cb-white);border-radius:14px;padding:18px;position:relative;border:1px solid var(--cb-border)">
-        <button id="orderPreviewClose" style="position:absolute;right:12px;top:12px;border:none;background:transparent;font-size:18px;cursor:pointer">✕</button>
+        <button id="orderPreviewClose" style="position:absolute;right:3px;top:3px;border:none;background:transparent;font-size:18px;cursor:pointer;color:var(--cb-muted);z-index:10;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;transition:background 0.2s, color 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#dc2626'" onmouseout="this.style.background='transparent'; this.style.color='var(--cb-muted)'">✕</button>
         <div id="orderPreviewContent">Loading…</div>
     </div>
 </div>

@@ -440,7 +440,7 @@
                 </a>
 
                 @if(session('success'))
-                    <div class="cb-alert cb-alert-success">{{ session('success') }}</div>
+                    <div class="cb-alert cb-alert-success" data-flash="success">{{ session('success') }}</div>
                 @endif
                 @if(session('error'))
                     <div class="cb-alert cb-alert-error">{{ session('error') }}</div>

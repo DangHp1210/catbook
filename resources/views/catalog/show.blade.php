@@ -63,7 +63,7 @@ html, body {
     border: 1px solid var(--cb-border);
     border-radius: 20px;
     overflow: hidden;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 5 / 8;
     display: flex; align-items: center; justify-content: center;
     position: relative;
 }
@@ -121,7 +121,7 @@ html, body {
 
 /* Tiêu đề của thẻ */
 .bd-perks-head {
-    padding: 14px 16px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--cb-border, #e2e8f0);
     font-family: var(--cb-serif);
     font-size: 15px;
@@ -149,25 +149,25 @@ html, body {
 .bd-perk-item {
     display: flex; 
     align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
+    gap: 10px;
+    padding: 8px 12px;
     border-radius: 10px;
     font-family: var(--cb-sans, system-ui, sans-serif);
-    font-size: 14px;
-    line-height: 1.4;
+    font-size: 13px;
+    line-height: 1.35;
     color: var(--cb-text-muted);
     transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 /* Icon bọc trong hình tròn */
 .bd-perk-ico {
-    width: 38px; 
-    height: 38px; 
+    width: 30px; 
+    height: 30px; 
     flex-shrink: 0;
     display: inline-flex; 
     align-items: center; 
     justify-content: center;
-    font-size: 18px;
+    font-size: 15px;
     background: var(--cb-primary-light);
     border-radius: 50%;
     color: var(--cb-primary-text);
@@ -510,7 +510,7 @@ html, body {
 
 {{-- ── Flash messages ──────────────────────────────────────── --}}
 @if(session('success'))
-    <div class="bd-alert bd-alert-ok">
+    <div class="bd-alert bd-alert-ok" data-flash="success">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <polyline points="20 6 9 17 4 12"/>
         </svg>

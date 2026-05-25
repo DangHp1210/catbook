@@ -18,7 +18,7 @@
     <main class="cb-admin-shell">
         <section class="min-w-0 flex-1 space-y-3.5">
             @if(session('success'))
-                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" data-flash="success">
                     {{ session('success') }}
                 </div>
             @endif

@@ -308,7 +308,7 @@ html, body {
 {{-- ── Flash messages ───────────────────────────────────── --}}
 <div class="os-page-gap">
 @if(session('success'))
-    <div class="os-flash os-flash-ok">
+    <div class="os-flash os-flash-ok" data-flash="success">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <polyline points="20 6 9 17 4 12"/>
         </svg>

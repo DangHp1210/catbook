@@ -60,16 +60,16 @@
     position: relative;
     width: 38px; height: 38px; border-radius: 50%;
     border: 1.5px solid #a0a1a0;
-    background: transparent; color: var(--cb-text);
+    background: #ffffff; color: var(--cb-text);
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer; transition: border-color .18s, transform .18s;
     flex-shrink: 0;
 }
 .rn-bell:hover {
     border-color: var(--cb-accent);
-    transform: translateY(-1px);
+    transform: translateY(-3px); 
 }
-.rn-bell svg { width: 20px; height: 20px; }
+.rn-bell svg { width: 22px; height: 22px; }
 
 /* Badge */
 .rn-badge {

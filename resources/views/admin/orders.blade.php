@@ -332,7 +332,7 @@ html, body {
                     <tr>
                         {{-- Order code --}}
                         <td>
-                            <a href="#" class="or-code-link" data-order-id="{{ $order->id }}" data-preview-url="{{ route('admin.orders.preview', $order) }}">
+                            <a href="#" class="or-code-link" data-order-id="{{ $order->id }}" data-order-code="{{ $order->order_code }}">
                                 <span class="or-code">{{ $order->order_code }}</span>
                             </a>
                             @if($order->created_at)
@@ -418,106 +418,8 @@ html, body {
                     {{-- Hidden inline preview template for this order (merged from partial) --}}
                         <tr style="display:none">
                             <td colspan="6" style="padding: 0;">
-                                <div class="order-detail-template" data-order-id="{{ $order->id }}" style="display:none; padding: 0 16px;">
-                                    
-                                    <div class="or-preview-card">
-                                        
-                                        {{-- 1. Header (Mã đơn & Trạng thái) --}}
-                                        <div class="or-preview-header">
-                                            <div>
-                                                <h3 class="or-preview-title">
-                                                    Chi tiết đơn hàng 
-                                                    <span class="or-code-pill">#{{ $order->order_code }}</span>
-                                                </h3>
-                                                @if($order->created_at)
-                                                    <div class="or-preview-date">Tạo lúc: {{ $order->created_at->format('H:i — d/m/Y') }}</div>
-                                                @endif
-                                            </div>
-                                            <div style="display:flex; gap:8px; align-items:center;">
-                                                <span class="or-order-badge or-ob-{{ $order->order_status }}">
-                                                    <span class="or-order-badge-dot"></span>
-                                                    {{ $orderStatusLabels[$order->order_status] ?? $order->order_status }}
-                                                </span>
-                                                <span class="or-pay-badge or-pb-{{ $order->payment_status }}">
-                                                    {{ $paymentStatusLabels[$order->payment_status] ?? $order->payment_status }}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {{-- 2. Thông tin Khách hàng & Thanh toán --}}
-                                        <div class="or-preview-body">
-                                            
-                                            {{-- Cột trái: Thông tin người nhận --}}
-                                            <div class="or-info-box">
-                                                <div class="or-info-title">👤 Thông tin giao hàng</div>
-                                                <div class="or-info-row">
-                                                    <span class="lbl">Người đặt:</span>
-                                                    <span class="val">{{ $order->user?->full_name ?? 'Khách vãng lai' }}</span>
-                                                </div>
-                                                <div class="or-info-row">
-                                                    <span class="lbl">Người nhận:</span>
-                                                    <span class="val">{{ $order->recipient_name }} ({{ $order->recipient_phone }})</span>
-                                                </div>
-                                                <div class="or-info-row">
-                                                    <span class="lbl">Địa chỉ:</span>
-                                                    <span class="val">{{ $order->shipping_address }}</span>
-                                                </div>
-                                                @if(!empty($order->note))
-                                                <div class="or-info-row">
-                                                    <span class="lbl">Ghi chú:</span>
-                                                    <span class="val" style="color:#d97706; font-style:italic;">{{ $order->note }}</span>
-                                                </div>
-                                                @endif
-                                            </div>
-
-                                            {{-- Cột phải: Tóm tắt chi phí --}}
-                                            <div class="or-info-box or-summary-box">
-                                                <div class="or-info-title" style="color:var(--cb-accent-dark)">💵 Tổng quan thanh toán</div>
-                                                
-                                                <div class="or-sum-row">
-                                                    <span>Phí vận chuyển</span>
-                                                    <strong>{{ number_format($order->shipping_fee ?? 0, 0, ',', '.') }}đ</strong>
-                                                </div>
-                                                
-                                                <div class="or-sum-total">
-                                                    <span>Tổng cộng</span>
-                                                    <span>{{ number_format($order->total_amount, 0, ',', '.') }}đ</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- 3. Danh sách Sản phẩm --}}
-                                        <div class="or-info-title">📦 Danh sách sản phẩm</div>
-                                        <table class="or-items-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Sách</th>
-                                                    <th style="width:90px; text-align:center;">Số lượng</th>
-                                                    <th style="width:130px; text-align:right;">Đơn giá</th>
-                                                    <th style="width:140px; text-align:right;">Thành tiền</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($order->items as $item)
-                                                    <tr>
-                                                        <td>
-                                                            <div class="or-book-title">{{ $item->book?->title ?? '—' }}</div>
-                                                            @if($item->book && $item->book->authors->isNotEmpty()) 
-                                                                <div class="or-book-author">Tác giả: {{ $item->book->authors->pluck('name')->join(', ') }}</div> 
-                                                            @endif
-                                                        </td>
-                                                        <td style="text-align:center; font-weight:600;">{{ $item->quantity }}</td>
-                                                        <td style="text-align:right;">{{ number_format($item->unit_price, 0, ',', '.') }}đ</td>
-                                                        <td style="text-align:right; font-weight:700; color:var(--cb-text);">
-                                                            {{ number_format($item->quantity * $item->unit_price, 0, ',', '.') }}đ
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-
-                                    </div>
-                                    
+                                <div class="order-detail-template" data-order-id="{{ $order->id }}" data-order-code="{{ $order->order_code }}" style="display:none; padding: 0 16px;">
+                                    @include('admin.partials.order_detail', ['order' => $order])
                                 </div>
                             </td>
                         </tr>
@@ -547,6 +449,12 @@ html, body {
     {{ $orders->links() }}
 </div>
 
+@if(!empty($selectedOrder))
+    <div class="order-detail-template" data-order-id="{{ $selectedOrder->id }}" data-order-code="{{ $selectedOrder->order_code }}" style="display:none;">
+        @include('admin.partials.order_detail', ['order' => $selectedOrder])
+    </div>
+@endif
+
 {{-- Order preview modal (AJAX) --}}
 <div id="orderPreviewModal" class="order-preview-modal" style="display:none;position:fixed;inset:0;z-index:80;align-items:center;justify-content:center;padding:28px;background:rgba(10,10,10,0.45)">
     <div style="max-width:900px;width:100%;max-height:90vh;overflow:auto;background:var(--cb-white);border-radius:14px;padding:18px;position:relative;border:1px solid var(--cb-border)">
@@ -560,36 +468,47 @@ document.addEventListener('click', function(e){
     const link = e.target.closest('.or-code-link');
     if (!link) return;
     e.preventDefault();
-    const orderId = link.dataset.orderId;
-    const url = link.dataset.previewUrl;
+    openOrderDetail(link.dataset.orderCode || link.dataset.orderId);
+
+});
+
+function clearOpenQueryParam() {
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+}
+
+function openOrderDetail(orderCode, clearQueryParam = false) {
+    if (!orderCode) return false;
+
     const modal = document.getElementById('orderPreviewModal');
     const content = document.getElementById('orderPreviewContent');
-    if (!modal || !content) return;
-    content.innerHTML = 'Đang tải...';
-    modal.style.display = 'flex';
+    if (!modal || !content) return false;
 
-    // Try using inline pre-rendered template first
-    if (orderId) {
-        const tpl = document.querySelector('.order-detail-template[data-order-id="' + orderId + '"]');
-        if (tpl) {
-            content.innerHTML = tpl.innerHTML;
-            return;
+    const template = document.querySelector('.order-detail-template[data-order-code="' + CSS.escape(orderCode) + '"]');
+    if (template) {
+        content.innerHTML = template.innerHTML;
+        modal.style.display = 'flex';
+        if (clearQueryParam) {
+            clearOpenQueryParam();
         }
+        return true;
     }
 
-    // Fallback to AJAX preview route
-    if (!url) {
-        content.innerHTML = '<p style="color:#c00">Không có đường dẫn xem trước.</p>';
-        return;
+    const link = document.querySelector('.or-code-link[data-order-code="' + CSS.escape(orderCode) + '"]');
+    if (link) return link.click(), true;
+
+    return false;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const params = new URLSearchParams(window.location.search);
+    const openCode = params.get('open');
+
+    if (openCode) {
+        openOrderDetail(openCode, true);
     }
-    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(resp => {
-            if (!resp.ok) throw new Error('Network error');
-            return resp.text();
-        })
-        .then(html => { content.innerHTML = html; })
-        .catch(err => { content.innerHTML = '<p style="color:#c00">Không tải được chi tiết đơn hàng.</p>'; console.error(err); });
 });
+
 document.getElementById('orderPreviewClose')?.addEventListener('click', function(){
     document.getElementById('orderPreviewModal').style.display = 'none';
 });

@@ -86,8 +86,8 @@ if (auth()->check()) {
     <nav class="cb-nav">
 
         {{-- Logo --}}
-       <a href="{{ route('home') }}" class="cb-logo">
-            <img src="{{ asset('images/logocatbook3.png') }}" alt="CatBook Logo" class="cb-logo-img">
+      <a href="{{ route('home') }}" class="cb-logo">
+          <img src="{{ asset('images/logocatbook3.png') }}" alt="CatBook Logo" class="cb-logo-img" width="44" height="40" decoding="async" fetchpriority="high">
             <span class="cb-logo-text">Cat<span>Book</span></span>
         </a>
 
@@ -261,8 +261,9 @@ if (auth()->check()) {
     white-space: nowrap;
 }
 .cb-logo-img {
+    width: 44px;
     height: 40px;
-    width: auto;
+    object-fit: contain;
     display: block;
 }
 .cb-logo-text {

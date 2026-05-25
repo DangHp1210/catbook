@@ -1,421 +1,394 @@
-@props([
-    'notifications' => [],
-    'unreadCount' => null,
-])
-
 @php
-    $sampleNotifications = [
-        [
-            'type' => 'order',
-            'title' => 'Đơn hàng #CB1024 đã thanh toán thành công',
-            'message' => 'Hệ thống đang chuẩn bị sách để bàn giao cho đơn vị vận chuyển.',
-            'time' => '2 phút trước',
-            'unread' => true,
-        ],
-        [
-            'type' => 'chatbot',
-            'title' => 'Chatbot AI đã tìm thấy 5 sách phù hợp',
-            'message' => 'Gợi ý dựa trên lịch sử xem và thể loại bạn quan tâm.',
-            'time' => 'Vừa xong',
-            'unread' => true,
-        ],
-        [
-            'type' => 'offer',
-            'title' => 'Sách mới từ tác giả bạn theo dõi',
-            'message' => 'Một đầu sách mới đã được cập nhật vào CatBook hôm nay.',
-            'time' => '15 phút trước',
-            'unread' => false,
-        ],
-    ];
+    $user = auth()->user();
+    if (!$user) return;
 
-    $items = count($notifications) > 0 ? $notifications : $sampleNotifications;
-    $effectiveUnreadCount = $unreadCount ?? collect($items)->where('unread', true)->count();
+    $items = $user->notifications()
+        ->latest()
+        ->limit(10)
+        ->get()
+        ->map(function ($notification) {
+            $data = is_array($notification->data) ? $notification->data : (array) $notification->data;
+            $role = auth()->user()?->role ?? 'customer';
+            $roleOrdersUrl = $role === 'staff'
+                ? route('staff.orders.index')
+                : ($role === 'admin' ? route('admin.orders.index') : route('orders.index'));
+
+            return [
+                'id'         => $notification->id,
+                'type'       => $data['type'] ?? 'order',
+                'title'      => $data['title'] ?? 'Thông báo mới',
+                'message'    => $data['message'] ?? '',
+                'time'       => optional($notification->created_at)->diffForHumans() ?? 'Vừa xong',
+                'unread'     => is_null($notification->read_at),
+                'url'        => !empty($data['url'])
+                    ? $data['url']
+                    : ((($data['type'] ?? 'order') === 'order' && !empty($data['order_code']))
+                        ? $roleOrdersUrl . '?open=' . urlencode((string) $data['order_code'])
+                        : $roleOrdersUrl),
+                'order_code' => $data['order_code'] ?? null,
+                'open_url'   => route('notifications.open', $notification->id),
+            ];
+        })
+        ->all();
+
+    $unreadCount = $user->unreadNotifications()->count();
 @endphp
 
 <style>
-.cb-notify {
+/* ─── Notification bell ───────────────────────────────── */
+:root {
+    --cb-bg:           #f8f6f1;
+    --cb-border:       #e8e3d8;
+    --cb-text:         #1a1a1a;
+    --cb-muted:        #777;
+    --cb-white:        #ffffff;
+    --cb-accent:       #2d6a4f;
+    --cb-accent-dark:  #1b4332;
+    --cb-accent-light: #d8f3dc;
+    --cb-serif:        'Playfair Display', Georgia, serif;
+    --cb-sans:         'DM Sans', system-ui, sans-serif;
+}
+
+.rn-wrap {
     position: relative;
-    display: inline-flex;
-    align-items: center;
+    display: inline-flex; align-items: center;
     z-index: 45;
 }
 
-.cb-notify-trigger {
+/* ─── Bell button ─────────────────────────────────────── */
+.rn-bell {
     position: relative;
-    width: 38px;
-    height: 38px;
-    border: 1.5px solid #a1a0a0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.11);
-    color: var(--cb-brand-text, #1a1a1a);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-    box-shadow: 0 10px 24px rgba(239, 235, 235, 0.06);
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1.5px solid #a0a1a0;
+    background: transparent; color: var(--cb-text);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color .18s, transform .18s;
+    flex-shrink: 0;
 }
-
-.cb-notify-trigger:hover {
+.rn-bell:hover {
+    border-color: var(--cb-accent);
     transform: translateY(-1px);
-    border-color: var(--cb-brand-accent, #2d6a4f);
-    box-shadow: 0 14px 28px rgba(26,26,26,.09);
 }
+.rn-bell svg { width: 20px; height: 20px; }
 
-.cb-notify-trigger svg {
-    width: 22px;
-    height: 22px;
-}
-
-.cb-notify-badge {
+/* Badge */
+.rn-badge {
     position: absolute; top: -5px; right: -5px;
-    background: var(--cb-brand-accent);
-    background: #dc2626;
-    color: #fff;
-    min-width: 18px; height: 18px;
-    border-radius: 999px;
-    font-family: var(--cb-font-sans);
-    font-size: 10px; font-weight: 700;
+    background: #dc2626; color: #fff;
+    min-width: 18px; height: 18px; border-radius: 999px;
+    font-family: var(--cb-sans); font-size: 10px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
-    padding: 0 4px;
-    border: 2px solid var(--cb-brand-bg);
+    padding: 0 4px; border: 2px solid var(--cb-bg);
+    animation: rn-pop .3s ease;
 }
-.cb-notify-panel {
-    position: absolute;
-    top: calc(100% + 12px);
-    right: 0;
-    width: min(420px, calc(100vw - 24px));
-    background: #fff;
-    border: 1px solid var(--cb-brand-border, #e8e3d8);
-    border-radius: 20px;
-    box-shadow: 0 28px 60px rgba(15,23,42,.16);
+@keyframes rn-pop {
+    0%  { transform: scale(0); }
+    70% { transform: scale(1.2); }
+    100%{ transform: scale(1); }
+}
+
+/* ─── Dropdown panel ──────────────────────────────────── */
+.rn-panel {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: min(380px, calc(100vw - 24px));
+    background: var(--cb-white); border: 1px solid var(--cb-border);
+    border-radius: 20px; box-shadow: 0 20px 56px rgba(0,0,0,.13);
     overflow: hidden;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-8px) scale(.98);
-    transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+    opacity: 0; visibility: hidden;
+    transform: translateY(-8px) scale(.97);
+    transition: opacity .18s, transform .18s, visibility .18s;
+    pointer-events: none;
 }
-
-.cb-notify:hover .cb-notify-panel,
-.cb-notify:focus-within .cb-notify-panel,
-.cb-notify.is-open .cb-notify-panel {
-    opacity: 1;
-    visibility: visible;
+.rn-wrap.is-open .rn-panel {
+    opacity: 1; visibility: visible;
     transform: translateY(0) scale(1);
+    pointer-events: auto;
 }
 
-.cb-notify-head {
-    padding: 18px 18px 14px;
-    background: linear-gradient(180deg, #fff, #faf8f3);
-    border-bottom: 1px solid var(--cb-brand-border, #e8e3d8);
+/* Panel header */
+.rn-head {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--cb-border);
+    display: flex; align-items: flex-end; justify-content: space-between;
+    position: relative;
+}
+.rn-head::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--cb-accent), #4ade80);
+}
+.rn-head-left {}
+.rn-head-title {
+    font-family: var(--cb-serif); font-size: 17px; font-weight: 700;
+    color: var(--cb-text); margin: 0;
+}
+.rn-head-sub {
+    font-family: var(--cb-sans); font-size: 11px; color: var(--cb-muted);
+    margin: 3px 0 0;
+}
+.rn-head-count {
+    font-family: var(--cb-sans); font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 999px;
+    background: #fff1f2; color: #dc2626; border: 1px solid #fecdd3;
+    flex-shrink: 0; white-space: nowrap;
 }
 
-.cb-notify-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
+/* Scrollable body */
+.rn-body {
+    max-height: 340px; overflow-y: auto;
+    padding: 8px;
+    scrollbar-width: thin; scrollbar-color: var(--cb-border) transparent;
 }
+.rn-body::-webkit-scrollbar { width: 4px; }
+.rn-body::-webkit-scrollbar-thumb { background: var(--cb-border); border-radius: 999px; }
 
-.cb-notify-title {
-    margin: 0;
-    font-family: var(--cb-font-serif, Georgia, serif);
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--cb-brand-text, #1a1a1a);
-}
+/* Notification list */
+.rn-list { display: flex; flex-direction: column; gap: 4px; }
 
-.cb-notify-sub {
-    margin: 4px 0 0;
-    font-family: var(--cb-font-sans, system-ui, sans-serif);
-    font-size: 12px;
-    color: var(--cb-brand-muted, #666);
-}
-
-.cb-notify-action {
-    border: 1px solid var(--cb-brand-border, #e8e3d8);
-    background: #fff;
-    color: var(--cb-brand-text, #1a1a1a);
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 999px;
-    padding: 8px 12px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.cb-notify-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-}
-
-.cb-notify-tabs::-webkit-scrollbar {
-    display: none;
-}
-
-.cb-notify-tab {
-    border: 1px solid var(--cb-brand-border, #e8e3d8);
-    background: #fff;
-    color: var(--cb-brand-muted, #666);
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 999px;
-    padding: 7px 12px;
-    cursor: pointer;
-    flex: 0 0 auto;
-}
-
-.cb-notify-tab.is-active {
-    background: var(--cb-brand-accent-light, #d8f3dc);
-    border-color: #b7ebc4;
-    color: var(--cb-brand-accent, #2d6a4f);
-}
-
-.cb-notify-body {
-    max-height: 360px;
-    overflow: auto;
-    padding: 10px 10px 12px;
-}
-
-.cb-notify-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.cb-notify-item {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 12px 12px;
+/* Single item */
+.rn-item {
+    display: flex; gap: 11px; align-items: flex-start;
+    padding: 11px 12px; border-radius: 12px;
     border: 1px solid transparent;
-    border-radius: 16px;
-    transition: background .18s ease, border-color .18s ease, transform .18s ease;
-}
-
-.cb-notify-item:hover {
-    background: #faf8f3;
-    border-color: var(--cb-brand-border, #e8e3d8);
-    transform: translateY(-1px);
-}
-
-.cb-notify-item.is-unread {
-    background: #f6fbf8;
-    border-color: #d8f3dc;
-}
-
-.cb-notify-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    box-shadow: 0 10px 24px rgba(0,0,0,.08);
-}
-
-.cb-notify-icon--order { background: linear-gradient(135deg, #2d6a4f, #1b4332); }
-.cb-notify-icon--chatbot { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
-.cb-notify-icon--offer { background: linear-gradient(135deg, #d97706, #f59e0b); }
-
-.cb-notify-icon svg {
-    width: 18px;
-    height: 18px;
-}
-
-.cb-notify-content {
-    min-width: 0;
-    flex: 1;
-}
-
-.cb-notify-item-title {
-    margin: 0;
-    font-family: var(--cb-font-sans, system-ui, sans-serif);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--cb-brand-text, #1a1a1a);
-    line-height: 1.35;
-}
-
-.cb-notify-item-message {
-    margin: 4px 0 0;
-    font-family: var(--cb-font-sans, system-ui, sans-serif);
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--cb-brand-muted, #666);
-}
-
-.cb-notify-meta {
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--cb-brand-muted, #666);
-}
-
-.cb-notify-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #2d6a4f;
-    flex-shrink: 0;
-}
-
-.cb-notify-item.is-read .cb-notify-dot {
-    background: #c4b9aa;
-}
-
-.cb-notify-more {
-    border: 1px solid var(--cb-brand-border, #e8e3d8);
-    background: #fff;
-    color: var(--cb-brand-muted, #666);
-    width: 30px;
-    height: 30px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    text-decoration: none;
+    transition: background .15s, border-color .15s, transform .15s;
     cursor: pointer;
 }
-
-.cb-notify-foot {
-    padding: 12px 16px 16px;
-    border-top: 1px solid var(--cb-brand-border, #e8e3d8);
-    background: #fff;
-}
-
-.cb-notify-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 11px 14px;
-    border-radius: 14px;
-    background: var(--cb-brand-accent, #2d6a4f);
-    color: #fff;
-    font-family: var(--cb-font-sans, system-ui, sans-serif);
-    font-size: 13px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: transform .18s ease, background .18s ease;
-}
-
-.cb-notify-link:hover {
-    background: var(--cb-brand-accent-dark, #1b4332);
+.rn-item:hover {
+    background: var(--cb-bg); border-color: var(--cb-border);
     transform: translateY(-1px);
 }
+.rn-item.is-unread {
+    background: #f0fdf4; border-color: #86efac;
+}
+.rn-item.is-unread:hover { background: #dcfce7; }
 
-.cb-notify-empty {
-    padding: 28px 18px;
-    text-align: center;
-    color: var(--cb-brand-muted, #666);
-    font-family: var(--cb-font-sans, system-ui, sans-serif);
-    font-size: 13px;
+/* Icon */
+.rn-icon {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+}
+.rn-icon--order   { background: linear-gradient(135deg, var(--cb-accent), var(--cb-accent-dark)); }
+.rn-icon--message { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.rn-icon--promo   { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.rn-icon--default { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+.rn-icon svg { width: 16px; height: 16px; }
+
+/* Text */
+.rn-content { flex: 1; min-width: 0; }
+.rn-item-title {
+    font-family: var(--cb-sans); font-size: 12px; font-weight: 700;
+    color: var(--cb-text); line-height: 1.35; margin: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rn-item-msg {
+    font-family: var(--cb-sans); font-size: 11px; color: var(--cb-muted);
+    margin: 3px 0 0; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.rn-item-meta {
+    display: flex; align-items: center; gap: 5px; margin-top: 5px;
+    font-family: var(--cb-sans); font-size: 10px; color: #b0a898;
+}
+.rn-meta-dot {
+    width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.rn-meta-dot--unread { background: var(--cb-accent); }
+.rn-meta-dot--read   { background: #c4b9aa; }
+
+/* Unread indicator on right */
+.rn-unread-pip {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--cb-accent); flex-shrink: 0; margin-top: 4px;
 }
 
-@media (max-width: 640px) {
-    .cb-notify {
-        display: none;
-    }
+/* Empty state */
+.rn-empty {
+    padding: 36px 16px; text-align: center;
 }
+.rn-empty-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--cb-bg); border: 1px solid var(--cb-border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px; color: #c4b9aa;
+}
+.rn-empty-text {
+    font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted);
+}
+
+/* Panel footer */
+.rn-foot {
+    padding: 10px 12px 14px;
+    border-top: 1px solid var(--cb-border);
+    display: flex; gap: 8px;
+}
+.rn-foot-mark {
+    flex: 1; font-family: var(--cb-sans); font-size: 12px; font-weight: 500;
+    padding: 9px 12px; border-radius: 9px;
+    border: 1.5px solid var(--cb-border); background: transparent;
+    color: var(--cb-muted); cursor: pointer; text-align: center;
+    transition: border-color .15s, color .15s;
+}
+.rn-foot-mark:hover { border-color: var(--cb-accent); color: var(--cb-accent); }
+.rn-foot-all {
+    flex: 1; font-family: var(--cb-sans); font-size: 12px; font-weight: 600;
+    padding: 9px 12px; border-radius: 9px; border: none;
+    background: var(--cb-text); color: #fff; text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background .15s;
+}
+.rn-foot-all:hover { background: var(--cb-accent); }
+
+@media (max-width: 640px) { .rn-wrap { display: none; } }
 </style>
 
-<div class="cb-notify">
-    <button type="button" class="cb-notify-trigger" aria-label="Thông báo" aria-haspopup="dialog" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2.9-.6 1.3L4 17h5"/>
-            <path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>
-        </svg>
+<div class="rn-wrap" id="rn-wrap">
 
-        @if($effectiveUnreadCount > 0)
-            <span class="cb-notify-badge">
-                {{ $effectiveUnreadCount > 99 ? '99+' : $effectiveUnreadCount }}
-            </span>
+    {{-- Bell trigger --}}
+    <button type="button" class="rn-bell" id="rn-bell"
+            aria-label="Thông báo" aria-haspopup="dialog" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2.9-.6 1.3L4 17h5"/>
+            <path d="M9.5 19a2.5 2.5 0 005 0"/>
+        </svg>
+        @if($unreadCount > 0)
+            <span class="rn-badge">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
         @endif
     </button>
 
-    <div class="cb-notify-panel" role="dialog" aria-label="Bảng thông báo real-time">
-        <div class="cb-notify-head">
-            <div class="cb-notify-top">
-                <div>
-                    <h3 class="cb-notify-title">Thông báo</h3>
-                </div>
-            </div>
+    {{-- Dropdown --}}
+    <div class="rn-panel" id="rn-panel" role="dialog" aria-label="Thông báo">
 
-            <div class="cb-notify-tabs" aria-label="Bộ lọc thông báo">
-                <button type="button" class="cb-notify-tab is-active">Tất cả</button>
-                <button type="button" class="cb-notify-tab">Đơn hàng</button>
-                <button type="button" class="cb-notify-tab">Chatbot AI</button>
-                <button type="button" class="cb-notify-tab">Ưu đãi</button>
+        {{-- Head --}}
+        <div class="rn-head">
+            <div class="rn-head-left">
+                <h3 class="rn-head-title">Thông báo</h3>
+                <p class="rn-head-sub">
+                    @if($unreadCount > 0)
+                        {{ $unreadCount }} thông báo chưa đọc
+                    @else
+                        Tất cả đã được đọc
+                    @endif
+                </p>
             </div>
+            @if($unreadCount > 0)
+                <span class="rn-head-count">{{ $unreadCount }} mới</span>
+            @endif
         </div>
 
-        <div class="cb-notify-body">
+        {{-- Body --}}
+        <div class="rn-body">
             @if(count($items) > 0)
-                <div class="cb-notify-list">
-                    @foreach($items as $notification)
+                <div class="rn-list">
+                    @foreach($items as $notif)
                         @php
-                            $type = $notification['type'] ?? 'offer';
-                            $typeLabel = match ($type) {
-                                'order' => 'Đơn hàng',
-                                'chatbot' => 'Chatbot AI',
-                                default => 'Ưu đãi',
-                            };
-                            $iconClass = match ($type) {
-                                'order' => 'cb-notify-icon--order',
-                                'chatbot' => 'cb-notify-icon--chatbot',
-                                default => 'cb-notify-icon--offer',
-                            };
-                            $iconSvg = match ($type) {
-                                'order' => '<path d="M5 7h14l-1 10H6L5 7zm2-3h10l1 3H6l1-3z"/><path d="M9 10v4m6-4v4"/>',
-                                'chatbot' => '<path d="M12 4a7 7 0 0 0-7 7c0 1.9.8 3.6 2.1 4.8L6 19l3.1-1.2c.9.3 1.8.5 2.9.5a7 7 0 1 0 0-14z"/><path d="M9.3 11.2h.01M12 11.2h.01M14.7 11.2h.01"/>',
-                                default => '<path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8-8-3.6-8-8z"/><path d="M12 8v8m-4-4h8"/>',
+                            $iconClass = match($notif['type']) {
+                                'order'   => 'rn-icon--order',
+                                'message' => 'rn-icon--message',
+                                'promo', 'promotion' => 'rn-icon--promo',
+                                default   => 'rn-icon--default',
                             };
                         @endphp
+                        <a href="{{ $notif['open_url'] }}"
+                           class="rn-item {{ $notif['unread'] ? 'is-unread' : '' }}">
 
-                        <div class="cb-notify-item {{ !empty($notification['unread']) ? 'is-unread' : 'is-read' }}">
-                            <div class="cb-notify-icon {{ $iconClass }}" aria-hidden="true">
-                                {!! $iconSvg !!}
+                            {{-- Icon --}}
+                            <div class="rn-icon {{ $iconClass }}" aria-hidden="true">
+                                @if($notif['type'] === 'order')
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                                        <line x1="3" y1="6" x2="21" y2="6"/>
+                                        <path d="M16 10a4 4 0 01-8 0"/>
+                                    </svg>
+                                @elseif($notif['type'] === 'message')
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                                    </svg>
+                                @elseif(in_array($notif['type'], ['promo','promotion']))
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                    </svg>
+                                @else
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="8" x2="12" y2="12"/>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                    </svg>
+                                @endif
                             </div>
 
-                            <div class="cb-notify-content">
-                                <p class="cb-notify-item-title">{{ $notification['title'] ?? 'Thông báo mới' }}</p>
-                                <p class="cb-notify-item-message">{{ $notification['message'] ?? '' }}</p>
-                                <div class="cb-notify-meta">
-                                    <span class="cb-notify-dot"></span>
-                                    <span>{{ $typeLabel }}</span>
-                                    <span>•</span>
-                                    <span>{{ $notification['time'] ?? 'Vừa xong' }}</span>
+                            {{-- Content --}}
+                            <div class="rn-content">
+                                <p class="rn-item-title">{{ $notif['title'] }}</p>
+                                @if($notif['message'])
+                                    <p class="rn-item-msg">{{ $notif['message'] }}</p>
+                                @endif
+                                <div class="rn-item-meta">
+                                    <span class="rn-meta-dot {{ $notif['unread'] ? 'rn-meta-dot--unread' : 'rn-meta-dot--read' }}"></span>
+                                    <span>{{ match($notif['type']) {
+                                        'order'   => 'Đơn hàng',
+                                        'message' => 'Tin nhắn',
+                                        'promo','promotion' => 'Khuyến mãi',
+                                        default   => 'Thông báo',
+                                    } }}</span>
+                                    <span>·</span>
+                                    <span>{{ $notif['time'] }}</span>
                                 </div>
                             </div>
 
-                            <button type="button" class="cb-notify-more" aria-label="Tùy chọn thông báo">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="5" r="1"/>
-                                    <circle cx="12" cy="12" r="1"/>
-                                    <circle cx="12" cy="19" r="1"/>
-                                </svg>
-                            </button>
-                        </div>
+                            {{-- Unread pip --}}
+                            @if($notif['unread'])
+                                <span class="rn-unread-pip" aria-hidden="true"></span>
+                            @endif
+                        </a>
                     @endforeach
                 </div>
             @else
-                <div class="cb-notify-empty">
-                    Chưa có thông báo mới.
+                <div class="rn-empty">
+                    <div class="rn-empty-icon">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2.9-.6 1.3L4 17h5"/>
+                            <path d="M9.5 19a2.5 2.5 0 005 0"/>
+                        </svg>
+                    </div>
+                    <p class="rn-empty-text">Chưa có thông báo nào</p>
                 </div>
             @endif
         </div>
 
-        <div class="cb-notify-foot">
-            <a href="#" class="cb-notify-link">Xem tất cả thông báo</a>
+        {{-- Footer --}}
+        <div class="rn-foot">
+            <form method="POST" action="{{ route('notifications.mark_all') }}" style="flex:1;margin:0">
+                @csrf
+                <button type="submit" class="rn-foot-mark">
+                    ✓ Đánh dấu đã đọc
+                </button>
+            </form>
         </div>
-    </div>
-</div>
+
+    </div>{{-- /.rn-panel --}}
+</div>{{-- /.rn-wrap --}}
+
+<script>
+(function () {
+    const wrap  = document.getElementById('rn-wrap');
+    const bell  = document.getElementById('rn-bell');
+    if (!wrap || !bell) return;
+
+    const open  = () => { wrap.classList.add('is-open');  bell.setAttribute('aria-expanded', 'true'); };
+    const close = () => { wrap.classList.remove('is-open'); bell.setAttribute('aria-expanded', 'false'); };
+    const toggle= () => wrap.classList.contains('is-open') ? close() : open();
+
+    bell.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+
+    document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target)) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
+})();
+</script>

@@ -54,7 +54,12 @@
     display: flex; align-items: center; gap: 10px;
     text-decoration: none; flex-shrink: 0; margin-right: 32px;
 }
-.an-logo-img { height: 36px; width: auto; display: block; }
+.an-logo-img {
+    width: 40px;
+    height: 36px;
+    object-fit: contain;
+    display: block;
+}
 .an-logo-text {
     font-family: var(--cb-serif);
     font-size: 20px; font-weight: 900;
@@ -266,7 +271,7 @@
 
         {{-- Logo --}}
         <a href="{{ route('home') }}" class="an-logo">
-            <img src="{{ asset('images/logocatbook3.png') }}" alt="CatBook" class="an-logo-img">
+            <img src="{{ asset('images/logocatbook3.png') }}" alt="CatBook" class="an-logo-img" width="40" height="36" decoding="async" fetchpriority="high">
             <span class="an-logo-text">Cat<em>Book</em></span>
         </a>
 

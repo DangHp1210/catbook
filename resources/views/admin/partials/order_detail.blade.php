@@ -1,56 +1,104 @@
-@php /** Minimal order preview partial — safe and defensive */ @endphp
-<div class="admin-order-detail">
-    <h4>Đơn hàng: {{ $order->order_code ?? '—' }}</h4>
+@php
+    $orderStatusLabels = [
+        'pending'   => 'Chờ xử lý',
+        'confirmed' => 'Đã xác nhận',
+        'shipping'  => 'Đang giao',
+        'completed'  => 'Hoàn tất',
+        'cancelled'  => 'Đã huỷ',
+    ];
+    $paymentStatusLabels = [
+        'unpaid'   => 'Chưa thanh toán',
+        'paid'     => 'Đã thanh toán',
+        'refunded' => 'Đã hoàn tiền',
+    ];
+@endphp
 
-    <div style="margin-bottom:8px;color:#444">
-        <strong>Người đặt:</strong>
-        {{ $order->user->full_name ?? $order->recipient_name ?? '—' }}
-        @if(!empty($order->user->email)) &middot; {{ $order->user->email }} @endif
-    </div>
-
-    <div style="margin-bottom:10px;color:#444">
-        <strong>Trạng thái:</strong> {{ $order->order_status ?? '—' }}
-        &nbsp;•&nbsp;
-        <strong>Thanh toán:</strong> {{ $order->payment_status ?? '—' }}
-    </div>
-
-    <div style="margin-bottom:12px;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead>
-                <tr style="text-align:left;border-bottom:1px solid #eee">
-                    <th style="padding:6px">Sách</th>
-                    <th style="padding:6px">Số lượng</th>
-                    <th style="padding:6px">Đơn giá</th>
-                    <th style="padding:6px">Tổng</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($order->items ?? [] as $item)
-                    <tr>
-                        <td style="padding:6px">{{ $item->book->title ?? $item->book_title_snapshot ?? '—' }}</td>
-                        <td style="padding:6px">{{ $item->quantity ?? 0 }}</td>
-                        <td style="padding:6px">{{ number_format((float)($item->unit_price ?? 0), 0, ',', '.') }}đ</td>
-                        <td style="padding:6px">{{ number_format((float)($item->total_price ?? ($item->unit_price * $item->quantity ?? 0)), 0, ',', '.') }}đ</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <div style="border-top:1px solid #f0f0f0;padding-top:8px;color:#333;font-weight:600">
-        <div>Tạm tính: {{ number_format((float)($order->subtotal ?? 0), 0, ',', '.') }}đ</div>
-        <div>Phí vận chuyển: {{ number_format((float)($order->shipping_fee ?? 0), 0, ',', '.') }}đ</div>
-        <div style="margin-top:6px">Tổng: {{ number_format((float)($order->total_amount ?? 0), 0, ',', '.') }}đ</div>
-    </div>
-
-    @if(!empty($order->payments) && count($order->payments) > 0)
-        <div style="margin-top:10px">
-            <strong>Payments</strong>
-            <ul style="margin:6px 0 0;padding-left:18px">
-                @foreach($order->payments as $p)
-                    <li>{{ $p->payment_method ?? '—' }} — {{ $p->status ?? '—' }} @if(!empty($p->transaction_code)) ({{ $p->transaction_code }}) @endif</li>
-                @endforeach
-            </ul>
+<div class="or-preview-card">
+    <div class="or-preview-header">
+        <div>
+            <h3 class="or-preview-title">
+                Chi tiết đơn hàng
+                <span class="or-code-pill">#{{ $order->order_code }}</span>
+            </h3>
+            @if($order->created_at)
+                <div class="or-preview-date">Tạo lúc: {{ $order->created_at->format('H:i — d/m/Y') }}</div>
+            @endif
         </div>
-    @endif
+        <div style="display:flex; gap:8px; align-items:center;">
+            <span class="or-order-badge or-ob-{{ $order->order_status }}">
+                <span class="or-order-badge-dot"></span>
+                {{ $orderStatusLabels[$order->order_status] ?? $order->order_status }}
+            </span>
+            <span class="or-pay-badge or-pb-{{ $order->payment_status }}">
+                {{ $paymentStatusLabels[$order->payment_status] ?? $order->payment_status }}
+            </span>
+        </div>
+    </div>
+
+    <div class="or-preview-body">
+        <div class="or-info-box">
+            <div class="or-info-title">👤 Thông tin giao hàng</div>
+            <div class="or-info-row">
+                <span class="lbl">Người đặt:</span>
+                <span class="val">{{ $order->user?->full_name ?? 'Khách vãng lai' }}</span>
+            </div>
+            <div class="or-info-row">
+                <span class="lbl">Người nhận:</span>
+                <span class="val">{{ $order->recipient_name }} ({{ $order->recipient_phone }})</span>
+            </div>
+            <div class="or-info-row">
+                <span class="lbl">Địa chỉ:</span>
+                <span class="val">{{ $order->shipping_address }}</span>
+            </div>
+            @if(!empty($order->note))
+                <div class="or-info-row">
+                    <span class="lbl">Ghi chú:</span>
+                    <span class="val" style="color:#d97706; font-style:italic;">{{ $order->note }}</span>
+                </div>
+            @endif
+        </div>
+
+        <div class="or-info-box or-summary-box">
+            <div class="or-info-title" style="color:var(--cb-accent-dark)">💵 Tổng quan thanh toán</div>
+
+            <div class="or-sum-row">
+                <span>Phí vận chuyển</span>
+                <strong>{{ number_format($order->shipping_fee ?? 0, 0, ',', '.') }}đ</strong>
+            </div>
+
+            <div class="or-sum-total">
+                <span>Tổng cộng</span>
+                <span>{{ number_format($order->total_amount, 0, ',', '.') }}đ</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="or-info-title">📦 Danh sách sản phẩm</div>
+    <table class="or-items-table">
+        <thead>
+            <tr>
+                <th>Sách</th>
+                <th style="width:90px; text-align:center;">Số lượng</th>
+                <th style="width:130px; text-align:right;">Đơn giá</th>
+                <th style="width:140px; text-align:right;">Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($order->items as $item)
+                <tr>
+                    <td>
+                        <div class="or-book-title">{{ $item->book?->title ?? '—' }}</div>
+                        @if($item->book && $item->book->authors->isNotEmpty())
+                            <div class="or-book-author">Tác giả: {{ $item->book->authors->pluck('name')->join(', ') }}</div>
+                        @endif
+                    </td>
+                    <td style="text-align:center; font-weight:600;">{{ $item->quantity }}</td>
+                    <td style="text-align:right;">{{ number_format($item->unit_price, 0, ',', '.') }}đ</td>
+                    <td style="text-align:right; font-weight:700; color:var(--cb-text);">
+                        {{ number_format($item->quantity * $item->unit_price, 0, ',', '.') }}đ
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>

@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
+use App\Notifications\AdminOrderPlacedNotification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class CheckoutController extends Controller
 {
@@ -134,6 +137,15 @@ class CheckoutController extends Controller
 
             return $order;
         });
+
+        $admins = User::query()
+            ->whereIn('role', ['admin', 'staff'])
+            ->where('status', 'active')
+            ->get();
+
+        if ($admins->isNotEmpty()) {
+            Notification::send($admins, new AdminOrderPlacedNotification($order));
+        }
 
         // Handle online payment methods (VNPay & MoMo)
         if ($validated['payment_method'] === 'vnpay') {

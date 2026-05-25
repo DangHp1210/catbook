@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\PaymentController;
@@ -46,6 +47,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/don-hang/{order:order_code}/danh-gia/{book:slug}', [ReviewController::class, 'store'])->name('orders.reviews.store');
     Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+    Route::get('/thong-bao/{notification}/open', [NotificationController::class, 'open'])->name('notifications.open');
+    Route::post('/thong-bao/mark-all', [NotificationController::class, 'markAll'])->name('notifications.mark_all');
 
     // Payment routes
     Route::get('/payment/vnpay', [PaymentController::class, 'createPayment'])->name('payment.vnpay');
@@ -87,6 +91,10 @@ Route::middleware('auth')->group(function () {
         // Admin dashboard
         Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('panel');
 
+        Route::get('/orders/{order:order_code}/preview', function (Order $order) {
+            return redirect()->route('admin.orders.index', ['open' => $order->order_code]);
+        })->name('orders.preview');
+
         // Admin-only resources
         Route::get('/users', [AdminDashboardController::class, 'users'])->name('users.index');
         Route::patch('/users/{user}', [AdminDashboardController::class, 'updateUser'])->name('users.update');
@@ -116,7 +124,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/authors/{author}', [AdminDashboardController::class, 'destroyAuthor'])->name('authors.destroy');
 
         Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders.index');
-        Route::get('/orders/{order}/preview', [AdminDashboardController::class, 'previewOrder'])->name('orders.preview');
         Route::patch('/orders/{order}', [AdminDashboardController::class, 'updateOrder'])->name('orders.update');
     });
 
@@ -136,6 +143,10 @@ Route::middleware('auth')->group(function () {
                 'stats' => $stats,
             ]);
         })->name('panel');
+
+        Route::get('/orders/{order:order_code}/preview', function (Order $order) {
+            return redirect()->route('staff.orders.index', ['open' => $order->order_code]);
+        })->name('orders.preview');
 
         // Shared resources (accessible to staff)
         Route::get('/books', [AdminDashboardController::class, 'books'])->name('books.index');

@@ -600,6 +600,7 @@ class DashboardController extends Controller
     public function orders(Request $request): View
     {
         $q = trim((string) $request->query('q', ''));
+        $openCode = trim((string) $request->query('open', ''));
 
         $orders = Order::query()
             ->with('user')
@@ -615,18 +616,19 @@ class DashboardController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        $selectedOrder = null;
+        if ($openCode !== '') {
+            $selectedOrder = Order::query()
+                ->with(['user', 'items.book.authors'])
+                ->where('order_code', $openCode)
+                ->first();
+        }
+
         return view('admin.orders', [
             'orders' => $orders,
             'q' => $q,
-        ]);
-    }
-
-    public function previewOrder(Order $order)
-    {
-        $order->load(['user', 'items.book.authors']);
-
-        return view('admin.partials.order_detail', [
-            'order' => $order,
+            'openCode' => $openCode,
+            'selectedOrder' => $selectedOrder,
         ]);
     }
 
@@ -637,7 +639,22 @@ class DashboardController extends Controller
             'payment_status' => ['required', Rule::in(['unpaid', 'paid', 'refunded'])],
         ]);
 
+        $oldStatus = $order->order_status;
+
         $order->update($data);
+
+        // If order status changed, notify the customer
+        if (isset($data['order_status']) && $data['order_status'] !== $oldStatus) {
+            $order->refresh();
+            try {
+                if ($order->user) {
+                    $order->user->notify(new \App\Notifications\OrderStatusUpdatedNotification($order, $oldStatus));
+                }
+            } catch (\Throwable $e) {
+                // Avoid breaking admin flow if notification fails; log quietly
+                 logger()->error('Failed to send order status notification: ' . $e->getMessage());
+            }
+        }
 
         return back()->with('success', 'Đã cập nhật đơn hàng.');
     }

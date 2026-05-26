@@ -7,14 +7,14 @@
 <style>
 /* ─── Design tokens ───────────────────────────────────── */
 :root {
-    --cb-bg:           #f8f6f1;
-    --cb-border:       #e8e3d8;
-    --cb-text:         #1a1a1a;
-    --cb-muted:        #777;
-    --cb-white:        #ffffff;
-    --cb-accent:       #2d6a4f;
-    --cb-accent-dark:  #1b4332;
-    --cb-accent-light: #d8f3dc;
+    --cb-bg:           var(--cb-brand-bg);
+    --cb-border:       var(--cb-brand-border);
+    --cb-text:         var(--cb-brand-text);
+    --cb-muted:        var(--cb-brand-muted);
+    --cb-white:        var(--cb-brand-white);
+    --cb-accent:       var(--cb-brand-accent);
+    --cb-accent-dark:  var(--cb-brand-accent-dark);
+    --cb-accent-light: var(--cb-brand-accent-light);
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
@@ -26,8 +26,6 @@ html, body {
 .oi-header {
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 16px; flex-wrap: wrap; margin-bottom: 28px;
-    max-width: 1300px;
-    margin: 0 auto 16px;
 }
 .oi-heading {
     font-family: var(--cb-serif);
@@ -35,14 +33,20 @@ html, body {
     letter-spacing: -.8px; line-height: 1.08; margin: 0 0 4px;
 }
 .oi-sub { font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted); }
+.oi-empty-btn:hover { background: var(--cb-brand-accent); }
+
 .oi-cta-link {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; /* Khoảng cách giữa mũi tên và chữ */
     font-family: var(--cb-sans); font-size: 13px; font-weight: 500;
     color: var(--cb-accent); text-decoration: none;
-    display: inline-flex; align-items: center; gap: 6px;
     border-bottom: 1px solid var(--cb-accent); padding-bottom: 1px;
     transition: opacity .18s; flex-shrink: 0;
 }
-.oi-cta-link:hover { opacity: .65; }
+
+.oi-badge-completed { background: var(--cb-brand-accent-light); color: var(--cb-brand-accent); border-color: #86efac; }
+.oi-badge-completed .oi-badge-dot { background: var(--cb-brand-accent); }
 
 /* ─── Flash messages ──────────────────────────────────── */
 .oi-flash {
@@ -172,7 +176,7 @@ html, body {
 
 /* Total */
 .oi-total {
-    font-family: var(--cb-serif); font-size: 16px; font-weight: 700;
+    font-size: 16px; font-weight: 700;
     color: var(--cb-accent); text-align: right; white-space: nowrap;
 }
 
@@ -210,7 +214,7 @@ html, body {
     </div>
     <a href="{{ route('catalog.categories') }}" class="oi-cta-link">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         Tiếp tục mua sách
     </a>
@@ -276,7 +280,7 @@ html, body {
         'pending'   => '#d97706',
         'confirmed' => '#1e3a8a',
         'shipping'  => '#0284c7',
-        'completed' => 'var(--cb-accent)',
+        'completed' => 'var(--cb-brand-accent)',
         'cancelled' => '#dc2626',
         'refunded'  => '#7c3aed',
         default     => '#999',

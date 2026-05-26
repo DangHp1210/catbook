@@ -37,14 +37,14 @@
 <style>
 /* ─── Notification bell ───────────────────────────────── */
 :root {
-    --cb-bg:           #f8f6f1;
-    --cb-border:       #e8e3d8;
-    --cb-text:         #1a1a1a;
-    --cb-muted:        #777;
-    --cb-white:        #ffffff;
-    --cb-accent:       #2d6a4f;
-    --cb-accent-dark:  #1b4332;
-    --cb-accent-light: #d8f3dc;
+    --cb-bg:           var(--cb-brand-bg);
+    --cb-border:       var(--cb-brand-border);
+    --cb-text:         var(--cb-brand-text);
+    --cb-muted:        var(--cb-brand-muted);
+    --cb-white:        var(--cb-brand-white);
+    --cb-brand-accent:       #2d6a4f;
+    --cb-brand-accent-dark:  #1b4332;
+    --cb-brand-accent-light: #d8f3dc;
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
@@ -66,7 +66,7 @@
     flex-shrink: 0;
 }
 .rn-bell:hover {
-    border-color: var(--cb-accent);
+    border-color: var(--cb-brand-accent);
     transform: translateY(-3px); 
 }
 .rn-bell svg { width: 22px; height: 22px; }
@@ -74,7 +74,7 @@
 /* Badge */
 .rn-badge {
     position: absolute; top: -5px; right: -5px;
-    background: #dc2626; color: #fff;
+    background: #cd0707; color: #fff;
     min-width: 18px; height: 18px; border-radius: 999px;
     font-family: var(--cb-sans); font-size: 10px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
@@ -99,8 +99,10 @@
     transition: opacity .18s, transform .18s, visibility .18s;
     pointer-events: none;
 }
+
 .rn-wrap.is-open .rn-panel {
-    opacity: 1; visibility: visible;
+    opacity: 1;
+    visibility: visible;
     transform: translateY(0) scale(1);
     pointer-events: auto;
 }
@@ -112,11 +114,12 @@
     display: flex; align-items: flex-end; justify-content: space-between;
     position: relative;
 }
+
 .rn-head::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--cb-accent), #4ade80);
+    background: linear-gradient(90deg, var(--cb-brand-accent), #4ade80);
 }
-.rn-head-left {}
+
 .rn-head-title {
     font-family: var(--cb-serif); font-size: 17px; font-weight: 700;
     color: var(--cb-text); margin: 0;
@@ -128,7 +131,8 @@
 .rn-head-count {
     font-family: var(--cb-sans); font-size: 11px; font-weight: 700;
     padding: 3px 10px; border-radius: 999px;
-    background: #fff1f2; color: #dc2626; border: 1px solid #fecdd3;
+    background: var(--cb-brand-accent); color: #fff;
+    margin-top: 4px;
     flex-shrink: 0; white-space: nowrap;
 }
 
@@ -168,7 +172,7 @@
     display: flex; align-items: center; justify-content: center;
     color: #fff;
 }
-.rn-icon--order   { background: linear-gradient(135deg, var(--cb-accent), var(--cb-accent-dark)); }
+.rn-icon--order   { background: linear-gradient(135deg, var(--cb-brand-accent), var(--cb-brand-accent-dark)); }
 .rn-icon--message { background: linear-gradient(135deg, #6366f1, #4f46e5); }
 .rn-icon--promo   { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .rn-icon--default { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
@@ -185,6 +189,7 @@
     font-family: var(--cb-sans); font-size: 11px; color: var(--cb-muted);
     margin: 3px 0 0; line-height: 1.45;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    line-clamp: 2;
     overflow: hidden;
 }
 .rn-item-meta {
@@ -194,13 +199,13 @@
 .rn-meta-dot {
     width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
 }
-.rn-meta-dot--unread { background: var(--cb-accent); }
+.rn-meta-dot--unread { background: var(--cb-brand-accent); }
 .rn-meta-dot--read   { background: #c4b9aa; }
 
 /* Unread indicator on right */
 .rn-unread-pip {
     width: 7px; height: 7px; border-radius: 50%;
-    background: var(--cb-accent); flex-shrink: 0; margin-top: 4px;
+    background: var(--cb-brand-accent); flex-shrink: 0; margin-top: 4px;
 }
 
 /* Empty state */
@@ -230,7 +235,7 @@
     color: var(--cb-muted); cursor: pointer; text-align: center;
     transition: border-color .15s, color .15s;
 }
-.rn-foot-mark:hover { border-color: var(--cb-accent); color: var(--cb-accent); }
+.rn-foot-mark:hover { border-color: var(--cb-brand-accent); color: var(--cb-brand-accent); }
 .rn-foot-all {
     flex: 1; font-family: var(--cb-sans); font-size: 12px; font-weight: 600;
     padding: 9px 12px; border-radius: 9px; border: none;
@@ -238,7 +243,7 @@
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: background .15s;
 }
-.rn-foot-all:hover { background: var(--cb-accent); }
+.rn-foot-all:hover { background: var(--cb-brand-accent); }
 
 @media (max-width: 640px) { .rn-wrap { display: none; } }
 </style>

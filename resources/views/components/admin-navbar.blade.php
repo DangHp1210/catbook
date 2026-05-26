@@ -100,38 +100,10 @@
                    class="an-link {{ request()->routeIs('admin.panel') ? 'active' : '' }}">
                     <span class="an-link-dot"></span>Dashboard
                 </a>
-                <a href="{{ route('admin.users.index') }}"
-                   class="an-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                    <span class="an-link-dot"></span>Người dùng
-                </a>
-                <a href="{{ route('admin.books.index') }}"
-                   class="an-link {{ request()->routeIs('admin.books.*') ? 'active' : '' }}">
-                    <span class="an-link-dot"></span>Sách
-                </a>
-                <a href="{{ route('admin.orders.index') }}"
-                   class="an-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
-                    <span class="an-link-dot"></span>Đơn hàng
-                </a>
-                <a href="{{ route('admin.revenue.index') }}"
-                   class="an-link {{ request()->routeIs('admin.revenue.*') ? 'active' : '' }}">
-                    <span class="an-link-dot"></span>Doanh thu
-                </a>
             @elseif($isStaff)
                 <a href="{{ route('staff.panel') }}"
                    class="an-link {{ request()->routeIs('staff.panel') ? 'active' : '' }}">
                     <span class="an-link-dot"></span>Dashboard
-                </a>
-                <a href="{{ route('staff.books.index') }}"
-                   class="an-link {{ request()->routeIs('staff.books.*') ? 'active' : '' }}">
-                    <span class="an-link-dot"></span>Sách
-                </a>
-                <a href="{{ route('staff.categories.index') }}"
-                   class="an-link {{ request()->routeIs('staff.categories.*') ? 'active' : '' }}">
-                    <span class="an-link-dot"></span>Danh mục
-                </a>
-                <a href="{{ route('staff.orders.index') }}"
-                   class="an-link {{ request()->routeIs('staff.orders.*') ? 'active' : '' }}">
-                    <span class="an-link-dot"></span>Đơn hàng
                 </a>
             @endif
         </nav>

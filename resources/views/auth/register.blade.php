@@ -8,8 +8,6 @@
         <div class="mb-8 text-center">
             <p class="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-700">Bắt đầu ngay</p>
             <h2 class="mt-3 text-3xl font-bold text-slate-900">Đăng ký CatBook</h2>
-            <p class="mt-3 text-xs leading-6 text-slate-600">Tạo tài khoản để mua sách, lưu địa chỉ, đánh giá sách và theo dõi đơn hàng dễ dàng hơn.</p>
-
         </div>
 
         @if ($errors->any())

@@ -7,14 +7,14 @@
 <style>
 /* ─── Tokens ──────────────────────────────────────────── */
 :root {
-    --cb-bg:           #f8f6f1;
-    --cb-border:       #e8e3d8;
-    --cb-text:         #1a1a1a;
-    --cb-muted:        #777;
-    --cb-white:        #ffffff;
-    --cb-accent:       #2d6a4f;
-    --cb-accent-dark:  #1b4332;
-    --cb-accent-light: #d8f3dc;
+    --cb-bg:           var(--cb-brand-bg);
+    --cb-border:       var(--cb-brand-border);
+    --cb-text:         var(--cb-brand-text);
+    --cb-muted:        var(--cb-brand-muted);
+    --cb-white:        var(--cb-brand-white);
+    --cb-brand-accent:       var(--cb-brand-accent);
+    --cb-brand-accent-dark:  var(--cb-brand-accent-dark);
+    --cb-brand-accent-light: var(--cb-brand-accent-light);
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
@@ -67,7 +67,7 @@ html, body {
     content: '';
     position: absolute; top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--cb-accent), #4ade80);
+    background: linear-gradient(90deg, var(--cb-brand-accent), #4ade80);
 }
 .ac-hero-body {
     padding: 28px 28px 24px;
@@ -82,7 +82,7 @@ html, body {
 .ac-avatar {
     width: 100px; height: 100px;
     border-radius: 16px;
-    background: linear-gradient(135deg, var(--cb-accent) 0%, #4ade80 100%);
+    background: linear-gradient(135deg, var(--cb-brand-accent) 0%, #4ade80 100%);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden;
     font-family: var(--cb-serif);
@@ -102,7 +102,7 @@ html, body {
     transition: all .18s; text-align: center;
     white-space: nowrap;
 }
-.ac-avatar-btn:hover { border-color: var(--cb-accent); color: var(--cb-accent); }
+.ac-avatar-btn:hover { border-color: var(--cb-brand-accent); color: var(--cb-brand-accent); }
 
 /* Hero info */
 .ac-hero-info { flex: 1; min-width: 200px; }
@@ -130,7 +130,7 @@ html, body {
 }
 .ac-role-admin { background: #fef3c7; color: #92400e; }
 .ac-role-staff { background: #e0eaff; color: #1e3a8a; }
-.ac-role-customer { background: var(--cb-accent-light); color: var(--cb-accent); }
+.ac-role-customer { background: var(--cb-brand-accent-light); color: var(--cb-brand-accent); }
 
 /* ─── Form elements ───────────────────────────────────── */
 .ac-form-group { margin-bottom: 16px; }
@@ -155,7 +155,7 @@ html, body {
     box-sizing: border-box;
 }
 .ac-input:focus {
-    border-color: var(--cb-accent);
+    border-color: var(--cb-brand-accent);
     box-shadow: 0 0 0 3px rgba(45,106,79,.09);
 }
 .ac-input::placeholder { color: #c0b8b0; }
@@ -173,7 +173,7 @@ html, body {
     cursor: pointer; transition: background .2s;
     display: inline-flex; align-items: center; gap: 7px;
 }
-.ac-btn-primary:hover { background: var(--cb-accent); }
+.ac-btn-primary:hover { background: var(--cb-brand-accent); }
 
 .ac-btn-ghost {
     font-family: var(--cb-sans);

@@ -4,14 +4,14 @@
 <style>
 /* ─── Design tokens ───────────────────────────────────── */
 :root {
-    --cb-bg:           #f8f6f1;
-    --cb-border:       #e8e3d8;
-    --cb-text:         #1a1a1a;
-    --cb-muted:        #777;
-    --cb-white:        #ffffff;
-    --cb-accent:       #2d6a4f;
-    --cb-accent-dark:  #1b4332;
-    --cb-accent-light: #d8f3dc;
+    --cb-bg:           var(--cb-brand-bg);
+    --cb-border:       var(--cb-brand-border);
+    --cb-text:         var(--cb-brand-text);
+    --cb-muted:        var(--cb-brand-muted);
+    --cb-white:        var(--cb-brand-white);
+    --cb-accent:       var(--cb-brand-accent);
+    --cb-accent-dark:  var(--cb-brand-accent-dark);
+    --cb-accent-light: var(--cb-brand-accent-light);
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
@@ -45,7 +45,7 @@ html, body {
 }
 .ad-heading {
     font-family: normal;
-    font-size: 38px; font-weight: 900; color: #0d1b10;
+    font-size: 48px; font-weight: 900; color: #0d1b10;
     letter-spacing: -0.5px; line-height: 1.08; margin: 0;
 }
 .ad-heading em { font-style: italic; color: var(--cb-accent); }

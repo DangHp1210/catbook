@@ -1,22 +1,11 @@
 <style>
-    :root {
-        --cb-accent: #2d6a4f;
-        --cb-serif: 'Playfair Display', serif;
-        --cb-sans: 'DM Sans', sans-serif;
-        --cb-brand-text: #1a1a1a;
-        --cb-brand-muted: #777;
-        --cb-brand-border: #e8e3d8;
-        --cb-brand-accent: #2d6a4f;
-        --cb-brand-accent-soft: #d8f3dc;
-    }
-
         *, *::before, *::after { box-sizing: border-box; }
 
     html, body { background: #f8f6f1 !important; margin: 0; }
     
         body {
             margin: 0;
-            font-family: var(--cb-sans, 'DM Sans', system-ui, sans-serif);
+            font-family: var(--cb-font-sans, 'DM Sans', system-ui, sans-serif);
             background: var(--cb-bg);
             color: var(--cb-brand-text);
         }
@@ -85,7 +74,7 @@
 
         .cb-auth-copy h1 {
             margin: 0;
-            font-family: 'Playfair Display', serif;
+            font-family: var(--cb-font-serif, 'Playfair Display', serif);
             font-size: clamp(36px, 6vw, 60px);
             line-height: 1.05;
             letter-spacing: -1.8px;
@@ -150,7 +139,7 @@
         }
 
         .cb-auth-logo a {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--cb-font-serif, 'Playfair Display', serif);
             font-size: 24px;
             font-weight: 900;
             color: #000;
@@ -159,7 +148,7 @@
             line-height: 1;
         }
 
-        .cb-auth-logo a span { color: var(--cb-accent); }
+        .cb-auth-logo a span { color: var(--cb-brand-accent); }
 
         .cb-auth-logo p {
             margin: 8px 0 0;
@@ -171,7 +160,7 @@
 
         .cb-auth-slot h1,
         .cb-auth-slot h2 {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--cb-font-serif, 'Playfair Display', serif);
             font-weight: 700;
             color: #0d1b10;
             text-align: center;
@@ -194,7 +183,7 @@
             color: #202221;
             margin-bottom: 6px;
             letter-spacing: 0px;
-            font-family: var(--cb-sans);
+            font-family: var(--cb-font-sans);
         }
 
         .cb-auth-slot input[type="text"],
@@ -205,7 +194,7 @@
         .cb-auth-slot textarea {
             display: block;
             width: 100%;
-            font-family: var(--cb-sans);
+            font-family: var(--cb-font-sans);
             font-size: 13px;
             padding: 12px 16px;
             border-radius: 12px;
@@ -221,7 +210,7 @@
         .cb-auth-slot input::placeholder,
         .cb-auth-slot textarea::placeholder { 
             color: #b0a898;
-            font-family: var(--cb-sans);
+            font-family: var(--cb-font-sans);
         }
 
         .cb-auth-slot input:focus,
@@ -240,13 +229,13 @@
             font-size: 12px;
             color: #dc2626;
             margin: -10px 0 12px;
-            font-family: var(--cb-sans);
+            font-family: var(--cb-font-sans);
         }
 
         .cb-auth-slot .cb-btn-primary {
             display: block;
             width: 100%;
-            font-family: 'DM Sans', sans-serif;
+            font-family: var(--cb-font-sans, 'DM Sans', sans-serif);
             font-size: 15px;
             font-weight: 600;
             padding: 13px;
@@ -269,7 +258,7 @@
         .cb-auth-slot .cb-btn-secondary {
             display: block;
             width: 100%;
-            font-family: 'DM Sans', sans-serif;
+            font-family: var(--cb-font-sans, 'DM Sans', sans-serif);
             font-size: 14px;
             font-weight: 500;
             padding: 12px;
@@ -410,17 +399,27 @@
         }
     </style>
 
-    <main class="cb-auth-page">
-        <div class="cb-auth-layout">
-            <section class="cb-auth-copy" aria-label="Giới thiệu">
+                <main class="cb-auth-page">
+                    <div class="cb-auth-layout">
+                        <section class="cb-auth-copy" aria-label="Giới thiệu">
                 <div class="cb-auth-eyebrow">
                     <span class="cb-eyebrow-dot"></span>
-                    Kho sách trực tuyến
+                    {{ request()->routeIs('register') ? 'Thành viên mới' : 'Kho sách trực tuyến' }}
                 </div>
-                <h1>Trở lại để tiếp tục
-                    <em>khám phá</em> tri thức</h1>
-                <p>Đăng nhập để lưu địa chỉ, theo dõi đơn hàng và trải nghiệm Chatbot thông minh – người bạn đồng hành giúp bạn tìm ra cuốn sách "chuẩn gu" trong tích tắc.</p>
-
+                <h1>
+                    @if(request()->routeIs('register'))
+                        Bắt đầu hành trình<br><em>khám phá</em> tri thức
+                    @else
+                        Trở lại để tiếp tục<br><em>khám phá</em> tri thức
+                    @endif
+                </h1>
+                <p>
+                    @if(request()->routeIs('register'))
+                        Đăng ký tài khoản để sở hữu kho sách cá nhân, nhận các gợi ý độc quyền và trải nghiệm Chatbot thông minh giúp bạn tìm ra cuốn sách phù hợp.
+                    @else
+                        Đăng nhập để quản lý đơn hàng, nhận các gợi ý thông minh từ Trợ lý AI và trải nghiệm tìm sách 'chuẩn gu' trong tích tắc.
+                    @endif
+                </p>
                 <div class="cb-auth-benefits">
                     <div class="cb-auth-benefit">
                         <strong>Trợ lý sách AI 24/7</strong>
@@ -428,7 +427,7 @@
                     </div>
                     <div class="cb-auth-benefit">
                         <strong>Thanh toán & Giao hàng tiện lợi</strong>
-                        <span>Quản lý giỏ hàng, lưu thông tin người nhận và dễ dàng thanh toán qua COD, VNPay hoặc MoMo.</span>
+                        <span>Quản lý giỏ hàng, lưu thông tin người nhận và dễ dàng thanh toán.</span>
                     </div>
                 </div>
             </section>
@@ -455,3 +454,21 @@
             </section>
         </div>
     </main>
+    <script>
+        function togglePassword(btn) {
+            const input = btn.previousElementSibling;
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            
+            // Chuyển đổi icon Mắt mở / Mắt nhắm
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+            if(type === 'text') {
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        }
+    </script>

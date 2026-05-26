@@ -7,14 +7,14 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-    --cb-bg:           #f8f6f1;
-    --cb-border:       #e8e3d8;
-    --cb-text:         #1a1a1a;
-    --cb-muted:        #777;
-    --cb-white:        #ffffff;
-    --cb-accent:       #2d6a4f;
-    --cb-accent-dark:  #1b4332;
-    --cb-accent-light: #d8f3dc;
+    --cb-bg:           var(--cb-brand-bg);
+    --cb-border:       var(--cb-brand-border);
+    --cb-text:         var(--cb-brand-text);
+    --cb-muted:        var(--cb-brand-muted);
+    --cb-white:        var(--cb-brand-white);
+    --cb-accent:       var(--cb-brand-accent);
+    --cb-accent-dark:  var(--cb-brand-accent-dark);
+    --cb-accent-light: var(--cb-brand-accent-light);
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
@@ -167,7 +167,7 @@ html,body {
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--cb-border);
 }
-.cb-product-price { font-family: var(--cb-serif); font-size: 17px; font-weight: 700; color: var(--cb-accent); }
+.cb-product-price { font-size: 17px; font-weight: 700; color: var(--cb-accent); }
 .cb-product-orig  { font-size: 11px; color: #bbb; text-decoration: line-through; margin-left: 6px; }
 .cb-add-btn {
     width: 34px; height: 34px; border-radius: 50%;
@@ -183,27 +183,6 @@ html,body {
     grid-column: 1/-1; padding: 56px 32px; text-align: center;
     font-family: var(--cb-sans); font-size: 14px; color: #aaa;
 }
-
-/* ── CTA Strip ────────────────────────────────────────── */
-.cb-cta { max-width: 1140px; margin: 0 auto 80px; padding: 0 40px; }
-.cb-cta-inner {
-    background: #0d1b10; border-radius: 26px; padding: 56px 64px;
-    display: flex; align-items: center; justify-content: space-between; gap: 40px;
-}
-.cb-cta-text h3 {
-    font-family: var(--cb-serif); font-size: 34px; font-weight: 700;
-    color: #fff; letter-spacing: -.5px; line-height: 1.2; margin: 0;
-}
-.cb-cta-text h3 em { font-style: italic; color: #4ade80; }
-.cb-cta-text p { font-size: 15px; color: #6a9e7a; margin: 10px 0 0; }
-.cb-cta-btn {
-    font-family: var(--cb-sans); font-size: 15px; font-weight: 600;
-    padding: 16px 34px; border-radius: 999px;
-    background: #4ade80; color: #0d1b10;
-    border: none; cursor: pointer; white-space: nowrap;
-    flex-shrink: 0; transition: all .2s;
-}
-.cb-cta-btn:hover { background: #86efac; transform: translateY(-2px); }
 
 /* ── Footer ───────────────────────────────────────────── */
 .cb-footer {
@@ -290,9 +269,7 @@ html,body {
     .cb-hero { padding: 48px 20px 56px; }
     .cb-hero h1 { font-size: 40px; letter-spacing: -1.5px; }
     .cb-search-wrap { max-width: 100%; }
-    .cb-cta-inner { flex-direction: column; text-align: center; padding: 40px 32px; }
     .cb-section { padding: 0 20px 56px; }
-    .cb-cta { padding: 0 20px; }
     .cb-divider { padding: 0 20px; }
 }
 </style>
@@ -470,19 +447,6 @@ html,body {
     </div>
 </section>
 
-{{-- ══════════════════════════════════════════════════
-     CTA STRIP
-══════════════════════════════════════════════════ --}}
-<div class="cb-cta">
-    <div class="cb-cta-inner">
-        <div class="cb-cta-text">
-            <h3>Để AI gợi ý cuốn sách<br><em>hoàn hảo</em> cho bạn</h3>
-            <p>Chỉ cần nói cho chatbot biết bạn muốn đọc gì — mọi thứ còn lại để CatBook lo.</p>
-        </div>
-        <button id="open-chat-btn" class="cb-cta-btn">Mở trợ lý AI ✦</button>
-    </div>
-</div>
-
 {{-- Footer is now rendered site-wide in layouts.app; removed duplicate here. --}}
 
 {{-- ══════════════════════════════════════════════════
@@ -505,7 +469,6 @@ function openChatbot() {
     const toggle = document.getElementById('chat-toggle-btn');
     if (toggle) toggle.click();
 }
-document.getElementById('open-chat-btn')?.addEventListener('click', openChatbot);
 document.getElementById('chat-fab')?.addEventListener('click', openChatbot);
 
 /* ── Add to cart ──────────────────────────────────────── */

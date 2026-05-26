@@ -149,15 +149,15 @@ class CheckoutController extends Controller
 
         // Handle online payment methods (VNPay & MoMo)
         if ($validated['payment_method'] === 'vnpay') {
-            return redirect()->route('payment.vnpay', ['order_id' => $order->id]);
+            return redirect()->route('payment.vnpay', ['order' => $order->order_code]);
         }
 
         if ($validated['payment_method'] === 'momo') {
-            return redirect()->route('payment.momo', ['order_id' => $order->id]);
+            return redirect()->route('payment.momo', ['order' => $order->order_code]);
         }
 
         if ($validated['payment_method'] === 'bank_transfer') {
-            return redirect()->route('payment.transfer', ['order_id' => $order->id]);
+            return redirect()->route('payment.transfer', ['order' => $order->order_code]);
         }
 
         // For COD, show order confirmation

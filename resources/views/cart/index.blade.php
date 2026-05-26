@@ -7,22 +7,25 @@
 <style>
 /* ─── Tokens ──────────────────────────────────────────── */
 :root {
-    --cb-bg:           #f8f6f1;
-    --cb-border:       #e8e3d8;
-    --cb-text:         #1a1a1a;
-    --cb-muted:        #777;
-    --cb-white:        #ffffff;
-    --cb-accent:       #2d6a4f;
-    --cb-accent-dark:  #1b4332;
-    --cb-accent-light: #d8f3dc;
-    --cb-serif:        'Playfair Display', Georgia, serif;
-    --cb-sans:         'DM Sans', system-ui, sans-serif;
+    --cb-bg:           var(--cb-brand-bg);
+    --cb-border:       var(--cb-brand-border);
+    --cb-text:         var(--cb-brand-text);
+    --cb-muted:        var(--cb-brand-muted);
+    --cb-white:        var(--cb-brand-white);
+    --cb-accent:       var(--cb-brand-accent);
+    --cb-accent-dark:  var(--cb-brand-accent-dark);
+    --cb-accent-light: var(--cb-brand-accent-light);
+    --cb-serif:        var(--cb-font-serif);
+    --cb-sans:         var(--cb-font-sans);
 }
 html, body {
     background: var(--cb-bg);
     margin: 0;
 }
 /* ─── Page header ─────────────────────────────────────── */
+.cb-page {
+    width: min(1160px, calc(100% - 2rem)) !important; 
+}
 .ct-header {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
@@ -77,8 +80,8 @@ html, body {
 /* ─── 2-col layout ────────────────────────────────────── */
 .ct-layout {
     display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 22px; align-items: start;
+    grid-template-columns: 1fr 360px;
+    gap: 40px; align-items: start;
 }
 @media (max-width: 860px) { .ct-layout { grid-template-columns: 1fr; } }
 

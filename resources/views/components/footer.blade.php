@@ -35,7 +35,7 @@
     color: #000; 
     margin-bottom: 8px;
 }
-.cb-footer-logo span { color: var(--cb-accent); }
+.cb-footer-logo span { color: var(--cb-brand-accent); }
 
 .cb-footer-desc { 
     /* 4. Giảm cỡ chữ mô tả và khoảng cách */
@@ -85,7 +85,7 @@
 
 .cb-socials { display: flex; align-items: center; gap: 16px; }
 .cb-socials a { color: #0e0e0e; text-decoration: none; font-size: 13px; transition: color .2s; }
-.cb-socials a:hover { color: var(--cb-accent); }
+.cb-socials a:hover { color: var(--cb-brand-accent); }
 </style>
 
 <footer class="cb-footer">

@@ -27,10 +27,8 @@ class PaymentController extends Controller
     }
 
     // Tạo URL thanh toán VNPay
-    public function createPayment(Request $request): View|RedirectResponse
+    public function createPayment(Request $request, Order $order): View|RedirectResponse
     {
-        $order = Order::findOrFail($request->query('order_id'));
-
         $vnp_Url = env('VNP_URL');
         $vnp_ReturnUrl = env('VNP_RETURN_URL');
         $vnp_TmnCode = env('VNP_TMN_CODE');
@@ -193,10 +191,8 @@ class PaymentController extends Controller
     }
 
     // Tạo URL thanh toán MoMo
-    public function createMomoPayment(Request $request): View|RedirectResponse
+    public function createMomoPayment(Request $request, Order $order): View|RedirectResponse
     {
-        $order = Order::findOrFail($request->query('order_id'));
-
         $momo_MerchantId = env('MOMO_MERCHANT_ID');
         $momo_AccessKey = env('MOMO_ACCESS_KEY');
         $momo_SecretKey = env('MOMO_SECRET_KEY');
@@ -320,9 +316,8 @@ class PaymentController extends Controller
     }
 
     // Trang trung gian cho chuyển khoản ngân hàng
-    public function createTransferPayment(Request $request): View|RedirectResponse
+    public function createTransferPayment(Order $order): View|RedirectResponse
     {
-        $order = Order::findOrFail($request->query('order_id'));
 
         return view('payments.transfer', [
             'order' => $order,

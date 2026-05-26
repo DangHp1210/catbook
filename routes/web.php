@@ -52,9 +52,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/thong-bao/mark-all', [NotificationController::class, 'markAll'])->name('notifications.mark_all');
 
     // Payment routes
-    Route::get('/payment/vnpay', [PaymentController::class, 'createPayment'])->name('payment.vnpay');
-    Route::get('/payment/momo', [PaymentController::class, 'createMomoPayment'])->name('payment.momo');
-    Route::get('/payment/transfer', [PaymentController::class, 'createTransferPayment'])->name('payment.transfer');
+    Route::get('/payment/vnpay/{order:order_code}', [PaymentController::class, 'createPayment'])->name('payment.vnpay');
+    Route::get('/payment/momo/{order:order_code}', [PaymentController::class, 'createMomoPayment'])->name('payment.momo');
+    Route::get('/payment/transfer/{order:order_code}', [PaymentController::class, 'createTransferPayment'])->name('payment.transfer');
 
     Route::get('/tai-khoan', function () {
         /** @var \App\Models\User|null $user */

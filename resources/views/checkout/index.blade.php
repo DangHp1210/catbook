@@ -4,25 +4,30 @@
 
 @section('content')
 <style>
-/* ─── Design tokens ───────────────────────────────────── */
+/* ─── 1. Design tokens (Đã chốt cứng màu dự phòng để luôn hiển thị đúng) ─── */
 :root {
-    --cb-bg:           #f8f6f1;
-    --cb-border:       #e8e3d8;
-    --cb-text:         #1a1a1a;
-    --cb-muted:        #777;
-    --cb-white:        #ffffff;
-    --cb-accent:       #2d6a4f;
-    --cb-accent-dark:  #1b4332;
-    --cb-accent-light: #d8f3dc;
-    --cb-serif:        'Playfair Display', Georgia, serif;
-    --cb-sans:         'DM Sans', system-ui, sans-serif;
+    --cb-bg:           var(--cb-brand-bg, #f8f6f1);
+    --cb-border:       var(--cb-brand-border, #e8e3d8);
+    --cb-text:         var(--cb-brand-text, #1a1a1a);
+    --cb-muted:        var(--cb-brand-muted, #5a5a5a);
+    --cb-white:        var(--cb-brand-white, #ffffff);
+    
+    /* Gom chung tên biến Accent (Màu xanh chủ đạo) cho dễ quản lý */
+    --cb-accent:       var(--cb-brand-accent, #2d6a4f);
+    --cb-accent-dark:  var(--cb-brand-accent-dark, #1b4332);
+    --cb-accent-light: var(--cb-brand-accent-light, #d8f3dc);
+    
+    --cb-serif:        var(--cb-font-serif, 'Playfair Display', Georgia, serif);
+    --cb-sans:         var(--cb-font-sans, 'DM Sans', system-ui, sans-serif);
 }
+
 html, body {
     background: var(--cb-bg);
     margin: 0;
 }
+
 /* ─── Page header ─────────────────────────────────────── */
-.ck-header { margin-bottom: 28px; margin-top: 10px; }
+.ck-header { margin-bottom: 28px; }
 .ck-eyebrow {
     display: inline-flex; align-items: center; gap: 7px;
     font-family: var(--cb-sans); font-size: 11px; font-weight: 600;
@@ -110,7 +115,6 @@ html, body {
 }
 .ck-textarea::placeholder { color: #c0b8b0; }
 
-/* ─── Section divider ─────────────────────────────────── */
 .ck-hr { height: 1px; background: var(--cb-border); margin: 6px 0 22px; }
 
 /* ─── Payment methods ─────────────────────────────────── */
@@ -120,7 +124,6 @@ html, body {
     color: #b0a898; margin-bottom: 12px;
 }
 
-/* Online method cards grid */
 .ck-pay-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 10px; }
 @media (max-width: 640px) { .ck-pay-grid { grid-template-columns: 1fr; } }
 
@@ -139,10 +142,8 @@ html, body {
     background: #f4fdf7;
 }
 
-/* Hide real radio */
 .ck-pay-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
 
-/* Check circle */
 .ck-pay-check {
     position: absolute; top: 12px; right: 12px;
     width: 20px; height: 20px; border-radius: 50%;
@@ -157,16 +158,16 @@ html, body {
 .ck-pay-check svg { display: none; }
 .ck-pay-card.selected .ck-pay-check svg { display: block; }
 
-/* Icon */
+/* ─── 2. Cập nhật Icon thanh toán sang màu Solid đồng bộ ─── */
 .ck-pay-icon {
     width: 40px; height: 40px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     font-family: var(--cb-serif); font-size: 16px; font-weight: 900; color: #fff;
 }
-.ck-pay-icon-bk { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
-.ck-pay-icon-mm { background: linear-gradient(135deg, #ec4899, #be185d); }
-.ck-pay-icon-vn { background: linear-gradient(135deg, #f97316, #dc2626); }
-.ck-pay-icon-cod { background: linear-gradient(135deg, #6b7280, #374151); }
+.ck-pay-icon-bk { background: var(--cb-accent); } /* Đổi sang màu thương hiệu */
+.ck-pay-icon-mm { background: #d63384; }          /* Hồng MoMo */
+.ck-pay-icon-vn { background: #c82333; }          /* Đỏ VNPay */
+.ck-pay-icon-cod { background: var(--cb-muted); } /* Xám COD */
 
 .ck-pay-name {
     font-family: var(--cb-sans); font-size: 13px; font-weight: 600; color: var(--cb-text);
@@ -239,23 +240,24 @@ html, body {
     color: var(--cb-accent); font-size: 11px;
 }
 
-/* ─── Action buttons ──────────────────────────────────── */
-.ck-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+/* ─── 3. Chỉnh nút Action (Tràn viền ngang, rõ ràng) ─── */
+.ck-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
 .ck-btn-submit {
     font-family: var(--cb-sans); font-size: 15px; font-weight: 600;
-    padding: 13px 32px; border-radius: 12px; border: none;
+    padding: 14px 32px; border-radius: 12px; border: none;
     background: var(--cb-accent); color: #fff; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-    transition: background .2s, transform .15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background .2s, transform .15s; width: 100%;
 }
 .ck-btn-submit:hover { background: var(--cb-accent-dark); transform: translateY(-1px); }
+
 .ck-btn-back {
     font-family: var(--cb-sans); font-size: 14px; font-weight: 500;
-    padding: 13px 22px; border-radius: 12px;
+    padding: 14px 22px; border-radius: 12px;
     border: 1.5px solid var(--cb-border); background: transparent;
     color: var(--cb-muted); text-decoration: none; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 7px;
-    transition: border-color .2s, color .2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: border-color .2s, color .2s; width: 100%;
 }
 .ck-btn-back:hover { border-color: var(--cb-text); color: var(--cb-text); }
 
@@ -295,15 +297,19 @@ html, body {
     font-family: var(--cb-sans); font-size: 13px; font-weight: 600;
     color: var(--cb-text); line-height: 1.4; margin-bottom: 5px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    line-clamp: 2;
 }
 .ck-item-meta {
     display: flex; align-items: center; justify-content: space-between;
     font-family: var(--cb-sans); font-size: 12px; color: var(--cb-muted);
 }
-.ck-item-price { font-weight: 600; color: var(--cb-accent); }
 
-/* Totals */
+/* ─── 4. Đổi Font Arial cho các dòng tiền tệ ─── */
+.ck-item-price { 
+    font-weight: 600; 
+    color: var(--cb-accent); 
+    font-family: Arial, Helvetica, sans-serif; /* Đã áp dụng Arial */
+}
+
 .ck-totals {
     padding: 14px 22px 20px;
     border-top: 1px solid var(--cb-border);
@@ -313,7 +319,11 @@ html, body {
     display: flex; align-items: center; justify-content: space-between;
     font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted);
 }
-.ck-total-row strong { color: var(--cb-text); font-weight: 600; }
+.ck-total-row strong { 
+    color: var(--cb-text); 
+    font-weight: 600; 
+    font-family: Arial, Helvetica, sans-serif; /* Đã áp dụng Arial */
+}
 .ck-total-divider { height: 1px; background: var(--cb-border); }
 .ck-grand-row {
     display: flex; align-items: center; justify-content: space-between;
@@ -321,7 +331,8 @@ html, body {
 }
 .ck-grand-lbl { font-size: 14px; font-weight: 600; color: var(--cb-text); }
 .ck-grand-val {
-    font-family: var(--cb-serif); font-size: 28px; font-weight: 900;
+    font-family: Arial, Helvetica, sans-serif; /* Đã áp dụng Arial */
+    font-size: 28px; font-weight: 900;
     color: var(--cb-accent); letter-spacing: -.5px; line-height: 1;
 }
 
@@ -349,12 +360,7 @@ html, body {
     width: 48px; height: 1.5px; background: var(--cb-border); margin: 0 6px;
 }
 .ck-step-line.done { background: var(--cb-accent); }
-
-.ck-page-gap { margin-bottom: 72px; }
 </style>
-
-<div class="ck-page-gap">
-
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="ck-header">
     {{-- Progress steps --}}
@@ -399,7 +405,7 @@ html, body {
     $onlineMethods = [
         'bank_transfer' => [
             'title'   => 'Chuyển khoản',
-            'desc'    => 'Chuyển khoản trực tiếp theo thông tin đơn hàng.',
+            'desc'    => 'Quét QR hoặc chuyển khoản trực tiếp theo thông tin đơn hàng.',
             'tag'     => 'Phổ biến',
             'tag_cls' => 'ck-tag-blue',
             'icon'    => 'BK',
@@ -504,6 +510,8 @@ html, body {
                     @endforeach
                 </div>
 
+                {{-- QR block (bank_transfer) removed --}}
+
                 {{-- COD --}}
                 <p class="ck-pay-section-title" style="margin-top:16px">Thanh toán khi nhận hàng</p>
                 <label class="ck-cod-row {{ $selectedMethod === 'cod' ? 'selected' : '' }}"
@@ -523,7 +531,7 @@ html, body {
                 <div class="ck-tips">
                     <p class="ck-tips-title">Gợi ý lựa chọn</p>
                     <ul>
-                        <li>Chuyển khoản phù hợp khi muốn đối soát nhanh bằng số tài khoản.</li>
+                        <li>Chuyển khoản phù hợp khi muốn đối soát nhanh bằng QR hoặc số tài khoản.</li>
                         <li>MoMo tiện cho thanh toán trên điện thoại, đặc biệt khi đặt hàng thường xuyên.</li>
                         <li>VNPay hỗ trợ nhiều ngân hàng và thẻ quốc tế, an toàn và quen thuộc.</li>
                     </ul>
@@ -619,12 +627,11 @@ html, body {
 
 </div>{{-- /.ck-layout --}}
 
-</div>{{-- /.ck-page-gap --}}
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const cards    = document.querySelectorAll('.ck-pay-card, .ck-cod-row');
     const inputs   = document.querySelectorAll('input[name="payment_method"]');
+    const qrBlock  = document.querySelector('.bank-qr');
 
     /* ── Payment card selection ── */
     function syncSelection() {
@@ -634,6 +641,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const m = card.dataset.method;
             card.classList.toggle('selected', m === val);
         });
+
+        if (qrBlock) {
+            qrBlock.classList.toggle('hidden', val !== 'bank_transfer');
+        }
     }
 
     cards.forEach(card => {

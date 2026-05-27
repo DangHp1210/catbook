@@ -2,18 +2,18 @@
 
 @section('title', 'Quản lý địa chỉ')
 
-@section('content')
+@section('styles')
 <style>
 /* ─── Design tokens ───────────────────────────────────── */
 :root {
-    --cb-bg:           var(--cb-brand-bg);
-    --cb-border:       var(--cb-brand-border);
-    --cb-text:         var(--cb-brand-text);
-    --cb-muted:        var(--cb-brand-muted);
-    --cb-white:        var(--cb-brand-white);
-    --cb-accent:       var(--cb-brand-accent);
-    --cb-accent-dark:  var(--cb-brand-accent-dark);
-    --cb-accent-light: var(--cb-brand-accent-light);
+    --cb-bg: var(--cb-brand-bg, #f8f6f1);
+    --cb-border: var(--cb-brand-border, #e8e3d8);
+    --cb-text: var(--cb-brand-text, #1a1a1a);
+    --cb-muted: var(--cb-brand-muted, #5a5a5a);
+    --cb-white: #ffffff;
+    --cb-accent: var(--cb-brand-accent, #2d6a4f);
+    --cb-accent-dark: var(--cb-brand-accent-dark, #1b4332);
+    --cb-accent-light: var(--cb-brand-accent-light, #d8f3dc);
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
@@ -245,7 +245,9 @@ html, body {
 .ad-modal-cancel:hover { border-color: var(--cb-text); color: var(--cb-text); }
 .ad-page-gap { margin-bottom: 72px; }
 </style>
+@endsection
 
+@section('content')
 <div class="ad-page-gap">
 <div class="ad-wrap">
 
@@ -513,7 +515,9 @@ html, body {
         </form>
     </div>
 </div>
+@endsection
 
+section('scripts')
 {{-- ── JavaScript (logic giữ nguyên) ──────────────────────── --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

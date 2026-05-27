@@ -9,7 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=block" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap">
 
     <link rel="preload" as="image" href="{{ asset('images/logocatbook3.png') }}">
 
@@ -19,6 +21,7 @@
     @yield('styles')
 
     <style>
+        html { overflow-y: scroll; }
         html, body { height: 100%; }
         body.cb-site { display: flex; flex-direction: column; min-height: 100vh; }
         main.cb-page { flex: 1 0 auto; }
@@ -33,6 +36,9 @@
 </main>
 
 <x-footer />
+
+@stack('scripts')
+@yield('scripts')
 
 </body>
 </html>

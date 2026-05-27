@@ -96,27 +96,34 @@ if (auth()->check()) {
     border: 2px solid var(--cb-bg);
 }
 .cb-btn-ghost {
-    font-family: var(--cb-font-sans);
+    font-family: var(--cb-font-sans, 'DM Sans', sans-serif);
     font-size: 13px; font-weight: 500;
     padding: 8px 18px;
     border-radius: 999px;
     border: 1.5px solid #e0dbd0;
-    background: var(--cb-white);
-    color: var(--cb-text);
+    /* Thêm fallback màu trắng và đen */
+    background: var(--cb-white, #ffffff);
+    color: var(--cb-text, #1a1a1a);
     cursor: pointer;
     transition: all 0.2s;
     text-decoration: none;
     display: inline-flex; align-items: center;
     white-space: nowrap;
 }
-.cb-btn-ghost:hover { border-color: var(--cb-accent); color: var(--cb-accent); background: var(--cb-white); }
+.cb-btn-ghost:hover { 
+    border-color: var(--cb-accent, #2d6a4f); 
+    color: var(--cb-accent, #2d6a4f); 
+    background: var(--cb-white, #ffffff); 
+}
+
 .cb-btn-solid {
-    font-family: var(--cb-font-sans);
+    font-family: var(--cb-font-sans, 'DM Sans', sans-serif);
     font-size: 13px; font-weight: 600;
     padding: 8px 20px;
     border-radius: 999px;
     border: none;
-    background: var(--cb-text);
+    /* Thêm fallback màu đen (#1a1a1a) để nút không bao giờ bị trong suốt */
+    background: var(--cb-text, #1a1a1a);
     color: #fff;
     cursor: pointer;
     transition: background 0.2s;
@@ -124,7 +131,9 @@ if (auth()->check()) {
     display: inline-flex; align-items: center;
     white-space: nowrap;
 }
-.cb-btn-solid:hover { background: var(--cb-accent); }
+.cb-btn-solid:hover { 
+    background: var(--cb-accent, #2d6a4f); 
+}
 .cb-user-menu { position: relative; }
 .cb-user-trigger {
     font-family: var(--cb-font-sans);
@@ -159,7 +168,7 @@ if (auth()->check()) {
 .cb-user-menu.open .cb-chevron { transform: rotate(180deg); }
 .cb-user-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 10px);
     right: 0;
     background: var(--cb-white);
     border: 1px solid var(--cb-border);
@@ -342,9 +351,17 @@ if (auth()->check()) {
             </a>
 
             @guest
-                <a href="{{ route('login') }}"    class="cb-btn-ghost">Đăng nhập</a>
-                <a href="{{ route('register') }}" class="cb-btn-solid">Đăng ký</a>
-
+                {{-- Đang ở trang Login thì nút Login sẽ bôi đen (Solid) --}}
+                <a href="{{ route('login') }}" 
+                   class="{{ request()->routeIs('login') ? 'cb-btn-solid' : 'cb-btn-ghost' }}">
+                   Đăng nhập
+                </a>
+                
+                {{-- Nút Đăng ký luôn nổi bật, hoặc đổi bôi đen nếu đang ở trang Register --}}
+                <a href="{{ route('register') }}" 
+                   class="{{ request()->routeIs('register') ? 'cb-btn-solid' : 'cb-btn-solid' }}">
+                   Đăng ký
+                </a>
             @else
                 {{-- User dropdown --}}
                 <div class="cb-user-menu" id="cb-user-menu">
@@ -379,21 +396,7 @@ if (auth()->check()) {
                             <div class="cb-dropdown-divider"></div>
                         @endif
 
-                        @if(auth()->user()->role === 'admin')
-                            <a href="{{ route('admin.panel') }}" class="cb-dropdown-item cb-dropdown-item--admin" role="menuitem">
-                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <path d="M3 13h8V3H3v10zm10 8h8v-6h-8v6zM3 21h8v-6H3v6zm10-8h8V3h-8v10z"/>
-                                </svg>
-                                Admin Dashboard
-                            </a>
-                        @elseif(auth()->user()->role === 'staff')
-                            <a href="{{ route('staff.panel') }}" class="cb-dropdown-item cb-dropdown-item--staff" role="menuitem">
-                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <path d="M3 13h8V3H3v10zm10 8h8v-6h-8v6zM3 21h8v-6H3v6zm10-8h8V3h-8v10z"/>
-                                </svg>
-                                Staff Dashboard
-                            </a>
-                        @endif
+                        {{-- Admin/Staff Dashboard links removed from user dropdown per request --}}
 
                         <a href="{{ route('account.show') }}" class="cb-dropdown-item" role="menuitem">
                             <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">

@@ -37,9 +37,9 @@
     --cb-brand-accent-tint-strong: rgba(45, 106, 79, 0.18);
 
     /* Compatibility aliases for legacy tokens still present in Blade templates */
-    --cb-accent: var(--cb-brand-accent);
-    --cb-accent-dark: var(--cb-brand-accent-dark);
-    --cb-accent-light: var(--cb-brand-accent-light);
+    --cb-accent: var(--cb-brand-accent, #2d6a4f);
+    --cb-accent-dark: var(--cb-brand-accent-dark, #1b4332);
+    --cb-accent-light: var(--cb-brand-accent-light, #d8f3dc);
 
     --cb-font-sans: 'DM Sans', 'Be Vietnam Pro', 'Instrument Sans', ui-sans-serif, sans-serif;
     --cb-font-serif: 'Playfair Display', Georgia, serif;
@@ -68,7 +68,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    height: 64px;
+    height: 60px;
+    min-height: 60px;
+    box-sizing: border-box;
 }
 .cb-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; white-space: nowrap; }
 .cb-logo-img { width: 44px; height: 40px; object-fit: contain; display: block; }
@@ -158,12 +160,14 @@
 .an-shell { position: sticky; top: 0; z-index: 60; }
 .an-bar {
     height: 60px;
+    min-height: 60px;
     background: rgba(248,246,241,.96);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--cb-border);
     display: flex; align-items: center;
     padding: 0 28px; gap: 0;
+    box-sizing: border-box;
 }
 .an-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; margin-right: 32px; }
 .an-logo-img { width: 40px; height: 36px; object-fit: contain; display: block; }

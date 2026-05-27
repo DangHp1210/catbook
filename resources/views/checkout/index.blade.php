@@ -2,17 +2,15 @@
 
 @section('title', 'Thanh toán — CatBook')
 
-@section('content')
+@section('styles')
 <style>
-/* ─── 1. Design tokens (Đã chốt cứng màu dự phòng để luôn hiển thị đúng) ─── */
+/* ─── 1. Design tokens*/
 :root {
     --cb-bg:           var(--cb-brand-bg, #f8f6f1);
     --cb-border:       var(--cb-brand-border, #e8e3d8);
     --cb-text:         var(--cb-brand-text, #1a1a1a);
     --cb-muted:        var(--cb-brand-muted, #5a5a5a);
     --cb-white:        var(--cb-brand-white, #ffffff);
-    
-    /* Gom chung tên biến Accent (Màu xanh chủ đạo) cho dễ quản lý */
     --cb-accent:       var(--cb-brand-accent, #2d6a4f);
     --cb-accent-dark:  var(--cb-brand-accent-dark, #1b4332);
     --cb-accent-light: var(--cb-brand-accent-light, #d8f3dc);
@@ -166,7 +164,7 @@ html, body {
 }
 .ck-pay-icon-bk { background: var(--cb-accent); } /* Đổi sang màu thương hiệu */
 .ck-pay-icon-mm { background: #d63384; }          /* Hồng MoMo */
-.ck-pay-icon-vn { background: #c82333; }          /* Đỏ VNPay */
+.ck-pay-icon-vn { background: #1d2dde; }          /* Xanh VNPay */
 .ck-pay-icon-cod { background: var(--cb-muted); } /* Xám COD */
 
 .ck-pay-name {
@@ -258,6 +256,7 @@ html, body {
     color: var(--cb-muted); text-decoration: none; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     transition: border-color .2s, color .2s; width: 100%;
+    background: #ffffff;
 }
 .ck-btn-back:hover { border-color: var(--cb-text); color: var(--cb-text); }
 
@@ -296,7 +295,7 @@ html, body {
 .ck-item-title {
     font-family: var(--cb-sans); font-size: 13px; font-weight: 600;
     color: var(--cb-text); line-height: 1.4; margin-bottom: 5px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .ck-item-meta {
     display: flex; align-items: center; justify-content: space-between;
@@ -336,51 +335,12 @@ html, body {
     color: var(--cb-accent); letter-spacing: -.5px; line-height: 1;
 }
 
-/* ─── Progress steps ──────────────────────────────────── */
-.ck-steps {
-    display: flex; align-items: center; justify-content: center;
-    gap: 0; margin-bottom: 28px;
-}
-.ck-step {
-    display: flex; align-items: center; gap: 8px;
-    font-family: var(--cb-sans); font-size: 12px; font-weight: 500;
-}
-.ck-step-dot {
-    width: 26px; height: 26px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700;
-}
-.ck-step-dot.done  { background: var(--cb-accent-light); color: var(--cb-accent); }
-.ck-step-dot.active { background: var(--cb-accent); color: #fff; }
-.ck-step-dot.future { background: var(--cb-bg); border: 1.5px solid var(--cb-border); color: var(--cb-muted); }
-.ck-step-lbl.active { color: var(--cb-accent); font-weight: 600; }
-.ck-step-lbl.future { color: var(--cb-muted); }
-.ck-step-lbl.done   { color: var(--cb-accent); }
-.ck-step-line {
-    width: 48px; height: 1.5px; background: var(--cb-border); margin: 0 6px;
-}
-.ck-step-line.done { background: var(--cb-accent); }
 </style>
+@endsection
+
+@section('content')
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="ck-header">
-    {{-- Progress steps --}}
-    <div class="ck-steps">
-        <div class="ck-step">
-            <div class="ck-step-dot done">✓</div>
-            <span class="ck-step-lbl done">Giỏ hàng</span>
-        </div>
-        <div class="ck-step-line done"></div>
-        <div class="ck-step">
-            <div class="ck-step-dot active">2</div>
-            <span class="ck-step-lbl active">Thanh toán</span>
-        </div>
-        <div class="ck-step-line"></div>
-        <div class="ck-step">
-            <div class="ck-step-dot future">3</div>
-            <span class="ck-step-lbl future">Hoàn tất</span>
-        </div>
-    </div>
-
     <div class="ck-eyebrow">Đặt hàng</div>
     <h1 class="ck-heading">Xác nhận đơn hàng</h1>
 </div>
@@ -626,7 +586,9 @@ html, body {
     </aside>
 
 </div>{{-- /.ck-layout --}}
+@endsection
 
+@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const cards    = document.querySelectorAll('.ck-pay-card, .ck-cod-row');

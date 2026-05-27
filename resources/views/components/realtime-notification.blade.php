@@ -37,11 +37,11 @@
 <style>
 /* ─── Notification bell ───────────────────────────────── */
 :root {
-    --cb-bg:           var(--cb-brand-bg);
-    --cb-border:       var(--cb-brand-border);
-    --cb-text:         var(--cb-brand-text);
-    --cb-muted:        var(--cb-brand-muted);
-    --cb-white:        var(--cb-brand-white);
+    --cb-bg: var(--cb-brand-bg, #f8f6f1);
+    --cb-border: var(--cb-brand-border, #e8e3d8);
+    --cb-text: var(--cb-brand-text, #1a1a1a);
+    --cb-muted: var(--cb-brand-muted, #5a5a5a);
+    --cb-white: #ffffff;
     --cb-brand-accent:       #2d6a4f;
     --cb-brand-accent-dark:  #1b4332;
     --cb-brand-accent-light: #d8f3dc;

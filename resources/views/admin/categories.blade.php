@@ -1,7 +1,5 @@
 @extends('layouts.admin', ['title' => 'Quản lý danh mục'])
 
-@section('content')
-
 @php
     $q = $q ?? trim((string) request()->query('q', ''));
     $categories = $categories ?? collect();
@@ -26,17 +24,18 @@
     $editSelectedParent = $editSelectedParentId ? $allCategories->firstWhere('id', $editSelectedParentId) : null;
 @endphp
 
+@section('styles')
 <style>
 /* ─── Design tokens ───────────────────────────────────── */
 :root {
-    --cb-bg:           var(--cb-brand-bg);
-    --cb-border:       var(--cb-brand-border);
-    --cb-text:         var(--cb-brand-text);
-    --cb-muted:        var(--cb-brand-muted);
-    --cb-white:        var(--cb-brand-white);
-    --cb-accent:       var(--cb-brand-accent);
-    --cb-accent-dark:  var(--cb-brand-accent-dark);
-    --cb-accent-light: var(--cb-brand-accent-light);
+    --cb-bg: var(--cb-brand-bg, #f8f6f1);
+    --cb-border: var(--cb-brand-border, #e8e3d8);
+    --cb-text: var(--cb-brand-text, #1a1a1a);
+    --cb-muted: var(--cb-brand-muted, #5a5a5a);
+    --cb-white: #ffffff;
+    --cb-accent: var(--cb-brand-accent, #2d6a4f);
+    --cb-accent-dark: var(--cb-brand-accent-dark, #1b4332);
+    --cb-accent-light: var(--cb-brand-accent-light, #d8f3dc);
     --cb-serif:        'Playfair Display', Georgia, serif;
     --cb-sans:         'DM Sans', system-ui, sans-serif;
 }
@@ -316,7 +315,9 @@ html, body {
     font-family: var(--cb-sans); font-size: 11px; color: var(--cb-muted); margin-top: 4px;
 }
 </style>
+@endsection
 
+@section('content')
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="ca-header">
     <div>
@@ -626,7 +627,9 @@ html, body {
         </form>
     </div>
 </div>
+@endsection
 
+@section('scripts')
 {{-- ── JavaScript (logic giữ nguyên từ file gốc) ───────────── --}}
 <script>
 (function () {

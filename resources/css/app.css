@@ -56,6 +56,29 @@
     color: var(--cb-ink);
 }
 
+/* Shared flash alerts that auto-dismiss via resources/js/app.js */
+[data-flash] {
+    overflow: hidden;
+    transform-origin: top;
+    will-change: opacity, transform, max-height, margin, padding;
+    transition:
+        opacity .45s ease,
+        transform .45s ease,
+        max-height .45s ease,
+        margin .45s ease,
+        padding .45s ease;
+}
+
+[data-flash].cb-flash--closing {
+    opacity: 0;
+    transform: translateY(-8px);
+    max-height: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
 /* Critical navbar styles live here so they load in <head> and avoid first-paint flash. */
 .cb-navbar-shell { position: sticky; top: 0; z-index: 50; }
 .cb-nav {

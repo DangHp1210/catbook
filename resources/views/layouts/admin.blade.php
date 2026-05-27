@@ -24,7 +24,7 @@
             @endif
 
             @if(session('error'))
-                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" data-flash="error">
                     {{ session('error') }}
                 </div>
             @endif
@@ -43,5 +43,8 @@
             @yield('content')
         </section>
     </main>
+
+    @stack('scripts')
+    @yield('scripts')
 </body>
 </html>

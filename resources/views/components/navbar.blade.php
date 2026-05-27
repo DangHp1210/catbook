@@ -101,7 +101,6 @@ if (auth()->check()) {
     padding: 8px 18px;
     border-radius: 999px;
     border: 1.5px solid #e0dbd0;
-    /* Thêm fallback màu trắng và đen */
     background: var(--cb-white, #ffffff);
     color: var(--cb-text, #1a1a1a);
     cursor: pointer;
@@ -122,7 +121,6 @@ if (auth()->check()) {
     padding: 8px 20px;
     border-radius: 999px;
     border: none;
-    /* Thêm fallback màu đen (#1a1a1a) để nút không bao giờ bị trong suốt */
     background: var(--cb-text, #1a1a1a);
     color: #fff;
     cursor: pointer;
@@ -350,14 +348,10 @@ if (auth()->check()) {
                 @endauth
             </a>
 
-            @guest
-                {{-- Đang ở trang Login thì nút Login sẽ bôi đen (Solid) --}}
-                <a href="{{ route('login') }}" 
-                   class="{{ request()->routeIs('login') ? 'cb-btn-solid' : 'cb-btn-ghost' }}">
-                   Đăng nhập
+                @guest
+                <a href="{{ route('login') }}" class="cb-btn-ghost">
+                Đăng nhập
                 </a>
-                
-                {{-- Nút Đăng ký luôn nổi bật, hoặc đổi bôi đen nếu đang ở trang Register --}}
                 <a href="{{ route('register') }}" 
                    class="{{ request()->routeIs('register') ? 'cb-btn-solid' : 'cb-btn-solid' }}">
                    Đăng ký

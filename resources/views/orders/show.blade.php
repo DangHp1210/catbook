@@ -318,7 +318,7 @@ html, body {
     </div>
 @endif
 @if(session('error'))
-    <div class="os-flash os-flash-err">
+    <div class="os-flash os-flash-err" data-flash="error">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
         </svg>

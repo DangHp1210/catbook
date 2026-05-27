@@ -1,23 +1,43 @@
 import './bootstrap';
 
-// Auto-dismiss success flash messages: fade out after 5s and remove from DOM
+// Auto-dismiss flash messages: fade out, collapse smoothly, then remove from DOM.
 document.addEventListener('DOMContentLoaded', () => {
-	const flashes = document.querySelectorAll('[data-flash="success"]');
-	flashes.forEach(el => {
-		// ensure starting opacity and smooth transition
-		el.style.opacity = '1';
-		el.style.transition = 'opacity .45s ease';
+	const flashes = document.querySelectorAll('[data-flash]');
 
-		// schedule fade
-		setTimeout(() => {
-			el.style.opacity = '0';
-		}, 5000);
+	flashes.forEach((el) => {
+		const duration = Number(el.dataset.flashDuration || 4000);
+		const startHeight = el.scrollHeight;
+		let removed = false;
 
-		// remove after transition completes
-		el.addEventListener('transitionend', (ev) => {
-			if (ev.propertyName === 'opacity' && el.parentNode) {
-				el.remove();
+		el.style.maxHeight = `${startHeight}px`;
+
+		const removeFromDom = () => {
+			if (removed) return;
+			removed = true;
+			el.removeEventListener('transitionend', handleTransitionEnd);
+			el.remove();
+		};
+
+		const handleTransitionEnd = (event) => {
+			if (event.propertyName === 'max-height' || event.propertyName === 'opacity') {
+				removeFromDom();
 			}
-		});
+		};
+
+		const dismiss = () => {
+			if (removed) return;
+
+			// Freeze current height first so the collapse animates instead of jumping.
+			el.style.maxHeight = `${el.scrollHeight}px`;
+
+			requestAnimationFrame(() => {
+				el.classList.add('cb-flash--closing');
+				el.addEventListener('transitionend', handleTransitionEnd);
+			});
+
+			window.setTimeout(removeFromDom, 700);
+		};
+
+		window.setTimeout(dismiss, duration);
 	});
 });

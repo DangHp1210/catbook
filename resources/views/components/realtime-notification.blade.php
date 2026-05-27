@@ -69,7 +69,7 @@
     border-color: var(--cb-brand-accent);
     transform: translateY(-3px); 
 }
-.rn-bell svg { width: 22px; height: 22px; }
+.rn-bell svg { width: 23px; height: 23px; }
 
 /* Badge */
 .rn-badge {
@@ -89,7 +89,7 @@
 
 /* ─── Dropdown panel ──────────────────────────────────── */
 .rn-panel {
-    position: absolute; top: calc(100% + 10px); right: 0;
+    position: absolute; top: calc(100% + 10px); right: 0; margin-right: 6px;
     width: min(380px, calc(100vw - 24px));
     background: var(--cb-white); border: 1px solid var(--cb-border);
     border-radius: 20px; box-shadow: 0 20px 56px rgba(0,0,0,.13);
@@ -227,9 +227,11 @@
     padding: 10px 12px 14px;
     border-top: 1px solid var(--cb-border);
     display: flex; gap: 8px;
+    justify-content: flex-end; /* Đẩy nội dung sang bên phải */
+    gap: 8px;
 }
 .rn-foot-mark {
-    flex: 1; font-family: var(--cb-sans); font-size: 12px; font-weight: 500;
+    font-family: var(--cb-sans); font-size: 12px; font-weight: 500;
     padding: 9px 12px; border-radius: 9px;
     border: 1.5px solid var(--cb-border); background: transparent;
     color: var(--cb-muted); cursor: pointer; text-align: center;
@@ -254,7 +256,7 @@
     <button type="button" class="rn-bell" id="rn-bell"
             aria-label="Thông báo" aria-haspopup="dialog" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2.9-.6 1.3L4 17h5"/>
             <path d="M9.5 19a2.5 2.5 0 005 0"/>
         </svg>
@@ -365,7 +367,7 @@
 
         {{-- Footer --}}
         <div class="rn-foot">
-            <form method="POST" action="{{ route('notifications.mark_all') }}" style="flex:1;margin:0">
+            <form method="POST" action="{{ route('notifications.mark_all') }}" style="margin:0">
                 @csrf
                 <button type="submit" class="rn-foot-mark">
                     ✓ Đánh dấu đã đọc

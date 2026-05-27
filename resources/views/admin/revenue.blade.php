@@ -335,6 +335,7 @@ html, body {
 
 </div>
 @endsection
+
 @section('scripts')
 {{-- ── Chart.js ─────────────────────────────────────────── --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -446,5 +447,4 @@ document.querySelectorAll('.rv-bar-fill[data-width]').forEach(el => {
     el.style.width = el.dataset.width + '%';
 });
 </script>
-
 @endsection

@@ -442,7 +442,7 @@
                     <div class="cb-alert cb-alert-success" data-flash="success">{{ session('success') }}</div>
                 @endif
                 @if(session('error'))
-                    <div class="cb-alert cb-alert-error">{{ session('error') }}</div>
+                    <div class="cb-alert cb-alert-error" data-flash="error">{{ session('error') }}</div>
                 @endif
                 @if(session('info'))
                     <div class="cb-alert cb-alert-info">{{ session('info') }}</div>

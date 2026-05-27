@@ -517,7 +517,7 @@ html, body {
 </div>
 @endsection
 
-section('scripts')
+
 {{-- ── JavaScript (logic giữ nguyên) ──────────────────────── --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -580,5 +580,3 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
-@endsection

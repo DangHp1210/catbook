@@ -35,7 +35,7 @@ class HomeController extends Controller
             ->whereColumn('discount_price', '<', 'price')
             ->orderByRaw('(price - discount_price) DESC')
             ->orderByDesc('created_at')
-            ->limit(6)
+            ->limit(8)
             ->get();
 
         $cartCount = Auth::check()
@@ -46,6 +46,7 @@ class HomeController extends Controller
             'featuredBooks' => $bestSellers,
             'bestSellers' => $bestSellers,
             'newArrivals' => $newArrivals,
+            'newBooks' => $newArrivals,
             'discountBooks' => $discountBooks,
             'stats' => [
                 'books' => Book::count(),

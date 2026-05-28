@@ -4,18 +4,14 @@
     background: #ffffff;
     color: var(--cb-text);
     border-top: 1px solid #1e5131;
-    border-radius: 20px; /* Độ bo góc, bạn có thể chỉnh tăng/giảm (VD: 16px, 24px) */
-    border: 1px solid #e8e3d8; /* Đường viền mỏng đồng màu hệ thống CatBook */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); /* Đổ bóng cực kỳ nhẹ giúp footer nổi bật */
-    /* Giữ nguyên khoảng cách mỏng vừa chỉnh */
-    padding: 24px 20px 16px; 
-    /* Để các góc bo không bị lỗi lấn lề nếu bạn có dùng margin */
+    border-radius: 32px;
+    border: 1px solid #e8e3d8;
+    padding: 24px 20px 16px;
 }
 
 .cb-footer-top {
     display: grid; 
     grid-template-columns: 2fr 1fr 1fr; 
-    /* 2. Giảm khoảng cách giữa 3 cột và giảm lề dưới */
     gap: 24px; 
     max-width: 1270px; 
     margin: 0 auto 16px; 
@@ -29,7 +25,6 @@
 
 .cb-footer-logo {
     font-family: var(--cb-serif); 
-    /* 3. Thu nhỏ logo và khoảng cách dưới logo */
     font-size: 24px; 
     font-weight: 900;
     color: #000; 
@@ -38,7 +33,6 @@
 .cb-footer-logo span { color: var(--cb-brand-accent); }
 
 .cb-footer-desc { 
-    /* 4. Giảm cỡ chữ mô tả và khoảng cách */
     font-size: 13px; 
     line-height: 1.5; 
     color: #202221; 
@@ -47,13 +41,12 @@
 
 .cb-footer-contact p {
     margin: 0 0 6px; 
-    font-size: 13px; /* Thu nhỏ chữ liên hệ */
+    font-size: 13px;
     display: flex; align-items: center; gap: 8px;
 }
 
 .cb-footer-heading {
     color: #1d1c1c; 
-    /* 5. Thu nhỏ tiêu đề các cột */
     font-size: 14px; 
     font-weight: 700;
     text-transform: uppercase; 
@@ -63,7 +56,6 @@
 
 .cb-footer-links { 
     display: flex; flex-direction: column; 
-    /* 6. Giảm khoảng cách giữa các đường link */
     gap: 8px; 
 }
 .cb-footer-links a {
@@ -75,9 +67,8 @@
 .cb-footer-bottom {
     display: flex; align-items: center; justify-content: space-between;
     max-width: 1270px; margin: 0 auto;
-    /* 7. Thu nhỏ chữ phần bản quyền và thêm đường kẻ mờ ngăn cách */
     font-size: 12px; 
-    color: #555; 
+    color: #323232; 
     flex-wrap: wrap; gap: 16px;
     padding-top: 12px;
     border-top: 1px solid rgba(0, 0, 0, 0.05);

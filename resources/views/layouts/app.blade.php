@@ -37,6 +37,8 @@
 
 <x-footer />
 
+<x-chatbot />
+
 @stack('scripts')
 @yield('scripts')
 

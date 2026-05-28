@@ -329,7 +329,7 @@ html,body {
     </div>
 
     <div class="cb-books-grid">
-        @forelse($newBooks ?? [] as $book)
+        @forelse(collect($newBooks ?? [])->take(4) as $book)
             @php
                 $cover = null;
                 if (!empty($book->cover_image)) {
@@ -394,7 +394,7 @@ html,body {
     </div>
 
     <div class="cb-books-grid">
-        @forelse($discountBooks ?? [] as $book)
+        @forelse(collect($discountBooks ?? [])->take(8) as $book)
             @php
                 $cover = null;
                 if (!empty($book->cover_image)) {
@@ -449,30 +449,10 @@ html,body {
 
 {{-- Footer is now rendered site-wide in layouts.app; removed duplicate here. --}}
 
-{{-- ══════════════════════════════════════════════════
-     CHATBOT FAB
-══════════════════════════════════════════════════ --}}
-<button id="chat-fab" class="cb-chat-fab" title="Mở trợ lý AI" aria-label="Mở chatbot">
-    <span class="cb-chat-fab-tooltip">Trợ lý AI CatBook</span>
-    <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-    </svg>
-    <span class="cb-chat-fab-dot"></span>
-</button>
 @endsection
 
 @section('scripts')
-{{-- ══════════════════════════════════════════════════
-     SCRIPTS
-══════════════════════════════════════════════════ --}}
 <script>
-/* ── Chatbot triggers ─────────────────────────────────── */
-function openChatbot() {
-    const toggle = document.getElementById('chat-toggle-btn');
-    if (toggle) toggle.click();
-}
-document.getElementById('chat-fab')?.addEventListener('click', openChatbot);
-
 /* ── Add to cart ──────────────────────────────────────── */
 function submitAddToCart(event, actionUrl) {
     event.preventDefault();

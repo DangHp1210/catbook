@@ -21,6 +21,13 @@ class ChatMessage extends Model
         'related_book_id',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+        ];
+    }
+
     public function session(): BelongsTo
     {
         return $this->belongsTo(ChatSession::class, 'session_id');

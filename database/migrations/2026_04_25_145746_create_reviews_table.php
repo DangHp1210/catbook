@@ -34,7 +34,9 @@ return new class extends Migration
             $table->unique(['user_id', 'book_id'], 'uk_review_user_book');
         });
 
-        DB::statement('ALTER TABLE reviews ADD CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)');
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE reviews ADD CONSTRAINT chk_reviews_rating CHECK (rating BETWEEN 1 AND 5)');
+        }
     }
 
     /**

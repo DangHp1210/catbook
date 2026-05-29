@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Book;
+use App\Models\Author;
+use App\Models\Category;
 use App\Models\ChatAiLog;
 use App\Models\ChatMessage;
 use App\Models\ChatSession;
@@ -10,11 +12,25 @@ use App\Models\Order;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Http;
+use App\Services\ChatbotProviders\ProviderFactory;
+use App\Services\ChatbotProviders\ProviderInterface;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use Throwable;
 
 class ChatBotService
 {
+    private ProviderInterface $defaultProvider;
+    private ProviderFactory $providerFactory;
+    private Container $container;
+
+    public function __construct(ProviderInterface $defaultProvider, ProviderFactory $providerFactory, Container $container)
+    {
+        $this->defaultProvider = $defaultProvider;
+        $this->providerFactory = $providerFactory;
+        $this->container = $container;
+    }
+
     public function history(?User $user, ?string $sessionToken): array
     {
         $session = $this->resolveSession($user, $sessionToken);
@@ -149,7 +165,11 @@ class ChatBotService
     {
         $orderCode = $this->extractOrderCode($message);
         $intent = $this->detectIntent($message);
-        $books = $this->findBooksForQuery($message);
+        $category = $this->detectCategory($message);
+        $author = $this->detectAuthor($message);
+        $priceRange = $this->extractPriceFilter($message);
+
+        $books = $this->searchBooks($message, $category, $author, $priceRange);
         $recommendations = $books->take(4)->values();
         $order = null;
 
@@ -160,6 +180,9 @@ class ChatBotService
         return [
             'order_code' => $orderCode,
             'intent' => $intent,
+            'category' => $category,
+            'author' => $author,
+            'price_range' => $priceRange,
             'books' => $books,
             'recommendations' => $recommendations,
             'order' => $order,
@@ -215,7 +238,59 @@ class ChatBotService
         return $query->first();
     }
 
-    private function findBooksForQuery(string $message): EloquentCollection
+    private function searchBooks(string $message, ?Category $category, ?Author $author, ?array $priceRange): EloquentCollection
+    {
+        $query = Book::query()
+            ->with(['authors:id,name', 'categories:id,name'])
+            ->where('status', 'available');
+
+        if ($category) {
+            return $this->searchByCategory($query, $category);
+        }
+
+        if ($author) {
+            return $this->searchByAuthor($query, $author, $priceRange);
+        }
+
+        if ($priceRange !== null) {
+            return $this->searchByPrice($query, $priceRange);
+        }
+
+        return $this->searchByKeyword($query, $message);
+    }
+
+    private function searchByCategory($query, Category $category): EloquentCollection
+    {
+        return $this->applyRanking(
+            $query
+            ->whereHas('categories', function ($categoryQuery) use ($category): void {
+                $categoryQuery->whereKey($category->id);
+            })
+        );
+    }
+
+    private function searchByAuthor($query, Author $author, ?array $priceRange): EloquentCollection
+    {
+        if ($priceRange !== null) {
+            $this->applyPriceRange($query, $priceRange);
+        }
+
+        return $this->applyRanking(
+            $query
+            ->whereHas('authors', function ($authorQuery) use ($author): void {
+                $authorQuery->whereKey($author->id);
+            })
+        );
+    }
+
+    private function searchByPrice($query, array $priceRange): EloquentCollection
+    {
+        $this->applyPriceRange($query, $priceRange);
+
+        return $this->applyRanking($query);
+    }
+
+    private function searchByKeyword($query, string $message): EloquentCollection
     {
         $terms = collect(preg_split('/[^\pL\pN]+/u', Str::lower($message)) ?: [])
             ->map(fn ($term) => trim((string) $term))
@@ -224,12 +299,14 @@ class ChatBotService
             ->values()
             ->take(6);
 
-        $query = Book::query()
-            ->with(['authors:id,name', 'categories:id,name'])
-            ->where('status', 'available');
-
         if ($terms->isEmpty()) {
-            return $query->latest()->limit(6)->get();
+            return $query
+                ->withCount('orderItems')
+                ->orderByDesc('order_items_count')
+                ->orderByDesc('stock_quantity')
+                ->orderByDesc('created_at')
+                ->limit(6)
+                ->get();
         }
 
         $query->where(function ($builder) use ($terms): void {
@@ -246,7 +323,163 @@ class ChatBotService
             }
         });
 
-        return $query->latest()->limit(6)->get();
+        return $this->applyRanking($query);
+    }
+
+    private function applyRanking($query): EloquentCollection
+    {
+        return $query
+            ->withSum('orderItems', 'quantity')
+            ->orderByDesc('order_items_sum_quantity')
+            ->orderByDesc('stock_quantity')
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get();
+    }
+
+    private function detectCategory(string $message): ?Category
+    {
+        $normalizedMessage = $this->normalizeText($message);
+
+        $categories = Category::query()
+            ->select(['id', 'name', 'slug'])
+            ->get()
+            ->sortByDesc(fn (Category $category): int => mb_strlen($this->normalizeText($category->name)))
+            ->values();
+
+        foreach ($categories as $category) {
+            $categoryName = $this->normalizeText($category->name);
+            $categorySlug = $this->normalizeText($category->slug);
+
+            if ($categoryName !== '' && $this->containsWholePhrase($normalizedMessage, $categoryName)) {
+                return $category;
+            }
+
+            if ($categorySlug !== '' && $this->containsWholePhrase($normalizedMessage, $categorySlug)) {
+                return $category;
+            }
+        }
+
+        return null;
+    }
+
+    private function detectAuthor(string $message): ?Author
+    {
+        $normalizedMessage = $this->normalizeText($message);
+
+        $authors = Author::query()
+            ->select(['id', 'name'])
+            ->get()
+            ->sortByDesc(fn (Author $author): int => mb_strlen($this->normalizeText($author->name)))
+            ->values();
+
+        foreach ($authors as $author) {
+            $authorName = $this->normalizeText($author->name);
+
+            if ($authorName !== '' && $this->containsWholePhrase($normalizedMessage, $authorName)) {
+                return $author;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractPriceFilter(string $message): ?array
+    {
+        $normalized = $this->normalizeText($message);
+
+        if (preg_match('/\b(?:gia re|re|cheap|budget)\b/u', $normalized)) {
+            return ['min' => null, 'max' => 100000];
+        }
+
+        if (preg_match('/\b(?:tu|from)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\s*(?:den|toi|to|and|-|~)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $rangeMatches)) {
+            return [
+                'min' => $this->parsePriceAmount($rangeMatches[1], $rangeMatches[2] ?? null),
+                'max' => $this->parsePriceAmount($rangeMatches[3], $rangeMatches[4] ?? null),
+            ];
+        }
+
+        if (preg_match('/\b(?:khoang|gan|quanh|around|about)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $exactMatches)) {
+            $target = $this->parsePriceAmount($exactMatches[1], $exactMatches[2] ?? null);
+            $delta = max(10000, (int) round($target * 0.1));
+
+            return [
+                'min' => max(0, $target - $delta),
+                'max' => $target + $delta,
+            ];
+        }
+
+        if (preg_match('/\b(?:duoi|duoi|duoi|toi da|max|under|less than)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $matches)) {
+            return [
+                'min' => null,
+                'max' => $this->parsePriceAmount($matches[1], $matches[2] ?? null),
+            ];
+        }
+
+        if (preg_match('/\b(\d+[\d\.,]*)(k|nghin|ngan)?\s*(?:tro len|len tro|plus|or more|\+)\b/u', $normalized, $matches)) {
+            return [
+                'min' => $this->parsePriceAmount($matches[1], $matches[2] ?? null),
+                'max' => null,
+            ];
+        }
+
+        if (preg_match('/\b(?:tren|trên|tu|from|over|above)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $matches)) {
+            return [
+                'min' => $this->parsePriceAmount($matches[1], $matches[2] ?? null),
+                'max' => null,
+            ];
+        }
+
+        return null;
+    }
+
+    private function applyPriceRange($query, array $priceRange): void
+    {
+        $query->where(function ($builder) use ($priceRange): void {
+            $priceExpression = 'COALESCE(discount_price, price)';
+
+            if (($priceRange['min'] ?? null) !== null) {
+                $builder->whereRaw("{$priceExpression} >= ?", [(int) $priceRange['min']]);
+            }
+
+            if (($priceRange['max'] ?? null) !== null) {
+                $builder->whereRaw("{$priceExpression} <= ?", [(int) $priceRange['max']]);
+            }
+        });
+    }
+
+    private function parsePriceValue(string $value): int
+    {
+        return (int) preg_replace('/[^0-9]/', '', $value);
+    }
+
+    private function parsePriceAmount(string $value, ?string $suffix = null): int
+    {
+        $amount = $this->parsePriceValue($value);
+        $normalizedSuffix = Str::lower((string) $suffix);
+
+        if ($normalizedSuffix !== '' || $amount < 1000) {
+            return $amount * 1000;
+        }
+
+        return $amount;
+    }
+
+    private function normalizeText(string $value): string
+    {
+        $value = Str::of($value)->ascii()->lower()->toString();
+        $value = preg_replace('/[^a-z0-9\s]+/u', ' ', $value) ?? $value;
+
+        return trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
+    }
+
+    private function containsWholePhrase(string $haystack, string $needle): bool
+    {
+        if ($needle === '') {
+            return false;
+        }
+
+        return preg_match('/(^|\s)'.preg_quote($needle, '/').'($|\s)/u', $haystack) === 1;
     }
 
     private function generateReply(?User $user, string $message, array $context): array
@@ -262,93 +495,58 @@ class ChatBotService
 
     private function providerReply(?User $user, string $message, array $context): array
     {
-        if (config('services.gemini.key')) {
-            return $this->geminiReply($user, $message, $context);
+        $providers = $this->providerFactory->availableProviders();
+
+        if (empty($providers)) {
+            throw new \RuntimeException('No AI providers configured');
         }
 
-        return $this->openAiReply($user, $message, $context);
-    }
+        // Build a detailed prompt for provider (includes catalog and order context)
+        $prompt = $this->buildPrompt($user, $message, $context);
 
-    private function geminiReply(?User $user, string $message, array $context): array
-    {
-        $model = config('services.gemini.model', 'gemini-1.5-flash');
-        $apiKey = config('services.gemini.key');
-        $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
+        $lastException = null;
 
-        $payload = [
-            'contents' => [[
-                'role' => 'user',
-                'parts' => [[
-                    'text' => $this->buildPrompt($user, $message, $context),
-                ]],
-            ]],
-            'generationConfig' => [
-                'temperature' => 0.6,
-                'maxOutputTokens' => 500,
-            ],
-        ];
+        // Try the default provider from the container first
+        try {
+            $reply = $this->defaultProvider->reply($user, $prompt, $context);
+            $reply['suggestions'] = $reply['suggestions'] ?? $this->buildSuggestions($context);
+            $reply['intent'] = $reply['intent'] ?? $context['intent'] ?? 'general';
 
-        $response = Http::timeout(25)->post($endpoint.'?key='.$apiKey, $payload);
-
-        if (! $response->successful()) {
-            throw new \RuntimeException('Gemini request failed with status '.$response->status());
+            return $reply;
+        } catch (\Throwable $e) {
+            report($e);
+            $lastException = $e;
+            // continue to fallback providers
         }
 
-        $text = data_get($response->json(), 'candidates.0.content.parts.0.text');
-        $text = is_string($text) ? trim($text) : '';
+        // Fallback chain: try providers from ProviderFactory in order, skipping the default provider class
+        $defaultClass = get_class($this->defaultProvider);
 
-        if ($text === '') {
-            throw new \RuntimeException('Gemini returned an empty response');
+        foreach ($providers as $providerClass) {
+            // providerFactory returns class names; skip the default class to avoid retrying it
+            if ($providerClass === $defaultClass) {
+                continue;
+            }
+
+            try {
+                $provider = $this->container->make($providerClass);
+                if (! $provider instanceof ProviderInterface) {
+                    continue;
+                }
+
+                $reply = $provider->reply($user, $prompt, $context);
+                $reply['suggestions'] = $reply['suggestions'] ?? $this->buildSuggestions($context);
+                $reply['intent'] = $reply['intent'] ?? $context['intent'] ?? 'general';
+
+                return $reply;
+            } catch (\Throwable $e) {
+                report($e);
+                $lastException = $e;
+                continue;
+            }
         }
 
-        return [
-            'text' => $text,
-            'model_name' => 'gemini:'.$model,
-            'prompt_tokens' => 0,
-            'completion_tokens' => 0,
-            'intent' => $context['intent'],
-            'suggestions' => $this->buildSuggestions($context),
-        ];
-    }
-
-    private function openAiReply(?User $user, string $message, array $context): array
-    {
-        $model = config('services.openai.model', 'gpt-4o-mini');
-        $baseUri = rtrim((string) config('services.openai.base_uri', 'https://api.openai.com/v1'), '/');
-        $apiKey = config('services.openai.key');
-
-        $payload = [
-            'model' => $model,
-            'messages' => [
-                ['role' => 'system', 'content' => $this->systemPrompt()],
-                ['role' => 'user', 'content' => $this->buildPrompt($user, $message, $context)],
-            ],
-            'temperature' => 0.6,
-        ];
-
-        $response = Http::timeout(25)
-            ->withToken($apiKey)
-            ->post($baseUri.'/chat/completions', $payload);
-
-        if (! $response->successful()) {
-            throw new \RuntimeException('OpenAI request failed with status '.$response->status());
-        }
-
-        $text = data_get($response->json(), 'choices.0.message.content');
-        $text = is_string($text) ? trim($text) : '';
-
-        if ($text === '') {
-            throw new \RuntimeException('OpenAI returned an empty response');
-        }
-
-        return [
-            'text' => $text,
-            'model_name' => 'openai:'.$model,
-            'prompt_tokens' => (int) data_get($response->json(), 'usage.prompt_tokens', 0),
-            'completion_tokens' => (int) data_get($response->json(), 'usage.completion_tokens', 0),
-            'intent' => $context['intent'],
-            'suggestions' => $this->buildSuggestions($context),
-        ];
+        throw $lastException ?? new \RuntimeException('All providers failed');
     }
 
     private function fallbackReply(?User $user, string $message, array $context): array
@@ -453,6 +651,18 @@ class ChatBotService
     {
         $recommendations = $context['recommendations'];
         $order = $context['order'];
+        $category = $context['category'];
+        $author = $context['author'];
+        $priceRange = $context['price_range'];
+        $categoryLine = $category ? 'Thể loại đã nhận diện: '.$category->name : 'Thể loại đã nhận diện: chưa có';
+        $authorLine = $author ? 'Tác giả đã nhận diện: '.$author->name : 'Tác giả đã nhận diện: chưa có';
+        $priceLine = 'Khoảng giá đã nhận diện: chưa có';
+
+        if ($priceRange !== null) {
+            $minText = $priceRange['min'] !== null ? number_format((int) $priceRange['min'], 0, ',', '.') : '...';
+            $maxText = $priceRange['max'] !== null ? number_format((int) $priceRange['max'], 0, ',', '.') : '...';
+            $priceLine = "Khoảng giá đã nhận diện: {$minText} - {$maxText}đ";
+        }
 
         $bookContext = $recommendations->map(function (Book $book): string {
             $authors = $book->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật';
@@ -486,6 +696,7 @@ class ChatBotService
 
 Quy tắc:
     - Chỉ gợi ý sách có trong danh sách trên.
+    - Nếu user hỏi theo thể loại thì chỉ trả sách thuộc đúng category đó.
     - Luôn kèm link dạng /catalog/book/{slug} khi đề cập sách.
     - Trả lời ngắn gọn, thân thiện, không quá 300 từ.
     - Không bịa đặt thông tin sách hay tác giả.
@@ -497,6 +708,10 @@ Quy tắc:
 
 Thông tin người dùng:
 - Trạng thái: {$userLabel}
+
+{$categoryLine}
+{$authorLine}
+{$priceLine}
 
 Ngữ cảnh đơn hàng:
 {$orderContext}
@@ -513,7 +728,7 @@ PROMPT);
 
     private function systemPrompt(): string
     {
-        return 'Bạn là trợ lý sách AI của CatBook. Chỉ trả lời bằng tiếng Việt, chỉ dựa trên dữ liệu sách và đơn hàng được cung cấp, luôn ngắn gọn, thân thiện, không bịa đặt thông tin, và luôn kèm link /catalog/book/{slug} khi nhắc đến sách.';
+        return 'Bạn là trợ lý sách AI của CatBook. Chỉ trả lời bằng tiếng Việt, chỉ dựa trên dữ liệu sách và đơn hàng được cung cấp, luôn ngắn gọn, thân thiện, không bịa đặt thông tin, và luôn kèm link /catalog/book/{slug} khi nhắc đến sách. Nếu user hỏi theo thể loại thì chỉ trả sách thuộc đúng category đó.';
     }
 
     private function buildSuggestions(array $context): array
@@ -523,7 +738,8 @@ PROMPT);
         return $recommendations->take(4)->values()->map(function (Book $book): array {
             return [
                 'title' => $book->title,
-                'url' => route('catalog.book', $book->slug),
+                // return a relative path (e.g. /sach/{slug}) so frontend can display consistent catalog links
+                'url' => parse_url(route('catalog.book', $book->slug), PHP_URL_PATH),
                 'price' => (float) ($book->discount_price ?? $book->price),
                 'stock_quantity' => (int) $book->stock_quantity,
             ];

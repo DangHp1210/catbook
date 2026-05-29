@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/chatbot/session', [ChatBotController::class, 'session'])->name('chatbot.session');
-Route::post('/chatbot/message', [ChatBotController::class, 'message'])->name('chatbot.message');
+Route::get('/chatbot/session', [ChatBotController::class, 'session'])->name('chatbot.session')->middleware('throttle:60,1');
+Route::post('/chatbot/message', [ChatBotController::class, 'message'])->name('chatbot.message')->middleware('throttle:30,1');
 Route::get('/danh-muc', [CatalogController::class, 'categories'])->name('catalog.categories');
 Route::get('/danh-muc/{parent}/{child}', [CatalogController::class, 'categories'])->name('catalog.categories.child');
 Route::get('/danh-muc/{category:slug}', [CatalogController::class, 'category'])->name('catalog.category');

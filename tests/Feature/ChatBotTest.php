@@ -2,33 +2,57 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\ChatSession;
 use App\Services\ChatBotService;
-use Mockery;
+use App\Services\ChatbotProviders\GeminiProvider;
+use App\Services\ChatbotProviders\OpenAiProvider;
+use App\Services\ChatbotProviders\ProviderFactory;
+use App\Services\ChatbotProviders\ProviderInterface;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Mockery;
 use Tests\TestCase;
 
 class ChatBotTest extends TestCase
 {
-    public function test_guest_chatbot_message_endpoint_delegates_to_service(): void
+    use RefreshDatabase;
+
+    protected function setUp(): void
     {
-        $service = Mockery::mock(ChatBotService::class);
-        $service->shouldReceive('sendMessage')
+        parent::setUp();
+
+        Http::fake();
+        Http::preventStrayRequests();
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+
+        parent::tearDown();
+    }
+
+    public function test_guest_session_message_endpoint_returns_expected_response_structure(): void
+    {
+        $defaultProvider = Mockery::mock(ProviderInterface::class);
+        $defaultProvider->shouldReceive('reply')
             ->once()
-            ->with(null, 'guest-session-1', 'gợi ý sách kinh doanh')
             ->andReturn([
-                'session_token' => 'guest-session-1',
-                'session_title' => 'gợi ý sách kinh doanh',
-                'messages' => [
-                    ['sender_type' => 'user', 'message_text' => 'gợi ý sách kinh doanh'],
-                    ['sender_type' => 'bot', 'message_text' => 'Mình gợi ý một số sách phù hợp.'],
-                ],
-                'reply' => 'Mình gợi ý một số sách phù hợp.',
+                'text' => 'Mình gợi ý một số sách phù hợp.',
+                'model_name' => 'gemini-test',
+                'prompt_tokens' => 10,
+                'completion_tokens' => 20,
+                'intent' => 'recommendation',
                 'suggestions' => [],
-                'detected_intent' => 'recommendation',
             ]);
 
-        $this->app->instance(ChatBotService::class, $service);
+        $factory = Mockery::mock(ProviderFactory::class);
+        $factory->shouldReceive('availableProviders')->andReturn([GeminiProvider::class, OpenAiProvider::class]);
+
+        $this->app->instance(ProviderInterface::class, $defaultProvider);
+        $this->app->instance(ProviderFactory::class, $factory);
+        $this->app->forgetInstance(ChatBotService::class);
 
         $response = $this->postJson(route('chatbot.message'), [
             'session_token' => 'guest-session-1',
@@ -41,47 +65,74 @@ class ChatBotTest extends TestCase
         $response->assertJsonStructure([
             'ok',
             'session_token',
-            'messages',
+            'session_title',
+            'messages' => [
+                '*' => [
+                    'id',
+                    'sender_type',
+                    'message_text',
+                    'message_type',
+                    'created_at',
+                    'related_book',
+                ],
+            ],
             'reply',
             'suggestions',
             'detected_intent',
         ]);
+
+        $this->assertDatabaseHas('chat_sessions', [
+            'session_token' => 'guest-session-1',
+            'user_id' => null,
+        ]);
+
+        $this->assertCount(2, ChatSession::where('session_token', 'guest-session-1')->firstOrFail()->messages);
     }
 
-    public function test_authenticated_user_session_endpoint_delegates_to_service(): void
+    public function test_session_endpoint_returns_history_for_guest_session(): void
     {
-        $user = new User([
-            'full_name' => 'Nguyen Van A',
-            'email' => 'a@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'customer',
-            'status' => 'active',
-        ]);
-        $user->setAttribute('id', 1);
-
-        $service = Mockery::mock(ChatBotService::class);
-        $service->shouldReceive('history')
+        $defaultProvider = Mockery::mock(ProviderInterface::class);
+        $defaultProvider->shouldReceive('reply')
             ->once()
-            ->withArgs(function ($passedUser, $sessionToken) use ($user) {
-                return $passedUser instanceof User
-                    && $passedUser->email === $user->email
-                    && $sessionToken === 'auth-session-1';
-            })
             ->andReturn([
-                'session_token' => 'auth-session-1',
-                'session_title' => 'Tra cứu đơn',
-                'messages' => [],
+                'text' => 'Mình có thể giúp bạn tìm sách.',
+                'model_name' => 'gemini-test',
+                'prompt_tokens' => 1,
+                'completion_tokens' => 1,
+                'intent' => 'catalog_search',
+                'suggestions' => [],
             ]);
 
-        $this->app->instance(ChatBotService::class, $service);
+        $factory = Mockery::mock(ProviderFactory::class);
+        $factory->shouldReceive('availableProviders')->andReturn([GeminiProvider::class, OpenAiProvider::class]);
 
-        $this->actingAs($user)
-            ->getJson(route('chatbot.session', [
-                'session_token' => 'auth-session-1',
-            ]))
+        $this->app->instance(ProviderInterface::class, $defaultProvider);
+        $this->app->instance(ProviderFactory::class, $factory);
+        $this->app->forgetInstance(ChatBotService::class);
+
+        $this->postJson(route('chatbot.message'), [
+            'session_token' => 'guest-session-2',
+            'message' => 'xin chào',
+        ])->assertOk();
+
+        $this->getJson(route('chatbot.session', ['session_token' => 'guest-session-2']))
             ->assertOk()
-            ->assertJsonFragment([
-                'session_token' => 'auth-session-1',
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('session_token', 'guest-session-2')
+            ->assertJsonStructure([
+                'ok',
+                'session_token',
+                'session_title',
+                'messages' => [
+                    '*' => [
+                        'id',
+                        'sender_type',
+                        'message_text',
+                        'message_type',
+                        'created_at',
+                        'related_book',
+                    ],
+                ],
             ]);
     }
 }

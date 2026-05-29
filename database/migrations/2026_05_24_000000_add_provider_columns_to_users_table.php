@@ -22,14 +22,7 @@ return new class extends Migration
             }
         });
 
-        $hasUniqueIndex = collect(DB::select('SHOW INDEX FROM users'))
-            ->contains(fn ($index) => ($index->Key_name ?? null) === 'users_provider_provider_id_unique');
-
-        if (! $hasUniqueIndex) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->unique(['provider', 'provider_id']);
-            });
-        }
+        // The unique constraint is already created by the earlier social-login migration.
     }
 
     /**

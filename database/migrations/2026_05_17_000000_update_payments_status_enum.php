@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // MySQL: Modify enum to include 'completed' and keep existing values
-        DB::statement("ALTER TABLE payments MODIFY status ENUM('pending', 'success', 'completed', 'failed', 'cancelled') DEFAULT 'pending'");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            // MySQL: Modify enum to include 'completed' and keep existing values
+            DB::statement("ALTER TABLE payments MODIFY status ENUM('pending', 'success', 'completed', 'failed', 'cancelled') DEFAULT 'pending'");
+        }
     }
 
     /**
@@ -21,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE payments MODIFY status ENUM('pending', 'success', 'failed') DEFAULT 'pending'");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE payments MODIFY status ENUM('pending', 'success', 'failed') DEFAULT 'pending'");
+        }
     }
 };

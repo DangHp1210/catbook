@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -10,7 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE books CHANGE book_format books_format VARCHAR(255) NULL');
+        Schema::table('books', function (Blueprint $table): void {
+            $table->renameColumn('book_format', 'books_format');
+        });
     }
 
     /**
@@ -18,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE books CHANGE books_format book_format VARCHAR(255) NULL');
+        Schema::table('books', function (Blueprint $table): void {
+            $table->renameColumn('books_format', 'book_format');
+        });
     }
 };

@@ -43,6 +43,31 @@ class ChatBotService
         ];
     }
 
+    public function clearHistory(?User $user, ?string $sessionToken): void
+    {
+        $token = trim((string) $sessionToken);
+
+        if ($token === '') {
+            return;
+        }
+
+        $query = ChatSession::query()->where('session_token', $token);
+
+        if ($user) {
+            $query->where(function ($builder) use ($user): void {
+                $builder->whereNull('user_id')->orWhere('user_id', $user->id);
+            });
+        }
+
+        $session = $query->first();
+
+        if (! $session) {
+            return;
+        }
+
+        $session->delete();
+    }
+
     public function sendMessage(?User $user, ?string $sessionToken, string $message): array
     {
         $cleanMessage = Str::squish($message);

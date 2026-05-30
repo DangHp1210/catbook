@@ -1,6 +1,7 @@
 @php
     $chatbotSessionUrl = route('chatbot.session');
     $chatbotMessageUrl = route('chatbot.message');
+    $chatbotClearUrl = route('chatbot.clear');
 @endphp
 
 <style>
@@ -55,7 +56,7 @@
 
 /* ─── Chat panel ──────────────────────────────────────── */
 .cb-chatbot-panel {
-    position: absolute; right: 24px; bottom: calc(100% + 28px);
+    position: absolute; right: 24px; bottom: calc(100% + 34px);
     width: min(320px, calc(100vw - 24px));
     height: min(480px, calc(100vh - 100px));
     border-radius: 20px; overflow: hidden;
@@ -111,6 +112,7 @@
 }
 .cb-chatbot-close:hover { border-color: var(--cb-text); color: var(--cb-text); }
 .cb-chatbot-close svg { width: 14px; height: 14px; }
+
 
 /* ─── Messages area ───────────────────────────────────── */
 .cb-chatbot-messages {
@@ -261,7 +263,8 @@
 <div class="cb-chatbot-shell"
      data-chatbot
      data-chatbot-session-url="{{ $chatbotSessionUrl }}"
-     data-chatbot-message-url="{{ $chatbotMessageUrl }}">
+    data-chatbot-message-url="{{ $chatbotMessageUrl }}"
+    data-chatbot-clear-url="{{ $chatbotClearUrl }}">
 
     {{-- ── Chat panel ──────────────────────────────────── --}}
     <div class="cb-chatbot-panel" data-chatbot-panel
@@ -272,10 +275,8 @@
             <div class="cb-chatbot-head-row">
                 <div class="cb-chatbot-head-left">
                     <div class="cb-chatbot-avatar" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                        </svg>
-                    </div>
+                    <img src="{{ asset('images/avatarcatbot.png') }}" alt="Bot Avatar" style="width: 36px; height: 36px; object-fit: contain;">
+                </div>
                     <div>
                         <h3 class="cb-chatbot-title">CatBook AI</h3>
                         <p class="cb-chatbot-subtitle">
@@ -284,13 +285,22 @@
                         </p>
                     </div>
                 </div>
-                <button type="button" class="cb-chatbot-close"
-                        data-chatbot-close aria-label="Đóng chat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
+                <div style="display:flex;align-items:center;gap:6px">
+                    <button type="button" class="cb-chatbot-close cb-chatbot-close--new"
+                            data-chatbot-new aria-label="Cuộc trò chuyện mới" title="Cuộc trò chuyện mới">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                    <button type="button" class="cb-chatbot-close"
+                            data-chatbot-close aria-label="Đóng chat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -351,11 +361,13 @@
 
     const sessionUrl = root.dataset.chatbotSessionUrl;
     const messageUrl = root.dataset.chatbotMessageUrl;
+    const clearUrl   = root.dataset.chatbotClearUrl;
     const panel      = root.querySelector('[data-chatbot-panel]');
     const toggle     = root.querySelector('[data-chatbot-toggle]');
     const closeBtn   = root.querySelector('[data-chatbot-close]');
+    const newBtn     = root.querySelector('[data-chatbot-new]');
     const messagesEl = root.querySelector('[data-chatbot-messages]');
-    const emptyEl    = root.querySelector('[data-chatbot-empty]');
+    let emptyEl      = root.querySelector('[data-chatbot-empty]');
     const form       = root.querySelector('[data-chatbot-form]');
     const input      = root.querySelector('[data-chatbot-input]');
     const sendBtn    = root.querySelector('[data-chatbot-send]');
@@ -379,6 +391,29 @@
     const money = v => new Intl.NumberFormat('vi-VN').format(Number(v||0)) + 'đ';
     const scrollEnd = () => requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
 
+    const renderEmptyState = () => {
+        messagesEl.innerHTML = `
+            <div class="cb-chatbot-empty" data-chatbot-empty>
+                <div class="cb-chatbot-empty-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                </div>
+                <p class="cb-chatbot-empty-title">Xin chào! Mình là CatBook AI</p>
+                <p>Mình có thể gợi ý sách, tìm sách theo ngân sách và hỗ trợ bạn trong lúc mua hàng.</p>
+                <div class="cb-bot-chips">
+                    <button type="button" class="cb-bot-chip" data-quick="Gợi ý sách hay dưới 150k">Sách dưới 150k</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Sách tâm lý học bán chạy">Tâm lý học</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Sách kinh doanh cho người mới">Kinh doanh</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Kiểm tra đơn hàng của tôi">Tra đơn hàng</button>
+                </div>
+            </div>`;
+        emptyEl = root.querySelector('[data-chatbot-empty]');
+        messagesEl.dataset.loaded = '0';
+        scrollEnd();
+    };
+
     const setOpen = open => {
         panel.classList.toggle('open', open);
         panel.setAttribute('aria-hidden', open ? 'false' : 'true');
@@ -389,6 +424,34 @@
         busy = state;
         if (sendBtn) sendBtn.disabled = state;
         if (input) input.disabled = state;
+    };
+
+    const clearConversation = async () => {
+        if (busy) return;
+
+        setBusy(true);
+        try {
+            if (clearUrl) {
+                await fetch(clearUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    },
+                    body: JSON.stringify({ session_token: localStorage.getItem(storageKey) || '' }),
+                });
+            }
+        } catch (e) {
+            console.error('Chatbot clear error', e);
+        } finally {
+            localStorage.removeItem(storageKey);
+            renderEmptyState();
+            input.value = '';
+            input.style.height = '44px';
+            setBusy(false);
+            input.focus();
+        }
     };
 
     /* ── Render suggestion cards ── */
@@ -418,7 +481,10 @@
 
         row.innerHTML = html;
         messagesEl.appendChild(row);
-        emptyEl?.remove();
+        if (emptyEl) {
+            emptyEl.remove();
+            emptyEl = null;
+        }
         scrollEnd();
         return row;
     };
@@ -451,6 +517,7 @@
             const data = await res.json();
             if (Array.isArray(data.messages) && data.messages.length) {
                 messagesEl.innerHTML = '';
+                emptyEl = null;
                 data.messages.forEach(m => renderMessage(m));
             }
             messagesEl.dataset.loaded = '1';
@@ -502,6 +569,7 @@
     /* ── Events ── */
     toggle?.addEventListener('click', () => setOpen(!panel.classList.contains('open')));
     closeBtn?.addEventListener('click', () => setOpen(false));
+    newBtn?.addEventListener('click', clearConversation);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
 
     form?.addEventListener('submit', e => { e.preventDefault(); sendMessage(input.value); });

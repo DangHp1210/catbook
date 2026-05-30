@@ -48,4 +48,23 @@ class ChatBotController extends Controller
             return response()->json(['ok' => false, 'message' => 'Lỗi máy chủ khi xử lý tin nhắn.'], 500);
         }
     }
+
+    public function clear(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'session_token' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        try {
+            $this->chatBotService->clearHistory($request->user(), $validated['session_token'] ?? null);
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Đã xóa lịch sử chat.',
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['ok' => false, 'message' => 'Lỗi máy chủ khi xóa lịch sử chat.'], 500);
+        }
+    }
 }

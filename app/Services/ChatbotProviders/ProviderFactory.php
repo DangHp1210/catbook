@@ -8,7 +8,6 @@ class ProviderFactory
     {
         $mapping = [
             'gemini' => GeminiProvider::class,
-            'openai' => OpenAiProvider::class,
         ];
 
         $available = [];

@@ -5,7 +5,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Services\ChatbotProviders\ProviderInterface;
 use App\Services\ChatbotProviders\GeminiProvider;
-use App\Services\ChatbotProviders\OpenAiProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,7 +18,6 @@ class AppServiceProvider extends ServiceProvider
 
         $map = [
             'gemini' => GeminiProvider::class,
-            'openai' => OpenAiProvider::class,
         ];
 
         if ($default && isset($map[$default])) {
@@ -27,12 +25,9 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
 
-        // Otherwise, bind to the first provider that has an API key configured.
-        foreach ($map as $key => $class) {
-            if (config("services.{$key}.key")) {
-                $this->app->bind(ProviderInterface::class, $class);
-                return;
-            }
+        // Bind Gemini when it has a key configured.
+        if (config('services.gemini.key')) {
+            $this->app->bind(ProviderInterface::class, GeminiProvider::class);
         }
     }
 

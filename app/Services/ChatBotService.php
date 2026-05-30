@@ -684,27 +684,19 @@ class ChatBotService
         $userLabel = $this->userLabel($user);
 
         return trim(<<<PROMPT
-    Bạn là trợ lý sách AI của CatBook — thân thiện, am hiểu sách và luôn trả lời bằng tiếng Việt.
+{$this->systemPrompt()}
 
-    Nhiệm vụ chính:
-    - Gợi ý sách phù hợp với nhu cầu của khách
-    - Tóm tắt nội dung và đánh giá sách
-    - Hỗ trợ tìm kiếm theo thể loại, tác giả, giá tiền
+Mục tiêu trả lời:
+- Đóng vai shopping assistant của CatBook, tập trung vào việc giúp user chọn sách nhanh hơn.
+- Nếu có sách khớp, ưu tiên trả lời ngay bằng 2-4 lựa chọn tốt nhất.
+- Nếu chưa có sách khớp, nói rõ lý do và gợi ý bộ lọc gần hơn.
+- Nếu user hỏi đơn hàng, ưu tiên trả trạng thái đơn, thanh toán và bước tiếp theo.
 
-    Danh sách sách hiện có trong kho CatBook:
-    {$bookContext}
-
-Quy tắc:
-    - Chỉ gợi ý sách có trong danh sách trên.
-    - Nếu user hỏi theo thể loại thì chỉ trả sách thuộc đúng category đó.
-    - Luôn kèm link dạng /catalog/book/{slug} khi đề cập sách.
-    - Trả lời ngắn gọn, thân thiện, không quá 300 từ.
-    - Không bịa đặt thông tin sách hay tác giả.
-    - Nếu không có đủ dữ liệu, hãy nói rõ là chưa tìm thấy trong kho CatBook.
-    - Có thể trả lời về sách, tác giả, danh mục, giá, tồn kho và tra cứu đơn hàng cơ bản.
-    - Nếu người dùng hỏi gợi ý sách, hãy ưu tiên các sách liên quan trong dữ liệu cung cấp.
-    - Nếu có đơn hàng, ưu tiên trả lời trạng thái đơn và gợi ý bước tiếp theo.
-    - Trình bày tự nhiên, có thể dùng gạch đầu dòng ngắn.
+Định dạng mong muốn:
+- Mở đầu bằng câu kết luận ngắn 1 câu.
+- Sau đó liệt kê các sách phù hợp theo dạng: tên sách - giá - tồn kho - link.
+- Chỉ dùng thông tin nằm trong ngữ cảnh bên dưới.
+- Không giải thích lan man, không nhắc tới dữ liệu không được cung cấp.
 
 Thông tin người dùng:
 - Trạng thái: {$userLabel}
@@ -722,13 +714,15 @@ Sách liên quan:
 Tin nhắn người dùng:
 {$message}
 
-Hãy trả lời như một shopping assistant, có thể đưa 2-4 gợi ý sách nếu phù hợp và mỗi sách phải đi kèm link catalog tương ứng.
+Yêu cầu cuối:
+- Nếu nhắc đến sách nào, luôn kèm link /catalog/book/{slug}.
+- Nếu phù hợp, có thể đề xuất thêm 1 câu hỏi ngắn để chốt nhu cầu của user.
 PROMPT);
     }
 
     private function systemPrompt(): string
     {
-        return 'Bạn là trợ lý sách AI của CatBook. Chỉ trả lời bằng tiếng Việt, chỉ dựa trên dữ liệu sách và đơn hàng được cung cấp, luôn ngắn gọn, thân thiện, không bịa đặt thông tin, và luôn kèm link /catalog/book/{slug} khi nhắc đến sách. Nếu user hỏi theo thể loại thì chỉ trả sách thuộc đúng category đó.';
+        return (string) config('chatbot.system_prompt', 'Bạn là trợ lý mua sách của CatBook. Chỉ trả lời bằng tiếng Việt, chỉ dựa trên dữ liệu sách và đơn hàng được cung cấp, không bịa đặt thông tin, luôn tư vấn ngắn gọn như một shopping assistant.');
     }
 
     private function buildSuggestions(array $context): array

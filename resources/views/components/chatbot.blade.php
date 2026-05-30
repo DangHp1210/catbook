@@ -6,7 +6,7 @@
 <style>
 /* ─── Shell ───────────────────────────────────────────── */
 .cb-chatbot-shell {
-    position: fixed; right: 24px; bottom: 24px;
+    position: fixed; right: 0px; bottom: 0px;
     z-index: 140;
     display: flex; align-items: flex-end; gap: 0;
     max-width: calc(100vw - 24px);
@@ -18,15 +18,15 @@
     width: 58px; height: 58px; border-radius: 50%; border: none;
     cursor: pointer; flex-shrink: 0;
     display: inline-flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, var(--cb-accent), var(--cb-accent-dark));
-    color: #fff;
-    box-shadow: 0 12px 32px rgba(45,106,79,.38);
+    background: #ffffff; 
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     transition: transform .2s, box-shadow .2s;
     animation: cb-fab-float 3s ease-in-out infinite;
 }
 .cb-chat-fab:hover {
-    transform: scale(1.08);
-    box-shadow: 0 18px 40px rgba(45,106,79,.46);
+   transform: scale(1.08);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16); 
+    background: #ffffff !important; 
     animation: none;
 }
 @keyframes cb-fab-float {
@@ -36,7 +36,7 @@
 .cb-chat-fab-dot {
     position: absolute; top: 4px; right: 4px;
     width: 12px; height: 12px; border-radius: 50%;
-    background: #4ade80; border: 2px solid #fff;
+    background: #007f00; border: 2px solid #fff;
     animation: cb-fab-pulse 2s ease-in-out infinite;
 }
 @keyframes cb-fab-pulse {
@@ -55,9 +55,9 @@
 
 /* ─── Chat panel ──────────────────────────────────────── */
 .cb-chatbot-panel {
-    position: absolute; right: 0; bottom: calc(100% + 14px);
-    width: min(370px, calc(100vw - 24px));
-    height: min(560px, calc(100vh - 100px));
+    position: absolute; right: 24px; bottom: calc(100% + 28px);
+    width: min(320px, calc(100vw - 24px));
+    height: min(480px, calc(100vh - 100px));
     border-radius: 20px; overflow: hidden;
     background: var(--cb-white); border: 1px solid var(--cb-border);
     box-shadow: 0 24px 64px rgba(13,27,16,.18);
@@ -337,9 +337,8 @@
             data-chatbot-toggle
             title="Mở trợ lý AI" aria-label="Mở chatbot">
         <span class="cb-chat-fab-tooltip">CatBook AI</span>
-        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-        </svg>
+        <img src="{{ asset('images/botcat.png') }}" alt="Bot" style="width: 46px; height: 46px; object-fit: contain;">
+        
         <span class="cb-chat-fab-dot"></span>
     </button>
 </div>

@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\ChatSession;
 use App\Services\ChatBotService;
 use App\Services\ChatbotProviders\GeminiProvider;
-use App\Services\ChatbotProviders\OpenAiProvider;
 use App\Services\ChatbotProviders\ProviderFactory;
 use App\Services\ChatbotProviders\ProviderInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,7 +47,7 @@ class ChatBotTest extends TestCase
             ]);
 
         $factory = Mockery::mock(ProviderFactory::class);
-        $factory->shouldReceive('availableProviders')->andReturn([GeminiProvider::class, OpenAiProvider::class]);
+        $factory->shouldReceive('availableProviders')->andReturn([GeminiProvider::class]);
 
         $this->app->instance(ProviderInterface::class, $defaultProvider);
         $this->app->instance(ProviderFactory::class, $factory);
@@ -104,7 +103,7 @@ class ChatBotTest extends TestCase
             ]);
 
         $factory = Mockery::mock(ProviderFactory::class);
-        $factory->shouldReceive('availableProviders')->andReturn([GeminiProvider::class, OpenAiProvider::class]);
+        $factory->shouldReceive('availableProviders')->andReturn([GeminiProvider::class]);
 
         $this->app->instance(ProviderInterface::class, $defaultProvider);
         $this->app->instance(ProviderFactory::class, $factory);

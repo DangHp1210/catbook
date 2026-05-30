@@ -9,7 +9,6 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\ChatBotService;
 use App\Services\ChatbotProviders\GeminiProvider;
-use App\Services\ChatbotProviders\OpenAiProvider;
 use App\Services\ChatbotProviders\ProviderFactory;
 use App\Services\ChatbotProviders\ProviderInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,7 +47,7 @@ class ChatBotServiceTest extends TestCase
                 'intent' => 'recommendation',
                 'suggestions' => [],
             ]),
-            providerClasses: [GeminiProvider::class, OpenAiProvider::class],
+            providerClasses: [GeminiProvider::class],
         );
 
         $response = $service->sendMessage(null, 'guest-session-1', 'gợi ý sách kinh doanh');
@@ -65,22 +64,14 @@ class ChatBotServiceTest extends TestCase
             defaultProvider: $this->mockProvider(throwable: new \RuntimeException('default provider failed')),
             fallbackProviders: [
                 GeminiProvider::class => $this->mockProvider(throwable: new \RuntimeException('gemini failed')),
-                OpenAiProvider::class => $this->mockProvider([
-                    'text' => 'OpenAI đã trả lời.',
-                    'model_name' => 'openai-test',
-                    'prompt_tokens' => 5,
-                    'completion_tokens' => 9,
-                    'intent' => 'catalog_search',
-                    'suggestions' => [],
-                ]),
             ],
-            providerClasses: [GeminiProvider::class, OpenAiProvider::class],
+            providerClasses: [GeminiProvider::class],
         );
 
         $response = $service->sendMessage(null, 'guest-session-2', 'tìm sách kinh doanh');
 
-        $this->assertSame('OpenAI đã trả lời.', $response['reply']);
-        $this->assertSame('catalog_search', $response['detected_intent']);
+        $this->assertStringContainsString('Mình có thể tìm sách', $response['reply']);
+        $this->assertSame('recommendation', $response['detected_intent']);
     }
 
     public function test_all_providers_fail_falls_back_to_rule_engine(): void
@@ -89,16 +80,15 @@ class ChatBotServiceTest extends TestCase
             defaultProvider: $this->mockProvider(throwable: new \RuntimeException('default provider failed')),
             fallbackProviders: [
                 GeminiProvider::class => $this->mockProvider(throwable: new \RuntimeException('gemini failed')),
-                OpenAiProvider::class => $this->mockProvider(throwable: new \RuntimeException('openai failed')),
             ],
-            providerClasses: [GeminiProvider::class, OpenAiProvider::class],
+            providerClasses: [GeminiProvider::class],
         );
 
         $response = $service->sendMessage(null, 'guest-session-3', 'xin chào');
 
         $this->assertSame('fallback-rule-engine', $this->latestChatLogModelName('guest-session-3'));
         $this->assertSame('fallback-rule-engine', $this->latestChatLogModelName('guest-session-3'));
-        $this->assertStringContainsString('Mình có thể giúp bạn tìm sách', $response['reply']);
+        $this->assertStringContainsString('Mình có thể tìm sách', $response['reply']);
         $this->assertSame('catalog_search', $response['detected_intent']);
     }
 
@@ -133,9 +123,8 @@ class ChatBotServiceTest extends TestCase
             defaultProvider: $this->mockProvider(throwable: new \RuntimeException('default provider failed')),
             fallbackProviders: [
                 GeminiProvider::class => $this->mockProvider(throwable: new \RuntimeException('gemini failed')),
-                OpenAiProvider::class => $this->mockProvider(throwable: new \RuntimeException('openai failed')),
             ],
-            providerClasses: [GeminiProvider::class, OpenAiProvider::class],
+            providerClasses: [GeminiProvider::class],
         );
 
         $response = $service->sendMessage($user, 'order-session-1', "tra cứu đơn {$orderCode}");
@@ -204,9 +193,8 @@ class ChatBotServiceTest extends TestCase
             defaultProvider: $this->mockProvider(throwable: new \RuntimeException('default provider failed')),
             fallbackProviders: [
                 GeminiProvider::class => $this->mockProvider(throwable: new \RuntimeException('gemini failed')),
-                OpenAiProvider::class => $this->mockProvider(throwable: new \RuntimeException('openai failed')),
             ],
-            providerClasses: [GeminiProvider::class, OpenAiProvider::class],
+            providerClasses: [GeminiProvider::class],
         );
 
         $response = $service->sendMessage($user, 'category-session-1', 'gợi ý sách văn học');
@@ -263,9 +251,8 @@ class ChatBotServiceTest extends TestCase
             defaultProvider: $this->mockProvider(throwable: new \RuntimeException('default provider failed')),
             fallbackProviders: [
                 GeminiProvider::class => $this->mockProvider(throwable: new \RuntimeException('gemini failed')),
-                OpenAiProvider::class => $this->mockProvider(throwable: new \RuntimeException('openai failed')),
             ],
-            providerClasses: [GeminiProvider::class, OpenAiProvider::class],
+            providerClasses: [GeminiProvider::class],
         );
 
         $underResponse = $service->sendMessage(null, 'price-session-under', 'sách dưới 100k');
@@ -299,7 +286,7 @@ class ChatBotServiceTest extends TestCase
     private function makeService(
         mixed $defaultProvider,
         array $fallbackProviders = [],
-        array $providerClasses = [GeminiProvider::class, OpenAiProvider::class],
+        array $providerClasses = [GeminiProvider::class],
     ): ChatBotService {
         $factory = Mockery::mock(ProviderFactory::class);
         $factory->shouldReceive('availableProviders')

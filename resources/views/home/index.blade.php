@@ -281,11 +281,6 @@ html,body {
      HERO
 ══════════════════════════════════════════════════ --}}
 <section class="cb-hero">
-    <div class="cb-hero-eyebrow">
-        <span class="cb-eyebrow-dot"></span>
-        Kho sách trực tuyến
-    </div>
-
     <h1>Tìm đúng cuốn sách<br><em>dành cho bạn</em></h1>
 
     <div class="cb-search-wrap">

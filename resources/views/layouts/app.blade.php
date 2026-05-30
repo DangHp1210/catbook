@@ -37,7 +37,9 @@
 
 <x-footer />
 
-<x-chatbot />
+@unless (request()->routeIs('login', 'register', 'payment.*'))
+    <x-chatbot />
+@endunless
 
 @stack('scripts')
 @yield('scripts')

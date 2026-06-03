@@ -438,8 +438,7 @@ html, body {
         {{-- 2. Payment method --}}
         <div class="ck-card" style="margin-bottom:16px">
             <div class="ck-card-head">
-                <div class="ck-card-title">Phương thức thanh toán</div>
-                <div class="ck-card-sub">Chọn hình thức phù hợp với bạn</div>
+                <div class="ck-card-title">Chọn phương thức thanh toán</div>
             </div>
             <div class="ck-card-body">
 

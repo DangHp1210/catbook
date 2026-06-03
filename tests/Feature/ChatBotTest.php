@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\ChatSession;
-use App\Services\ChatBotService;
 use App\Services\ChatbotProviders\GeminiProvider;
 use App\Services\ChatbotProviders\ProviderFactory;
 use App\Services\ChatbotProviders\ProviderInterface;
@@ -51,7 +50,7 @@ class ChatBotTest extends TestCase
 
         $this->app->instance(ProviderInterface::class, $defaultProvider);
         $this->app->instance(ProviderFactory::class, $factory);
-        $this->app->forgetInstance(ChatBotService::class);
+        $this->app->forgetInstance(\App\Services\ChatBotService::class);
 
         $response = $this->postJson(route('chatbot.message'), [
             'session_token' => 'guest-session-1',
@@ -107,7 +106,7 @@ class ChatBotTest extends TestCase
 
         $this->app->instance(ProviderInterface::class, $defaultProvider);
         $this->app->instance(ProviderFactory::class, $factory);
-        $this->app->forgetInstance(ChatBotService::class);
+        $this->app->forgetInstance(\App\Services\ChatBotService::class);
 
         $this->postJson(route('chatbot.message'), [
             'session_token' => 'guest-session-2',

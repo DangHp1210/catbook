@@ -21,6 +21,10 @@
     ];
 @endphp
 
+@php
+    $routePrefix = request()->routeIs('staff.*') ? 'staff.' : 'admin.';
+@endphp
+
 @section('styles')
 <style>
 /* ─── Design tokens ───────────────────────────────────── */
@@ -386,7 +390,7 @@ html, body {
                         {{-- Inline edit --}}
                         <td>
                             <form method="POST"
-                                  action="{{ route('admin.orders.update', $order) }}"
+                                action="{{ route($routePrefix.'orders.update', $order) }}"
                                   class="or-edit-form">
                                 @csrf
                                 @method('PATCH')

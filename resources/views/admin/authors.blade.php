@@ -238,6 +238,7 @@ html, body {
 @endsection
  
 @php
+    $routePrefix = request()->routeIs('staff.*') ? 'staff.' : 'admin.';
     $openCreateModal  = old('_form') === 'create-author';
     $openEditAuthorId = old('_form') === 'update-author' ? (int) old('_author_id') : null;
 @endphp
@@ -333,7 +334,7 @@ html, body {
                                 </button>
  
                                 <form method="POST"
-                                      action="{{ route('admin.authors.destroy', $author) }}"
+                                    action="{{ route($routePrefix.'authors.destroy', $author) }}"
                                       onsubmit="return confirm('Bạn chắc chắn muốn xóa tác giả này?')">
                                     @csrf
                                     @method('DELETE')
@@ -386,7 +387,7 @@ html, body {
             </div>
 
             <form method="POST"
-                  action="{{ route('admin.authors.update', $author) }}"
+                action="{{ route($routePrefix.'authors.update', $author) }}"
                   enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
@@ -448,7 +449,7 @@ html, body {
             </button>
         </div>
  
-        <form method="POST" action="{{ route('admin.authors.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route($routePrefix.'authors.store') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="_form" value="create-author">
  

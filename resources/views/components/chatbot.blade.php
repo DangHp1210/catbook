@@ -1,16 +1,24 @@
 @php
-    $chatbotSessionUrl = route('chatbot.session');
-    $chatbotMessageUrl = route('chatbot.message');
-    $chatbotClearUrl = route('chatbot.clear');
+    $chatbotSessionUrl = route('chatbot.session', [], false);
+    $chatbotMessageUrl = route('chatbot.message', [], false);
+    $chatbotClearUrl = route('chatbot.clear', [], false);
 @endphp
 
 <style>
 /* ─── Shell ───────────────────────────────────────────── */
 .cb-chatbot-shell {
-    position: fixed; right: 0px; bottom: 0px;
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
     z-index: 140;
     display: flex; align-items: flex-end; gap: 0;
     max-width: calc(100vw - 24px);
+}
+
+.cb-chatbot-shell .cb-chat-fab {
+    position: relative !important;
+    right: auto !important;
+    bottom: auto !important;
 }
 
 /* ─── FAB button ──────────────────────────────────────── */
@@ -56,7 +64,7 @@
 
 /* ─── Chat panel ──────────────────────────────────────── */
 .cb-chatbot-panel {
-    position: absolute; right: 24px; bottom: calc(100% + 34px);
+    position: absolute; right: 24px; bottom: calc(100% + 6px);
     width: min(320px, calc(100vw - 24px));
     height: min(480px, calc(100vh - 100px));
     border-radius: 20px; overflow: hidden;
@@ -228,6 +236,7 @@
     font-family: var(--cb-sans); font-size: 13px; line-height: 1.45;
     color: var(--cb-text); background: var(--cb-white);
     transition: border-color .2s, box-shadow .2s;
+    scrollbar-width: none; -ms-overflow-style: none;
 }
 .cb-chatbot-input::placeholder { color: #c0b8b0; }
 .cb-chatbot-input:focus {
@@ -307,20 +316,11 @@
         {{-- Messages --}}
         <div class="cb-chatbot-messages" data-chatbot-messages>
             <div class="cb-chatbot-empty" data-chatbot-empty>
-                <div class="cb-chatbot-empty-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                    </svg>
+               <div class="cb-chatbot-empty-icon">
+                    <img src="{{ asset('images/avatarcatbot.png') }}" alt="Bot Icon" style="width: 48px; height: 48px; object-fit: contain;">
                 </div>
                 <p class="cb-chatbot-empty-title">Xin chào! Mình là CatBook AI</p>
                 <p>Mình có thể gợi ý sách, tìm sách theo ngân sách và hỗ trợ bạn trong lúc mua hàng.</p>
-                <div class="cb-bot-chips">
-                    <button type="button" class="cb-bot-chip" data-quick="Gợi ý sách hay dưới 150k">Sách dưới 150k</button>
-                    <button type="button" class="cb-bot-chip" data-quick="Sách tâm lý học bán chạy">Tâm lý học</button>
-                    <button type="button" class="cb-bot-chip" data-quick="Sách kinh doanh cho người mới">Kinh doanh</button>
-                    <button type="button" class="cb-bot-chip" data-quick="Kiểm tra đơn hàng của tôi">Tra đơn hàng</button>
-                </div>
             </div>
         </div>
 
@@ -373,6 +373,7 @@
     const sendBtn    = root.querySelector('[data-chatbot-send]');
     const storageKey = 'catbook.chatbot.sessionToken';
     let busy = false;
+    let lastUserMessage = null;
 
     /* ── Helpers ── */
     const getToken = () => {
@@ -389,6 +390,11 @@
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     const money = v => new Intl.NumberFormat('vi-VN').format(Number(v||0)) + 'đ';
+    const stripCatalogSlug = text => String(text ?? '')
+        .replace(/\s*[-–—]?\s*\/catalog\/book\/[^\s<>"]+/giu, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/[ \t]+$/gm, '')
+        .trim();
     const scrollEnd = () => requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
 
     const renderEmptyState = () => {
@@ -403,10 +409,12 @@
                 <p class="cb-chatbot-empty-title">Xin chào! Mình là CatBook AI</p>
                 <p>Mình có thể gợi ý sách, tìm sách theo ngân sách và hỗ trợ bạn trong lúc mua hàng.</p>
                 <div class="cb-bot-chips">
-                    <button type="button" class="cb-bot-chip" data-quick="Gợi ý sách hay dưới 150k">Sách dưới 150k</button>
-                    <button type="button" class="cb-bot-chip" data-quick="Sách tâm lý học bán chạy">Tâm lý học</button>
-                    <button type="button" class="cb-bot-chip" data-quick="Sách kinh doanh cho người mới">Kinh doanh</button>
-                    <button type="button" class="cb-bot-chip" data-quick="Kiểm tra đơn hàng của tôi">Tra đơn hàng</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Sách bán chạy">📚 Sách bán chạy</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Sách mới nhập kho">🆕 Sách mới nhập kho</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Sách dưới 100.000đ">💰 Sách dưới 100k</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Gợi ý sách hay">🎯 Gợi ý cho tôi</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Sách giảm giá">🏷️ Sách giảm giá</button>
+                    <button type="button" class="cb-bot-chip" data-quick="Tra cứu đơn hàng">📦 Tra cứu đơn hàng</button>
                 </div>
             </div>`;
         emptyEl = root.querySelector('[data-chatbot-empty]');
@@ -458,12 +466,17 @@
     const renderSuggestions = (suggestions = []) => {
         if (!Array.isArray(suggestions) || !suggestions.length) return '';
         return '<div class="cb-chatbot-suggestions">' +
-            suggestions.map(s =>
-                `<a class="cb-chatbot-suggestion" href="${esc(s.url||'#')}">
+            suggestions.map(s => {
+                if (s.quick) {
+                    return `<button type="button" class="cb-chatbot-suggestion cb-chatbot-suggestion--quick" data-quick="${esc(s.text||s.title||'')}">${esc(s.title||s.text||'Chọn')}</button>`;
+                }
+
+                return `<a class="cb-chatbot-suggestion" href="${esc(s.url||'#')}">
                     <span class="cb-chatbot-suggestion-title">${esc(s.title||'Sách')}</span>
                     <span class="cb-chatbot-suggestion-price">${money(s.price)}</span>
-                </a>`
-            ).join('') + '</div>';
+                    <span class="cb-chatbot-suggestion-stock">${esc(s.stock_status||'')}</span>
+                </a>`;
+            }).join('') + '</div>';
     };
 
     /* ── Render message ── */
@@ -475,7 +488,7 @@
         let html = '';
         if (!isUser) html += '<div class="cb-chatbot-msg-avatar">AI</div>';
         html += `<div class="cb-chatbot-bubble cb-chatbot-bubble--${isUser ? 'user' : 'bot'}">
-            ${esc(msg.message_text).replace(/\n/g,'<br>')}
+            ${esc(stripCatalogSlug(msg.message_text)).replace(/\n/g,'<br>')}
             ${!isUser && Array.isArray(msg.suggestions) && msg.suggestions.length ? renderSuggestions(msg.suggestions) : ''}
         </div>`;
 
@@ -529,6 +542,7 @@
         const content = String(text || '').trim();
         if (!content || busy) return;
         renderMessage({ sender_type: 'user', message_text: content });
+        lastUserMessage = content;
         input.value = '';
         input.style.height = '44px';
         setBusy(true);
@@ -559,11 +573,28 @@
         } catch (e) {
             console.error('Chatbot send error', e);
             typingEl.remove();
-            renderMessage({ sender_type: 'bot', message_text: 'Lỗi kết nối. Vui lòng thử lại sau.' });
+            renderBotError('Lỗi kết nối. Vui lòng thử lại sau.', lastUserMessage);
         } finally {
             setBusy(false);
             input.focus();
         }
+    };
+
+    /* Render bot error with retry */
+    const renderBotError = (errorText, retryMessage = '') => {
+        const row = document.createElement('div');
+        row.className = 'cb-chatbot-msg cb-chatbot-msg--bot';
+        row.innerHTML = `<div class="cb-chatbot-msg-avatar">AI</div>
+            <div class="cb-chatbot-bubble cb-chatbot-bubble--bot">
+                <div style="margin-bottom:8px">${esc(errorText)}</div>
+                <div style="display:flex;gap:8px;justify-content:flex-end">
+                    <button type="button" class="cb-bot-chip" data-retry="${esc(retryMessage)}">Thử lại</button>
+                    <button type="button" class="cb-bot-chip" data-clear>Đóng</button>
+                </div>
+            </div>`;
+        messagesEl.appendChild(row);
+        if (emptyEl) { emptyEl.remove(); emptyEl = null; }
+        scrollEnd();
     };
 
     /* ── Events ── */
@@ -585,6 +616,15 @@
     root.addEventListener('click', e => {
         const chip = e.target.closest('[data-quick]');
         if (chip) sendMessage(chip.dataset.quick);
+
+        const retry = e.target.closest('[data-retry]');
+        if (retry) {
+            const msg = retry.dataset.retry || '';
+            if (msg) sendMessage(msg);
+        }
+
+        const clear = e.target.closest('[data-clear]');
+        if (clear) setOpen(false);
     });
 
     /* External trigger (CTA button on home page) */

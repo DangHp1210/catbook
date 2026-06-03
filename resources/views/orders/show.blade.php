@@ -128,7 +128,6 @@ html, body {
 /* Review section inside item */
 .os-review-section {
     margin-top: 12px; padding: 14px 16px;
-    background: var(--cb-white); border: 1px solid var(--cb-border);
     border-radius: 10px;
 }
 .os-reviewed-badge {
@@ -369,10 +368,31 @@ html, body {
                                     </a>
                                 @endif
                             </div>
-                            @if($order->order_status === 'completed')
+                            @if($order->order_status === 'completed' && $book)
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    @if($existingReview)
+                                        <span class="os-reviewed-badge" style="margin-bottom: 0;">
+                                            ★ Đã đánh giá {{ $existingReview->rating }}/5
+                                        </span>
+                                    @endif
+                                    <button type="button"
+                                            class="os-btn-review open-review-modal"
+                                            style="padding: 7px 14px; font-size: 12px;"
+                                            data-book-slug="{{ $book->slug }}"
+                                            data-book-title="{{ $item->book_title_snapshot }}"
+                                            data-existing-rating="{{ $existingReview->rating ?? '' }}"
+                                            data-existing-comment="{{ e($existingReview->comment ?? '') }}">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                        </svg>
+                                        {{ $existingReview ? 'Sửa đánh giá' : 'Viết đánh giá' }}
+                                    </button>
+                                </div>
+                            @elseif($order->order_status === 'completed')
+                                {{-- Trường hợp mồ côi (sách đã bị xóa khỏi hệ thống nhưng đơn hàng đã hoàn tất) --}}
                                 <span class="os-can-review-badge">
                                     <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Có thể đánh giá
+                                    Đã hoàn thành
                                 </span>
                             @endif
                         </div>
@@ -388,30 +408,6 @@ html, body {
                             </div>
                             <span class="os-item-total">{{ number_format((float)$item->total_price, 0, ',', '.') }}đ</span>
                         </div>
-
-                        {{-- Review section --}}
-                        @if($order->order_status === 'completed' && $book)
-                            <div class="os-review-section">
-                                @if($existingReview)
-                                    <div>
-                                        <span class="os-reviewed-badge">
-                                            ★ Đã đánh giá {{ $existingReview->rating }}/5 sao
-                                        </span>
-                                    </div>
-                                @endif
-                                <button type="button"
-                                        class="os-btn-review open-review-modal"
-                                        data-book-slug="{{ $book->slug }}"
-                                        data-book-title="{{ $item->book_title_snapshot }}"
-                                        data-existing-rating="{{ $existingReview->rating ?? '' }}"
-                                        data-existing-comment="{{ e($existingReview->comment ?? '') }}">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                    </svg>
-                                    {{ $existingReview ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá' }}
-                                </button>
-                            </div>
-                        @endif
                     </div>
                 @endforeach
             </div>

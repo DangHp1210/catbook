@@ -2,51 +2,57 @@
 
 namespace App\Services;
 
-use App\Models\Book;
 use App\Models\Author;
+use App\Models\Book;
 use App\Models\Category;
 use App\Models\ChatAiLog;
 use App\Models\ChatMessage;
 use App\Models\ChatSession;
 use App\Models\Order;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Facades\Http;
 use App\Services\ChatbotProviders\ProviderFactory;
 use App\Services\ChatbotProviders\ProviderInterface;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Throwable;
 
 class ChatBotService
 {
     private ProviderInterface $defaultProvider;
-    private ProviderFactory $providerFactory;
-    private Container $container;
+    private ProviderFactory   $providerFactory;
+    private Container         $container;
 
-    public function __construct(ProviderInterface $defaultProvider, ProviderFactory $providerFactory, Container $container)
-    {
+    public function __construct(
+        ProviderInterface $defaultProvider,
+        ProviderFactory   $providerFactory,
+        Container         $container
+    ) {
         $this->defaultProvider = $defaultProvider;
         $this->providerFactory = $providerFactory;
-        $this->container = $container;
+        $this->container       = $container;
     }
+
+    /* ══════════════════════════════════════════════════════
+       PUBLIC API
+    ══════════════════════════════════════════════════════ */
 
     public function history(?User $user, ?string $sessionToken): array
     {
-        $session = $this->resolveSession($user, $sessionToken);
+        $session  = $this->resolveSession($user, $sessionToken);
         $messages = $this->loadMessages($session);
 
         return [
             'session_token' => $session->session_token,
             'session_title' => $session->title,
-            'messages' => $messages,
+            'messages'      => $messages,
         ];
     }
 
     public function clearHistory(?User $user, ?string $sessionToken): void
     {
         $token = trim((string) $sessionToken);
-
         if ($token === '') {
             return;
         }
@@ -54,61 +60,69 @@ class ChatBotService
         $query = ChatSession::query()->where('session_token', $token);
 
         if ($user) {
-            $query->where(function ($builder) use ($user): void {
-                $builder->whereNull('user_id')->orWhere('user_id', $user->id);
+            $query->where(function ($b) use ($user): void {
+                $b->whereNull('user_id')->orWhere('user_id', $user->id);
             });
         }
 
-        $session = $query->first();
-
-        if (! $session) {
-            return;
-        }
-
-        $session->delete();
+        $query->first()?->delete();
     }
 
     public function sendMessage(?User $user, ?string $sessionToken, string $message): array
     {
         $cleanMessage = Str::squish($message);
-        $session = $this->resolveSession($user, $sessionToken, $cleanMessage);
+        $session      = $this->resolveSession($user, $sessionToken, $cleanMessage);
 
         $this->storeMessage($session, 'user', $cleanMessage);
 
         $startedAt = microtime(true);
-        $context = $this->buildContext($user, $cleanMessage);
+        $context   = $this->buildContext($user, $cleanMessage, $session);
 
         try {
-            $reply = $this->generateReply($user, $cleanMessage, $context);
+            $reply     = $this->generateReply($user, $cleanMessage, $context);
             $modelName = $reply['model_name'];
         } catch (Throwable $throwable) {
+            if ($this->isGeminiQuotaError($throwable)) {
+                Cache::put($this->geminiCooldownCacheKey(), now()->addMinutes(30)->timestamp, now()->addMinutes(30));
+            }
+
             report($throwable);
-            $reply = $this->fallbackReply($user, $cleanMessage, $context);
+            $reply     = $this->fallbackReply($user, $cleanMessage, $context);
             $modelName = 'fallback-rule-engine';
         }
 
-        $assistantMessage = $this->storeMessage($session, 'bot', $reply['text'], $reply['message_type'] ?? 'text', $reply['related_book_id'] ?? null);
+        $reply['text'] = $this->sanitizeReplyText($reply['text'] ?? '');
+
+        $assistantMessage = $this->storeMessage(
+            $session,
+            'bot',
+            $reply['text'],
+            $reply['message_type'] ?? 'text',
+            $reply['related_book_id'] ?? null
+        );
 
         ChatAiLog::query()->create([
-            'message_id' => $assistantMessage->id,
-            'model_name' => $modelName,
-            'prompt_tokens' => $reply['prompt_tokens'] ?? 0,
+            'message_id'        => $assistantMessage->id,
+            'model_name'        => $modelName,
+            'prompt_tokens'     => $reply['prompt_tokens'] ?? 0,
             'completion_tokens' => $reply['completion_tokens'] ?? 0,
-            'total_tokens' => ($reply['prompt_tokens'] ?? 0) + ($reply['completion_tokens'] ?? 0),
-            'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'total_tokens'      => ($reply['prompt_tokens'] ?? 0) + ($reply['completion_tokens'] ?? 0),
+            'response_time_ms'  => (int) round((microtime(true) - $startedAt) * 1000),
         ]);
 
-        $messages = $this->loadMessages($session);
-
         return [
-            'session_token' => $session->session_token,
-            'session_title' => $session->title,
-            'messages' => $messages,
-            'reply' => $reply['text'],
-            'suggestions' => $reply['suggestions'] ?? [],
+            'session_token'   => $session->session_token,
+            'session_title'   => $session->title,
+            'messages'        => $this->loadMessages($session),
+            'reply'           => $reply['text'],
+            'suggestions'     => $reply['suggestions'] ?? [],
             'detected_intent' => $reply['intent'] ?? 'general',
         ];
     }
+
+    /* ══════════════════════════════════════════════════════
+       SESSION
+    ══════════════════════════════════════════════════════ */
 
     private function resolveSession(?User $user, ?string $sessionToken, ?string $firstMessage = null): ChatSession
     {
@@ -121,7 +135,7 @@ class ChatBotService
             ['session_token' => $token],
             [
                 'user_id' => $user?->id,
-                'title' => $firstMessage ? Str::limit($firstMessage, 48) : null,
+                'title'   => $firstMessage ? Str::limit($firstMessage, 48) : null,
             ]
         );
 
@@ -136,83 +150,119 @@ class ChatBotService
         return $session;
     }
 
-    private function storeMessage(ChatSession $session, string $senderType, string $messageText, string $messageType = 'text', ?int $relatedBookId = null): ChatMessage
-    {
+    /* ══════════════════════════════════════════════════════
+       MESSAGES
+    ══════════════════════════════════════════════════════ */
+
+    private function storeMessage(
+        ChatSession $session,
+        string $senderType,
+        string $messageText,
+        string $messageType = 'text',
+        ?int $relatedBookId = null
+    ): ChatMessage {
         return $session->messages()->create([
-            'sender_type' => $senderType,
-            'message_text' => $messageText,
-            'message_type' => $messageType,
+            'sender_type'     => $senderType,
+            'message_text'    => $messageText,
+            'message_type'    => $messageType,
             'related_book_id' => $relatedBookId,
         ]);
     }
 
     private function loadMessages(ChatSession $session): array
     {
-        $messages = $session->messages()
-            ->with(['relatedBook:id,title,slug,price,discount_price,stock_quantity'])
-            ->with('aiLog')
+        return $session->messages()
+            ->with(['relatedBook:id,title,slug,price,discount_price,stock_quantity', 'aiLog'])
             ->orderBy('id')
             ->limit(30)
-            ->get();
-
-        return $messages->map(fn (ChatMessage $message) => $this->formatMessage($message))->all();
+            ->get()
+            ->map(fn (ChatMessage $m) => $this->formatMessage($m))
+            ->all();
     }
 
     private function formatMessage(ChatMessage $message): array
     {
-        $createdAt = $message->created_at;
+        $createdAt    = $message->created_at;
         $createdAtIso = null;
 
         if ($createdAt instanceof \DateTimeInterface) {
             $createdAtIso = $createdAt->format(DATE_ATOM);
         } elseif (is_string($createdAt) && $createdAt !== '') {
-            $createdAtIso = (string) $createdAt;
+            $createdAtIso = $createdAt;
         }
 
         return [
-            'id' => $message->id,
-            'sender_type' => $message->sender_type,
+            'id'           => $message->id,
+            'sender_type'  => $message->sender_type,
             'message_text' => $message->message_text,
             'message_type' => $message->message_type,
-            'created_at' => $createdAtIso,
+            'created_at'   => $createdAtIso,
             'related_book' => $message->relatedBook ? [
-                'id' => $message->relatedBook->id,
-                'title' => $message->relatedBook->title,
-                'slug' => $message->relatedBook->slug,
-                'price' => (float) $message->relatedBook->price,
-                'discount_price' => $message->relatedBook->discount_price !== null ? (float) $message->relatedBook->discount_price : null,
-                'stock_quantity' => (int) $message->relatedBook->stock_quantity,
+                'id'             => $message->relatedBook->id,
+                'title'          => $message->relatedBook->title,
+                'slug'           => $message->relatedBook->slug,
+                'price'          => (float) $message->relatedBook->price,
+                'discount_price' => $message->relatedBook->discount_price !== null
+                    ? (float) $message->relatedBook->discount_price
+                    : null,
+                'stock_status'   => $this->stockStatusLabel((int) $message->relatedBook->stock_quantity),
             ] : null,
         ];
     }
 
-    private function buildContext(?User $user, string $message): array
+    /* ══════════════════════════════════════════════════════
+       CONTEXT BUILDING
+    ══════════════════════════════════════════════════════ */
+
+    // [FIX C] Accept session to build chat history
+    private function buildContext(?User $user, string $message, ChatSession $session): array
     {
-        $orderCode = $this->extractOrderCode($message);
-        $intent = $this->detectIntent($message);
-        $category = $this->detectCategory($message);
-        $author = $this->detectAuthor($message);
+        $orderCode  = $this->extractOrderCode($message);
+        $intent     = $this->detectIntent($message);
+        $category   = $this->detectCategory($message);
+        $author     = $this->detectAuthor($message);
         $priceRange = $this->extractPriceFilter($message);
 
-        $books = $this->searchBooks($message, $category, $author, $priceRange);
+        $books           = $this->searchBooks($message, $category, $author, $priceRange);
         $recommendations = $books->take(4)->values();
-        $order = null;
+        $order           = $orderCode ? $this->findOrder($user, $orderCode) : null;
 
-        if ($orderCode !== null) {
-            $order = $this->findOrder($user, $orderCode);
+        // Auto-upgrade intent when author detected
+        if ($author && $intent === 'catalog_search') {
+            $intent = 'recommendation';
         }
 
         return [
-            'order_code' => $orderCode,
-            'intent' => $intent,
-            'category' => $category,
-            'author' => $author,
-            'price_range' => $priceRange,
-            'books' => $books,
+            'order_code'      => $orderCode,
+            'intent'          => $intent,
+            'category'        => $category,
+            'author'          => $author,
+            'price_range'     => $priceRange,
+            'books'           => $books,
             'recommendations' => $recommendations,
-            'order' => $order,
+            'order'           => $order,
+            'chat_history'    => $this->buildChatHistory($session),
         ];
     }
+
+    private function buildChatHistory(ChatSession $session): array
+    {
+        return $session->messages()
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get()
+            ->reverse()
+            ->map(fn (ChatMessage $m) => [
+                'role'    => $m->sender_type === 'user' ? 'user' : 'assistant',
+                'content' => $m->message_text,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /* ══════════════════════════════════════════════════════
+       INTENT / EXTRACT
+    ══════════════════════════════════════════════════════ */
 
     private function detectIntent(string $message): string
     {
@@ -230,12 +280,32 @@ class ChatBotService
             return 'recommendation';
         }
 
+        if (Str::contains($lower, ['tóm tắt', 'tom tat', 'summarize', 'summary', 'tóm lược', 'tom luoc'])) {
+            return 'summary';
+        }
+
+        if (Str::contains($lower, ['so sánh', 'so sanh', 'compare', 'comparison', 'khác nhau giữa', 'khac nhau giua'])) {
+            return 'comparison';
+        }
+
+        if (Str::contains($lower, ['tư vấn', 'tu van', 'reading advice', 'nên đọc gì', 'nen doc gi', 'phù hợp với mình', 'phu hop voi minh'])) {
+            return 'advice';
+        }
+
+        if (Str::contains($lower, ['tác giả', 'tac gia', 'author', 'kiểm tra tác giả', 'kiem tra tac gia'])) {
+            return 'author_lookup';
+        }
+
+        if (Str::contains($lower, ['danh mục', 'danh muc', 'thể loại', 'the loai', 'category'])) {
+            return 'category_lookup';
+        }
+
         if (Str::contains($lower, ['giá', 'gia', 'rẻ', 're', 'discount', 'giảm giá', 'giam gia'])) {
-            return 'pricing';
+            return 'price_lookup';
         }
 
         if (Str::contains($lower, ['tồn kho', 'ton kho', 'còn hàng', 'con hang', 'hết hàng', 'het hang'])) {
-            return 'stock';
+            return 'stock_lookup';
         }
 
         return 'catalog_search';
@@ -243,11 +313,7 @@ class ChatBotService
 
     private function extractOrderCode(string $message): ?string
     {
-        if (preg_match('/\bCB\d{17}\b/', $message, $matches)) {
-            return $matches[0];
-        }
-
-        return null;
+        return preg_match('/\bCB\d{17}\b/', $message, $m) ? $m[0] : null;
     }
 
     private function findOrder(?User $user, string $orderCode): ?Order
@@ -262,6 +328,10 @@ class ChatBotService
 
         return $query->first();
     }
+
+    /* ══════════════════════════════════════════════════════
+       BOOK SEARCH
+    ══════════════════════════════════════════════════════ */
 
     private function searchBooks(string $message, ?Category $category, ?Author $author, ?array $priceRange): EloquentCollection
     {
@@ -287,10 +357,7 @@ class ChatBotService
     private function searchByCategory($query, Category $category): EloquentCollection
     {
         return $this->applyRanking(
-            $query
-            ->whereHas('categories', function ($categoryQuery) use ($category): void {
-                $categoryQuery->whereKey($category->id);
-            })
+            $query->whereHas('categories', fn ($q) => $q->whereKey($category->id))
         );
     }
 
@@ -301,28 +368,22 @@ class ChatBotService
         }
 
         return $this->applyRanking(
-            $query
-            ->whereHas('authors', function ($authorQuery) use ($author): void {
-                $authorQuery->whereKey($author->id);
-            })
+            $query->whereHas('authors', fn ($q) => $q->whereKey($author->id))
         );
     }
 
     private function searchByPrice($query, array $priceRange): EloquentCollection
     {
         $this->applyPriceRange($query, $priceRange);
-
         return $this->applyRanking($query);
     }
 
     private function searchByKeyword($query, string $message): EloquentCollection
     {
         $terms = collect(preg_split('/[^\pL\pN]+/u', Str::lower($message)) ?: [])
-            ->map(fn ($term) => trim((string) $term))
-            ->filter(fn ($term) => $term !== '' && mb_strlen($term) > 2)
-            ->unique()
-            ->values()
-            ->take(6);
+            ->map(fn ($t) => trim((string) $t))
+            ->filter(fn ($t) => $t !== '' && mb_strlen($t) > 2)
+            ->unique()->values()->take(6);
 
         if ($terms->isEmpty()) {
             return $query
@@ -330,21 +391,18 @@ class ChatBotService
                 ->orderByDesc('order_items_count')
                 ->orderByDesc('stock_quantity')
                 ->orderByDesc('created_at')
-                ->limit(6)
-                ->get();
+                ->limit(6)->get();
         }
 
         $query->where(function ($builder) use ($terms): void {
             foreach ($terms as $term) {
-                $like = '%'.$term.'%';
-                $builder->orWhere('title', 'like', $like)
+                $like = '%' . $term . '%';
+                $builder
+                    ->orWhere('title', 'like', $like)
                     ->orWhere('isbn', 'like', $like)
-                    ->orWhereHas('authors', function ($authorQuery) use ($like): void {
-                        $authorQuery->where('name', 'like', $like);
-                    })
-                    ->orWhereHas('categories', function ($categoryQuery) use ($like): void {
-                        $categoryQuery->where('name', 'like', $like);
-                    });
+                    ->orWhere('description', 'like', $like)
+                    ->orWhereHas('authors', fn ($q) => $q->where('name', 'like', $like))
+                    ->orWhereHas('categories', fn ($q) => $q->where('name', 'like', $like));
             }
         });
 
@@ -358,29 +416,29 @@ class ChatBotService
             ->orderByDesc('order_items_sum_quantity')
             ->orderByDesc('stock_quantity')
             ->orderByDesc('created_at')
-            ->limit(6)
-            ->get();
+            ->limit(6)->get();
     }
+
+    /* ══════════════════════════════════════════════════════
+       DETECT CATEGORY / AUTHOR / PRICE
+    ══════════════════════════════════════════════════════ */
 
     private function detectCategory(string $message): ?Category
     {
-        $normalizedMessage = $this->normalizeText($message);
+        $normalized = $this->normalizeText($message);
 
-        $categories = Category::query()
-            ->select(['id', 'name', 'slug'])
-            ->get()
-            ->sortByDesc(fn (Category $category): int => mb_strlen($this->normalizeText($category->name)))
+        $categories = Category::query()->select(['id', 'name', 'slug'])->get()
+            ->sortByDesc(fn (Category $c): int => mb_strlen($this->normalizeText($c->name)))
             ->values();
 
         foreach ($categories as $category) {
-            $categoryName = $this->normalizeText($category->name);
-            $categorySlug = $this->normalizeText($category->slug);
+            $name = $this->normalizeText($category->name);
+            $slug = $this->normalizeText($category->slug);
 
-            if ($categoryName !== '' && $this->containsWholePhrase($normalizedMessage, $categoryName)) {
+            if ($name !== '' && $this->containsWholePhrase($normalized, $name)) {
                 return $category;
             }
-
-            if ($categorySlug !== '' && $this->containsWholePhrase($normalizedMessage, $categorySlug)) {
+            if ($slug !== '' && $this->containsWholePhrase($normalized, $slug)) {
                 return $category;
             }
         }
@@ -390,18 +448,15 @@ class ChatBotService
 
     private function detectAuthor(string $message): ?Author
     {
-        $normalizedMessage = $this->normalizeText($message);
+        $normalized = $this->normalizeText($message);
 
-        $authors = Author::query()
-            ->select(['id', 'name'])
-            ->get()
-            ->sortByDesc(fn (Author $author): int => mb_strlen($this->normalizeText($author->name)))
+        $authors = Author::query()->select(['id', 'name'])->get()
+            ->sortByDesc(fn (Author $a): int => mb_strlen($this->normalizeText($a->name)))
             ->values();
 
         foreach ($authors as $author) {
-            $authorName = $this->normalizeText($author->name);
-
-            if ($authorName !== '' && $this->containsWholePhrase($normalizedMessage, $authorName)) {
+            $name = $this->normalizeText($author->name);
+            if ($name !== '' && $this->containsWholePhrase($normalized, $name)) {
                 return $author;
             }
         }
@@ -417,42 +472,29 @@ class ChatBotService
             return ['min' => null, 'max' => 100000];
         }
 
-        if (preg_match('/\b(?:tu|from)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\s*(?:den|toi|to|and|-|~)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $rangeMatches)) {
+        if (preg_match('/\b(?:tu|from)\s*(\d+[\d.,]*)(k|nghin|ngan)?\s*(?:den|toi|to|and|-|~)\s*(\d+[\d.,]*)(k|nghin|ngan)?\b/u', $normalized, $m)) {
             return [
-                'min' => $this->parsePriceAmount($rangeMatches[1], $rangeMatches[2] ?? null),
-                'max' => $this->parsePriceAmount($rangeMatches[3], $rangeMatches[4] ?? null),
+                'min' => $this->parsePriceAmount($m[1], $m[2] ?? null),
+                'max' => $this->parsePriceAmount($m[3], $m[4] ?? null),
             ];
         }
 
-        if (preg_match('/\b(?:khoang|gan|quanh|around|about)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $exactMatches)) {
-            $target = $this->parsePriceAmount($exactMatches[1], $exactMatches[2] ?? null);
-            $delta = max(10000, (int) round($target * 0.1));
-
-            return [
-                'min' => max(0, $target - $delta),
-                'max' => $target + $delta,
-            ];
+        if (preg_match('/\b(?:khoang|gan|quanh|around|about)\s*(\d+[\d.,]*)(k|nghin|ngan)?\b/u', $normalized, $m)) {
+            $target = $this->parsePriceAmount($m[1], $m[2] ?? null);
+            $delta  = max(10000, (int) round($target * 0.1));
+            return ['min' => max(0, $target - $delta), 'max' => $target + $delta];
         }
 
-        if (preg_match('/\b(?:duoi|duoi|duoi|toi da|max|under|less than)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $matches)) {
-            return [
-                'min' => null,
-                'max' => $this->parsePriceAmount($matches[1], $matches[2] ?? null),
-            ];
+        if (preg_match('/\b(?:duoi|toi da|max|under|less than)\s*(\d+[\d.,]*)(k|nghin|ngan)?\b/u', $normalized, $m)) {
+            return ['min' => null, 'max' => $this->parsePriceAmount($m[1], $m[2] ?? null)];
         }
 
-        if (preg_match('/\b(\d+[\d\.,]*)(k|nghin|ngan)?\s*(?:tro len|len tro|plus|or more|\+)\b/u', $normalized, $matches)) {
-            return [
-                'min' => $this->parsePriceAmount($matches[1], $matches[2] ?? null),
-                'max' => null,
-            ];
+        if (preg_match('/\b(\d+[\d.,]*)(k|nghin|ngan)?\s*(?:tro len|len tro|plus|or more|\+)\b/u', $normalized, $m)) {
+            return ['min' => $this->parsePriceAmount($m[1], $m[2] ?? null), 'max' => null];
         }
 
-        if (preg_match('/\b(?:tren|trên|tu|from|over|above)\s*(\d+[\d\.,]*)(k|nghin|ngan)?\b/u', $normalized, $matches)) {
-            return [
-                'min' => $this->parsePriceAmount($matches[1], $matches[2] ?? null),
-                'max' => null,
-            ];
+        if (preg_match('/\b(?:tren|trên|tu|from|over|above)\s*(\d+[\d.,]*)(k|nghin|ngan)?\b/u', $normalized, $m)) {
+            return ['min' => $this->parsePriceAmount($m[1], $m[2] ?? null), 'max' => null];
         }
 
         return null;
@@ -461,61 +503,45 @@ class ChatBotService
     private function applyPriceRange($query, array $priceRange): void
     {
         $query->where(function ($builder) use ($priceRange): void {
-            $priceExpression = 'COALESCE(discount_price, price)';
-
+            $expr = 'COALESCE(discount_price, price)';
             if (($priceRange['min'] ?? null) !== null) {
-                $builder->whereRaw("{$priceExpression} >= ?", [(int) $priceRange['min']]);
+                $builder->whereRaw("{$expr} >= ?", [(int) $priceRange['min']]);
             }
-
             if (($priceRange['max'] ?? null) !== null) {
-                $builder->whereRaw("{$priceExpression} <= ?", [(int) $priceRange['max']]);
+                $builder->whereRaw("{$expr} <= ?", [(int) $priceRange['max']]);
             }
         });
     }
 
-    private function parsePriceValue(string $value): int
-    {
-        return (int) preg_replace('/[^0-9]/', '', $value);
-    }
-
-    private function parsePriceAmount(string $value, ?string $suffix = null): int
-    {
-        $amount = $this->parsePriceValue($value);
-        $normalizedSuffix = Str::lower((string) $suffix);
-
-        if ($normalizedSuffix !== '' || $amount < 1000) {
-            return $amount * 1000;
-        }
-
-        return $amount;
-    }
-
-    private function normalizeText(string $value): string
-    {
-        $value = Str::of($value)->ascii()->lower()->toString();
-        $value = preg_replace('/[^a-z0-9\s]+/u', ' ', $value) ?? $value;
-
-        return trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
-    }
-
-    private function containsWholePhrase(string $haystack, string $needle): bool
-    {
-        if ($needle === '') {
-            return false;
-        }
-
-        return preg_match('/(^|\s)'.preg_quote($needle, '/').'($|\s)/u', $haystack) === 1;
-    }
+    /* ══════════════════════════════════════════════════════
+       AI REPLY GENERATION
+    ══════════════════════════════════════════════════════ */
 
     private function generateReply(?User $user, string $message, array $context): array
     {
-        $apiKey = config('services.gemini.key') ?: config('services.openai.key');
-
-        if ($apiKey) {
-            return $this->providerReply($user, $message, $context);
+        if ($this->isRuleEngineIntent($context['intent'] ?? '')) {
+            return $this->fallbackReply($user, $message, $context);
         }
 
-        return $this->fallbackReply($user, $message, $context);
+        $hasKey = config('services.gemini.key') || config('services.openai.key');
+        if ($hasKey && $this->isGeminiCoolingDown()) {
+            return $this->fallbackReply($user, $message, $context);
+        }
+
+        return $hasKey
+            ? $this->providerReply($user, $message, $context)
+            : $this->fallbackReply($user, $message, $context);
+    }
+
+    private function isRuleEngineIntent(string $intent): bool
+    {
+        return in_array($intent, [
+            'order_lookup',
+            'stock_lookup',
+            'price_lookup',
+            'author_lookup',
+            'category_lookup',
+        ], true);
     }
 
     private function providerReply(?User $user, string $message, array $context): array
@@ -526,29 +552,26 @@ class ChatBotService
             throw new \RuntimeException('No AI providers configured');
         }
 
-        // Build a detailed prompt for provider (includes catalog and order context)
-        $prompt = $this->buildPrompt($user, $message, $context);
+        $prompt      = $this->buildPrompt($user, $message, $context);
+        $chatHistory = $context['chat_history'] ?? [];
 
         $lastException = null;
 
-        // Try the default provider from the container first
         try {
-            $reply = $this->defaultProvider->reply($user, $prompt, $context);
+            $reply = $this->defaultProvider->reply($user, $prompt, $context + [
+                'history' => $chatHistory,
+            ]);
             $reply['suggestions'] = $reply['suggestions'] ?? $this->buildSuggestions($context);
-            $reply['intent'] = $reply['intent'] ?? $context['intent'] ?? 'general';
-
+            $reply['intent']      = $reply['intent'] ?? ($context['intent'] ?? 'general');
             return $reply;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             report($e);
             $lastException = $e;
-            // continue to fallback providers
         }
 
-        // Fallback chain: try providers from ProviderFactory in order, skipping the default provider class
         $defaultClass = get_class($this->defaultProvider);
 
         foreach ($providers as $providerClass) {
-            // providerFactory returns class names; skip the default class to avoid retrying it
             if ($providerClass === $defaultClass) {
                 continue;
             }
@@ -559,218 +582,300 @@ class ChatBotService
                     continue;
                 }
 
-                $reply = $provider->reply($user, $prompt, $context);
+                $reply = $provider->reply($user, $prompt, $context + [
+                    'history' => $chatHistory,
+                ]);
                 $reply['suggestions'] = $reply['suggestions'] ?? $this->buildSuggestions($context);
-                $reply['intent'] = $reply['intent'] ?? $context['intent'] ?? 'general';
-
+                $reply['intent']      = $reply['intent'] ?? ($context['intent'] ?? 'general');
                 return $reply;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 report($e);
                 $lastException = $e;
-                continue;
             }
         }
 
         throw $lastException ?? new \RuntimeException('All providers failed');
     }
 
+    /* ══════════════════════════════════════════════════════
+       FALLBACK (rule-based)
+    ══════════════════════════════════════════════════════ */
+
     private function fallbackReply(?User $user, string $message, array $context): array
     {
-        $intent = $context['intent'];
-        $order = $context['order'];
-        $books = $context['books'];
-        $recommendations = $context['recommendations'];
+        $intent          = $context['intent'];
+        $order           = $context['order'];
+        $books           = $context['books'];
 
+        // If the user only sent a short greeting / chit-chat and provider failed,
+        // return a friendly greeting instead of listing top books (avoids irrelevant replies).
+        $normalizedMsg = $this->normalizeText($message);
+        if ($intent === 'catalog_search' && preg_match('/\b(xin chao|xin chào|chao|chào|hello|hi)\b/u', $normalizedMsg)) {
+            return [
+                'text'       => 'Xin chào! Mình là CatBook AI — Mình có thể tìm sách, gợi ý sách theo nhu cầu, hoặc tra cứu đơn hàng. Bạn muốn tìm gì hôm nay?',
+                'model_name' => 'fallback-rule-engine',
+                'intent'     => $intent,
+                'suggestions'=> $this->buildSuggestions($context),
+            ];
+        }
+
+        // Order lookup
         if ($intent === 'order_lookup') {
             if ($order) {
                 $statusLabel = match ($order->order_status) {
-                    'pending' => 'đang chờ xử lý',
+                    'pending'   => 'đang chờ xử lý',
                     'confirmed' => 'đã xác nhận',
-                    'shipping' => 'đang giao hàng',
+                    'shipping'  => 'đang giao hàng',
                     'completed' => 'đã hoàn tất',
                     'cancelled' => 'đã hủy',
-                    'refunded' => 'đã hoàn tiền',
-                    default => $order->order_status,
+                    'refunded'  => 'đã hoàn tiền',
+                    default     => $order->order_status,
                 };
-
                 $paymentLabel = match ($order->payment_status) {
-                    'unpaid' => 'chưa thanh toán',
-                    'paid' => 'đã thanh toán',
+                    'unpaid'   => 'chưa thanh toán',
+                    'paid'     => 'đã thanh toán',
                     'refunded' => 'đã hoàn tiền',
-                    default => $order->payment_status,
+                    default    => $order->payment_status,
                 };
 
                 return [
-                    'text' => "Mình đã tra được đơn {$order->order_code}. Trạng thái hiện tại: {$statusLabel}. Thanh toán: {$paymentLabel}. Tổng tiền: ".number_format((float) $order->total_amount, 0, ',', '.')."đ. Bạn có thể xem chi tiết đơn trong trang đơn hàng của mình.",
+                    'text'       => "Đơn {$order->order_code} — trạng thái: {$statusLabel}, thanh toán: {$paymentLabel}, tổng: " . number_format((float) $order->total_amount, 0, ',', '.') . "đ.",
                     'model_name' => 'fallback-rule-engine',
-                    'intent' => $intent,
-                    'suggestions' => $this->buildSuggestions($context),
+                    'intent'     => $intent,
+                    'suggestions'=> $this->buildSuggestions($context),
                 ];
             }
 
             return [
-                'text' => 'Mình chưa tìm thấy đơn hàng đó. Nếu bạn muốn tra cứu, hãy gửi cho mình mã đơn bắt đầu bằng CB như CB20260528123456789. Nếu bạn đang dùng tài khoản khách, mình sẽ hỗ trợ tốt nhất khi có mã đơn chính xác.',
+                'text'       => 'Chưa tìm thấy đơn hàng đó. Hãy gửi mã đơn bắt đầu bằng CB (ví dụ: CB20260528123456789).',
                 'model_name' => 'fallback-rule-engine',
-                'intent' => $intent,
-                'suggestions' => $this->buildSuggestions($context),
+                'intent'     => $intent,
+                'suggestions'=> $this->buildSuggestions($context),
             ];
         }
 
+        // Books found
         if ($books->isNotEmpty()) {
             $lines = $books->take(4)->values()->map(function (Book $book, int $index): string {
-                $price = (float) ($book->discount_price ?? $book->price);
-                $authors = $book->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật';
+                $price       = number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') . 'đ';
+                $authors     = $book->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật';
+                $stockStatus = $this->stockStatusLabel((int) $book->stock_quantity);
 
-                return sprintf(
-                    '%d. %s - %s - còn %d cuốn',
-                    $index + 1,
-                    $book->title,
-                    number_format($price, 0, ',', '.') . 'đ',
-                    (int) $book->stock_quantity
-                );
+                return sprintf('%d. %s — %s — %s — %s', $index + 1, $book->title, $authors, $price, $stockStatus);
             });
 
             $intro = match ($intent) {
-                'recommendation' => 'Mình gợi ý một số sách phù hợp với nhu cầu của bạn:',
-                'pricing' => 'Mình tìm được một số sách đúng với nhu cầu về giá:',
-                'stock' => 'Mình đã kiểm tra tồn kho và thấy các sách sau còn hàng:',
-                default => 'Mình đã tìm thấy một vài sách liên quan:',
+                'recommendation' => 'Gợi ý phù hợp nhất:',
+                'summary'        => 'Tóm tắt nhanh:',
+                'comparison'     => 'So sánh nhanh:',
+                'advice'         => 'Tư vấn đọc sách:',
+                'price_lookup'   => 'Sách theo mức giá bạn cần:',
+                'stock_lookup'   => 'Sách đang còn hàng:',
+                'author_lookup'  => 'Sách theo tác giả bạn tìm:',
+                'category_lookup'=> 'Sách trong danh mục bạn hỏi:',
+                default          => 'Kết quả tìm kiếm:',
             };
 
             return [
-                'text' => $intro."\n".$lines->implode("\n")."\nNếu bạn muốn, mình có thể lọc tiếp theo thể loại, tác giả hoặc mức giá.",
+                'text'       => $intro . "\n" . $lines->implode("\n"),
                 'model_name' => 'fallback-rule-engine',
-                'intent' => $intent,
-                'suggestions' => $this->buildSuggestions($context),
+                'intent'     => $intent,
+                'suggestions'=> $this->buildSuggestions($context),
             ];
         }
 
+        // Default: new books
         $defaultBooks = Book::query()
             ->with(['authors:id,name'])
             ->where('status', 'available')
-            ->latest()
-            ->limit(4)
-            ->get();
+            ->latest()->limit(4)->get();
 
-        $fallbackLines = $defaultBooks->map(function (Book $book, int $index): string {
-            $authors = $book->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật';
-
-            return sprintf(
-                '%d. %s - %s - %s',
-                $index + 1,
-                $book->title,
-                number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') . 'đ',
-                $authors
-            );
-        })->implode("\n");
+        $fallbackLines = $defaultBooks->map(fn (Book $book, int $index): string => sprintf(
+            '%d. %s — %s — %sđ',
+            $index + 1,
+            $book->title,
+            $book->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật',
+            number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.')
+        ))->implode("\n");
 
         return [
-            'text' => "Mình có thể giúp bạn tìm sách theo tác giả, thể loại, mức giá hoặc tra cứu đơn hàng. Bạn thử mô tả nhu cầu ngắn gọn nhé, ví dụ: \"sách kinh doanh dưới 200k\" hoặc \"tra cứu đơn CB...\".\n\nMột vài sách mới để tham khảo:\n{$fallbackLines}",
+            'text'       => "Mình có thể tìm sách. Chưa tìm thấy sách khớp. Một vài sách mới trong kho:\n{$fallbackLines}",
             'model_name' => 'fallback-rule-engine',
-            'intent' => $intent,
-            'suggestions' => $this->buildSuggestions(['recommendations' => $defaultBooks, 'books' => $defaultBooks]),
+            'intent'     => 'recommendation',
+            'suggestions'=> $this->buildSuggestions(['recommendations' => $defaultBooks, 'books' => $defaultBooks]),
         ];
     }
+
+    /* ══════════════════════════════════════════════════════
+       PROMPT BUILDING
+    ══════════════════════════════════════════════════════ */
 
     private function buildPrompt(?User $user, string $message, array $context): string
     {
         $recommendations = $context['recommendations'];
-        $order = $context['order'];
-        $category = $context['category'];
-        $author = $context['author'];
-        $priceRange = $context['price_range'];
-        $categoryLine = $category ? 'Thể loại đã nhận diện: '.$category->name : 'Thể loại đã nhận diện: chưa có';
-        $authorLine = $author ? 'Tác giả đã nhận diện: '.$author->name : 'Tác giả đã nhận diện: chưa có';
-        $priceLine = 'Khoảng giá đã nhận diện: chưa có';
+        $order           = $context['order'];
+        $category        = $context['category'];
+        $author          = $context['author'];
+        $priceRange      = $context['price_range'];
+
+        $categoryLine = $category   ? "Thể loại: {$category->name}"    : 'Thể loại: chưa nhận diện';
+        $authorLine   = $author     ? "Tác giả: {$author->name}"        : 'Tác giả: chưa nhận diện';
+        $priceLine    = 'Giá: chưa nhận diện';
 
         if ($priceRange !== null) {
-            $minText = $priceRange['min'] !== null ? number_format((int) $priceRange['min'], 0, ',', '.') : '...';
-            $maxText = $priceRange['max'] !== null ? number_format((int) $priceRange['max'], 0, ',', '.') : '...';
-            $priceLine = "Khoảng giá đã nhận diện: {$minText} - {$maxText}đ";
+            $min       = $priceRange['min'] !== null ? number_format((int) $priceRange['min'], 0, ',', '.') . 'đ' : '...';
+            $max       = $priceRange['max'] !== null ? number_format((int) $priceRange['max'], 0, ',', '.') . 'đ' : '...';
+            $priceLine = "Giá: {$min} – {$max}";
         }
 
+        // [FIX C] Include description in book context
         $bookContext = $recommendations->map(function (Book $book): string {
-            $authors = $book->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật';
-            $categories = $book->categories->pluck('name')->filter()->implode(', ') ?: 'Chưa phân loại';
-            $price = number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') . 'đ';
-            $stock = (int) $book->stock_quantity;
+            $authors    = $book->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật';
+            $categories = $book->categories->pluck('name')->filter()->implode(', ')  ?: 'Chưa phân loại';
+            $price      = number_format((float) ($book->discount_price ?? $book->price), 0, ',', '.') . 'đ';
+            $stock      = $this->stockStatusLabel((int) $book->stock_quantity);
+            $slug       = $book->slug;
 
-            return "- {$book->title} | Tác giả: {$authors} | Danh mục: {$categories} | Giá: {$price} | Tồn kho: {$stock}";
+            $line = "• {$book->title} | {$authors} | {$categories} | {$price} | {$stock}";
+
+            // Inject short description if available
+            if (! empty($book->description)) {
+                $desc = Str::limit(strip_tags($book->description), 100);
+                $line .= "\n  Mô tả: {$desc}";
+            }
+
+            return $line;
         })->implode("\n");
 
-        $orderContext = $order ? sprintf(
-            "- Mã đơn: %s | Trạng thái: %s | Thanh toán: %s | Tổng tiền: %sđ",
-            $order->order_code,
-            $order->order_status,
-            $order->payment_status,
-            number_format((float) $order->total_amount, 0, ',', '.')
-        ) : '- Không có đơn hàng được tìm thấy';
+        $orderContext = $order
+            ? "• {$order->order_code} | {$order->order_status} | {$order->payment_status} | " . number_format((float) $order->total_amount, 0, ',', '.') . 'đ'
+            : '• Không tìm thấy đơn hàng';
 
-        $userLabel = $this->userLabel($user);
-
+        // [FIX B] NOTE: systemPrompt() is NOT injected here — provider handles it separately
+        // so it doesn't get duplicated in the final API call
         return trim(<<<PROMPT
-{$this->systemPrompt()}
-
-Mục tiêu trả lời:
-- Đóng vai shopping assistant của CatBook, tập trung vào việc giúp user chọn sách nhanh hơn.
-- Nếu có sách khớp, ưu tiên trả lời ngay bằng 2-4 lựa chọn tốt nhất.
-- Nếu chưa có sách khớp, nói rõ lý do và gợi ý bộ lọc gần hơn.
-- Nếu user hỏi đơn hàng, ưu tiên trả trạng thái đơn, thanh toán và bước tiếp theo.
-
-Định dạng mong muốn:
-- Mở đầu bằng câu kết luận ngắn 1 câu.
-- Sau đó liệt kê các sách phù hợp theo dạng: tên sách - giá - tồn kho - link.
-- Chỉ dùng thông tin nằm trong ngữ cảnh bên dưới.
-- Không giải thích lan man, không nhắc tới dữ liệu không được cung cấp.
-
-Thông tin người dùng:
-- Trạng thái: {$userLabel}
-
+=== BỘ LỌC ===
 {$categoryLine}
 {$authorLine}
 {$priceLine}
+Người dùng: {$this->userLabel($user)}
 
-Ngữ cảnh đơn hàng:
-{$orderContext}
-
-Sách liên quan:
+=== SÁCH LIÊN QUAN ===
 {$bookContext}
 
-Tin nhắn người dùng:
+=== ĐƠN HÀNG ===
+{$orderContext}
+
+=== CÂU HỎI ===
 {$message}
 
-Yêu cầu cuối:
-- Nếu nhắc đến sách nào, luôn kèm link /catalog/book/{slug}.
-- Nếu phù hợp, có thể đề xuất thêm 1 câu hỏi ngắn để chốt nhu cầu của user.
+Hãy trả lời theo system prompt. Gợi ý 2–4 sách phù hợp nhất, không kèm link trong nội dung.
 PROMPT);
     }
 
+    // [FIX D] Improved system prompt with few-shot examples and clear format
     private function systemPrompt(): string
     {
-        return (string) config('chatbot.system_prompt', 'Bạn là trợ lý mua sách của CatBook. Chỉ trả lời bằng tiếng Việt, chỉ dựa trên dữ liệu sách và đơn hàng được cung cấp, không bịa đặt thông tin, luôn tư vấn ngắn gọn như một shopping assistant.');
+        return (string) config('chatbot.system_prompt',
+            'Bạn là trợ lý mua sách của CatBook. Chỉ trả lời bằng tiếng Việt, chỉ dựa trên dữ liệu sách và đơn hàng được cung cấp, không bịa đặt thông tin. Gemini dùng cho gợi ý sách theo nhu cầu, trả lời tự nhiên, tóm tắt sách, so sánh sách và tư vấn đọc sách. Rule engine dùng cho tra cứu đơn hàng, kiểm tra tồn kho, kiểm tra giá, kiểm tra tác giả, kiểm tra danh mục và dữ liệu lấy trực tiếp từ database. Khi có dữ liệu sách trong ngữ cảnh, phải nêu ngay tên sách cụ thể, tác giả, giá và tình trạng; khi là đơn hàng thì nêu mã đơn, trạng thái đơn, thanh toán và bước tiếp theo. Không mở đầu bằng lời chào dài hoặc câu lấp lửng như "Dựa trên cuốn sách...". Không hiển thị slug hoặc đường dẫn /catalog/book/{slug} trong phần trả lời; link chỉ dùng ở suggestions. Mỗi câu trả lời phải đủ thông tin ngay từ lượt đầu, không đẩy việc lọc sang câu hỏi tiếp theo. Không hiển thị số lượng tồn kho chính xác; chỉ dùng các trạng thái Còn hàng, Sắp hết hàng, Hết hàng.'
+        );
+    }
+
+    /* ══════════════════════════════════════════════════════
+       HELPERS
+    ══════════════════════════════════════════════════════ */
+
+    private function sanitizeReplyText(string $text): string
+    {
+        $text = preg_replace('~\s*[-–—]?\s*/catalog/book/[^\s<>"]+~iu', '', $text) ?? $text;
+        $text = preg_replace_callback('/\b(?:Tồn kho|tồn kho|Kho|kho)\s*:\s*(\d+)\b/u', function (array $m): string {
+            return 'Tình trạng: ' . $this->stockStatusLabel((int) $m[1]);
+        }, $text) ?? $text;
+        $text = preg_replace_callback('/\b(?:còn|con)\s+(\d+)\s+(?:cuốn|quyển|sách)\b/iu', function (array $m): string {
+            return $this->stockStatusLabel((int) $m[1]);
+        }, $text) ?? $text;
+        $text = preg_replace('/[ \t]+$/mu', '', $text) ?? $text;
+        $text = preg_replace('/\n{3,}/u', "\n\n", $text) ?? $text;
+
+        return trim($text);
+    }
+
+    private function stockStatusLabel(int $stockQuantity): string
+    {
+        if ($stockQuantity <= 0) {
+            return 'Hết hàng';
+        }
+        if ($stockQuantity <= 5) {
+            return 'Sắp hết hàng';
+        }
+        return 'Còn hàng';
     }
 
     private function buildSuggestions(array $context): array
     {
-        $recommendations = collect($context['recommendations'] ?? $context['books'] ?? []);
-
-        return $recommendations->take(4)->values()->map(function (Book $book): array {
-            return [
-                'title' => $book->title,
-                // return a relative path (e.g. /sach/{slug}) so frontend can display consistent catalog links
-                'url' => parse_url(route('catalog.book', $book->slug), PHP_URL_PATH),
-                'price' => (float) ($book->discount_price ?? $book->price),
-                'stock_quantity' => (int) $book->stock_quantity,
-            ];
-        })->all();
+        return collect($context['recommendations'] ?? $context['books'] ?? [])
+            ->take(4)->values()
+            ->map(fn (Book $book): array => [
+                'title'        => $book->title,
+                'url'          => parse_url(route('catalog.book', $book->slug), PHP_URL_PATH),
+                'price'        => (float) ($book->discount_price ?? $book->price),
+                'stock_status' => $this->stockStatusLabel((int) $book->stock_quantity),
+            ])
+            ->all();
     }
 
     private function userLabel(?User $user): string
     {
-        if (! $user) {
-            return 'Khách vãng lai';
-        }
+        return $user ? "{$user->full_name} ({$user->role})" : 'Khách vãng lai';
+    }
 
-        return sprintf('%s (%s)', $user->full_name, $user->role);
+    private function parsePriceValue(string $value): int
+    {
+        return (int) preg_replace('/[^0-9]/', '', $value);
+    }
+
+    private function parsePriceAmount(string $value, ?string $suffix = null): int
+    {
+        $amount           = $this->parsePriceValue($value);
+        $normalizedSuffix = Str::lower((string) $suffix);
+
+        return ($normalizedSuffix !== '' || $amount < 1000)
+            ? $amount * 1000
+            : $amount;
+    }
+
+    private function normalizeText(string $value): string
+    {
+        $value = Str::of($value)->ascii()->lower()->toString();
+        $value = preg_replace('/[^a-z0-9\s]+/u', ' ', $value) ?? $value;
+        return trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
+    }
+
+    private function containsWholePhrase(string $haystack, string $needle): bool
+    {
+        if ($needle === '') {
+            return false;
+        }
+        return preg_match('/(^|\s)' . preg_quote($needle, '/') . '($|\s)/u', $haystack) === 1;
+    }
+
+    private function geminiCooldownCacheKey(): string
+    {
+        return 'chatbot.gemini.cooldown_until';
+    }
+
+    private function isGeminiCoolingDown(): bool
+    {
+        $cooldownUntil = (int) Cache::get($this->geminiCooldownCacheKey(), 0);
+        return $cooldownUntil > now()->timestamp;
+    }
+
+    private function isGeminiQuotaError(Throwable $throwable): bool
+    {
+        $message = $throwable->getMessage();
+
+        return str_contains($message, 'status 429')
+            || str_contains($message, 'RESOURCE_EXHAUSTED')
+            || str_contains($message, 'Quota exceeded');
     }
 }

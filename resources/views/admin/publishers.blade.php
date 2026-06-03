@@ -1,6 +1,7 @@
 @extends('layouts.admin', ['title' => 'Quản lý nhà xuất bản'])
 
 @php
+    $routePrefix = request()->routeIs('staff.*') ? 'staff.' : 'admin.';
     $openCreateModal  = old('_form') === 'create-publisher';
     $openEditModal    =     old('_form') === 'edit-publisher';
     $editingPublisher = $openEditModal ? $publishers->firstWhere('id', (int) old('_publisher_id')) : null;
@@ -218,7 +219,7 @@ html, body {
         <p class="pb-header-sub">Thêm mới, chỉnh sửa và xoá nhà xuất bản.</p>
     </div>
     <div class="pb-header-right">
-        <form method="GET">
+        <form method="GET" action="{{ route($routePrefix.'publishers.index') }}">
             <div class="pb-search-wrap">
                 <span class="pb-search-icon">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -309,7 +310,7 @@ html, body {
                                         data-phone="{{ $publisher->phone }}"
                                         data-website="{{ $publisher->website }}"
                                         data-address="{{ $publisher->address }}"
-                                        data-update-url="{{ route('admin.publishers.update', $publisher) }}">
+                                        data-update-url="{{ route($routePrefix.'publishers.update', $publisher) }}">
                                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -318,7 +319,7 @@ html, body {
                                 </button>
 
                                 <form method="POST"
-                                      action="{{ route('admin.publishers.destroy', $publisher) }}"
+                                    action="{{ route($routePrefix.'publishers.destroy', $publisher) }}"
                                       style="margin:0"
                                       onsubmit="return confirm('Xoá nhà xuất bản này?')">
                                     @csrf
@@ -376,7 +377,7 @@ html, body {
             </button>
         </div>
 
-        <form method="POST" action="{{ route('admin.publishers.store') }}">
+        <form method="POST" action="{{ route($routePrefix.'publishers.store') }}">
             @csrf
             <input type="hidden" name="_form" value="create-publisher">
 
@@ -443,7 +444,7 @@ html, body {
 
         <form id="editPublisherForm"
               method="POST"
-              action="{{ $editingPublisher ? route('admin.publishers.update', $editingPublisher) : '#' }}">
+              action="{{ $editingPublisher ? route($routePrefix.'publishers.update', $editingPublisher) : '#' }}">
             @csrf
             @method('PATCH')
             <input type="hidden" name="_form"         value="edit-publisher">
@@ -499,6 +500,7 @@ html, body {
 (function () {
     const openModal  = m => m?.classList.add('is-open');
     const closeModal = m => m?.classList.remove('is-open');
+    const basePath   = window.location.pathname.replace(/\/$/, '');
 
     /* ── Create modal ── */
     const createModal = document.getElementById('createPublisherModal');
@@ -527,7 +529,7 @@ html, body {
             editPhone.value   = btn.dataset.phone    || '';
             editWebsite.value = btn.dataset.website  || '';
             editAddress.value = btn.dataset.address  || '';
-            editForm.setAttribute('action', btn.dataset.updateUrl || '#');
+            editForm.setAttribute('action', btn.dataset.updateUrl || `${basePath}/${editId.value}`);
             openModal(editModal);
         });
     });

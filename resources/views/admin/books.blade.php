@@ -6,6 +6,7 @@
     $publishers = $publishers ?? collect();
     $categories = $categories ?? collect();
     $authors    = $authors    ?? collect();
+    $routePrefix = request()->routeIs('staff.*') ? 'staff.' : 'admin.';
     $authorsById = $authors->keyBy('id');
 
     $openCreateModal  = old('_form') === 'create-book';
@@ -328,7 +329,7 @@ html, body {
         <p class="bk-header-sub">Thêm mới, chỉnh sửa, xoá và tìm kiếm đầu sách.</p>
     </div>
     <div class="bk-header-right">
-        <form method="GET" action="{{ route('admin.books.index') }}">
+        <form method="GET" action="{{ route($routePrefix.'books.index') }}">
             <div class="bk-search-wrap">
                 <span class="bk-search-icon">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -440,7 +441,7 @@ html, body {
                                 </button>
 
                                 <form method="POST"
-                                      action="{{ route('admin.books.destroy', $book) }}"
+                                    action="{{ route($routePrefix.'books.destroy', $book) }}"
                                       class="inline-block"
                                       onsubmit="return confirm('Xoá sách này?')">
                                     @csrf
@@ -505,7 +506,7 @@ html, body {
             </button>
         </div>
 
-        <form method="POST" action="{{ route('admin.books.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route($routePrefix.'books.store') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="_form" value="create-book">
             <div class="bk-modal-body">
@@ -599,7 +600,7 @@ html, body {
                         <label class="bk-label">Tác giả</label>
                         <div class="author-picker"
                              data-author-picker
-                             data-search-url="{{ route('admin.books.authors.search') }}"
+                            data-search-url="{{ route($routePrefix.'books.authors.search') }}"
                              data-author-items='@json($createAuthorItems)'>
                             <div class="author-picker-tags" data-author-tags></div>
                             <input type="text" class="bk-input author-picker-input" data-author-input
@@ -645,7 +646,7 @@ html, body {
         </div>
 
         <form method="POST"
-              action="{{ $editingBook ? route('admin.books.update', $editingBook) : '#' }}"
+              action="{{ $editingBook ? route($routePrefix.'books.update', $editingBook) : '#' }}"
               enctype="multipart/form-data"
               id="editBookForm">
             @csrf
@@ -760,7 +761,7 @@ html, body {
                         <div class="author-picker"
                              data-author-picker
                              data-edit-author-picker
-                             data-search-url="{{ route('admin.books.authors.search') }}"
+                             data-search-url="{{ route($routePrefix.'books.authors.search') }}"
                              data-author-items='@json($editAuthorItems)'>
                             <div class="author-picker-tags" data-author-tags></div>
                             <input type="text" class="bk-input author-picker-input" data-author-input
@@ -825,7 +826,7 @@ html, body {
         btn.addEventListener('click', () => {
             if (!editForm) return;
             const d = btn.dataset;
-            editForm.action = `/admin/books/${d.bookId}`;
+            editForm.action = `${window.location.pathname.replace(/\/$/, '')}/${d.bookId}`;
             editForm.querySelector('input[name="_book_id"]').value         = d.bookId        || '';
             editForm.querySelector('input[name="title"]').value            = d.bookTitle      || '';
             editForm.querySelector('input[name="isbn"]').value             = d.bookIsbn       || '';

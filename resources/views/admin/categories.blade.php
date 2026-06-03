@@ -5,6 +5,7 @@
     $categories = $categories ?? collect();
     $allCategories = $allCategories ?? collect();
     $categoryOptions = $categoryOptions ?? collect();
+    $routePrefix = request()->routeIs('staff.*') ? 'staff.' : 'admin.';
 
     $totalCategories     = $allCategories->count();
     $rootCategories      = $allCategories->whereNull('parent_id')->count();
@@ -63,19 +64,6 @@ html, body {
 }
 .ca-header-sub { font-family: var(--cb-sans); font-size: 13px; color: var(--cb-muted); }
 .ca-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-/* Search */
-.ca-search-wrap {
-    display: flex; border: 1.5px solid var(--cb-border); border-radius: 10px;
-    overflow: hidden; background: var(--cb-white); transition: border-color .2s;
-}
-.ca-search-wrap:focus-within { border-color: var(--cb-accent); }
-.ca-search-icon { padding: 0 10px 0 12px; display: flex; align-items: center; color: var(--cb-muted); }
-.ca-search-input {
-    font-family: var(--cb-sans); font-size: 13px; border: none; outline: none;
-    background: transparent; color: var(--cb-text); padding: 9px 14px 9px 0; width: 220px;
-}
-.ca-search-input::placeholder { color: #c0b8b0; }
 
 /* Add button */
 .ca-btn-add {
@@ -325,18 +313,6 @@ html, body {
         <p class="ca-header-sub">Xem cây phân cấp, thêm mới và chỉnh sửa danh mục.</p>
     </div>
     <div class="ca-header-right">
-        <form method="GET" action="{{ route('admin.categories.index') }}">
-            <div class="ca-search-wrap">
-                <span class="ca-search-icon">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                </span>
-                <input name="q" value="{{ $q }}"
-                       placeholder="Tìm danh mục..."
-                       class="ca-search-input">
-            </div>
-        </form>
         <button type="button" id="openCreateCategoryModal" class="ca-btn-add">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -476,7 +452,7 @@ html, body {
                                 </button>
 
                                 <form method="POST"
-                                      action="{{ route('admin.categories.destroy', $category) }}"
+                                    action="{{ route($routePrefix.'categories.destroy', $category) }}"
                                       class="inline-block"
                                       onsubmit="return confirm('Xoá danh mục này?')">
                                     @csrf
@@ -527,7 +503,7 @@ html, body {
             </button>
         </div>
 
-        <form method="POST" action="{{ route('admin.categories.store') }}">
+        <form method="POST" action="{{ route($routePrefix.'categories.store') }}">
             @csrf
             <input type="hidden" name="_form" value="create-category">
 
@@ -583,8 +559,8 @@ html, body {
             </button>
         </div>
 
-        <form method="POST"
-              action="{{ $editingCategory ? route('admin.categories.update', $editingCategory) : '#' }}"
+          <form method="POST"
+              action="{{ $editingCategory ? route($routePrefix.'categories.update', $editingCategory) : '#' }}"
               id="editCategoryForm">
             @csrf
             @method('PATCH')
@@ -636,6 +612,7 @@ html, body {
     const createModal = document.getElementById('createCategoryModal');
     const editModal   = document.getElementById('editCategoryModal');
     const editForm    = document.getElementById('editCategoryForm');
+    const basePath    = window.location.pathname.replace(/\/$/, '');
 
     const openModal  = m => m?.classList.add('is-open');
     const closeModal = m => m?.classList.remove('is-open');
@@ -665,7 +642,7 @@ html, body {
             const name     = btn.dataset.categoryName     || '';
             const parentId = btn.dataset.categoryParentId || '';
 
-            editForm.action = `/admin/categories/${id}`;
+            editForm.action = `${basePath}/${id}`;
             editForm.querySelector('input[name="_category_id"]').value = id;
             editForm.querySelector('input[name="name"]').value         = name;
             editForm.querySelector('select[name="parent_id"]').value   = parentId;

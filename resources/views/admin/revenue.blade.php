@@ -175,7 +175,6 @@ html, body {
 <div class="rv-header">
     <div>
         <h1 class="rv-header-title">Thống kê doanh thu</h1>
-        <p class="rv-header-sub">Dựa trên đơn hàng đã xác nhận, đang giao và hoàn tất.</p>
     </div>
     <form method="GET" class="rv-filter">
         <input type="number" name="year" value="{{ $year }}"

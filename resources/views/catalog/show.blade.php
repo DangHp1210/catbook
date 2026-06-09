@@ -312,21 +312,12 @@ html, body {
     padding: 0 24px; height: 44px; border-radius: 10px; border: none;
     background: var(--cb-text); color: #fff; cursor: pointer;
     display: flex; align-items: center; gap: 8px;
-    white-space: nowrap; flex: 1;
+    white-space: nowrap;
     transition: background .2s, transform .15s;
 }
+
 .bd-btn-cart:hover:not(:disabled) { background: var(--cb-accent); transform: translateY(-1px); }
 .bd-btn-cart:disabled { opacity: .4; cursor: not-allowed; }
-
-.bd-btn-outline {
-    font-family: var(--cb-sans); font-size: 13px; font-weight: 500;
-    padding: 0 18px; height: 44px; border-radius: 10px;
-    border: 1.5px solid var(--cb-border); background: var(--cb-white);
-    color: var(--cb-text); text-decoration: none; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 7px;
-    transition: border-color .2s, color .2s;
-}
-.bd-btn-outline:hover { border-color: var(--cb-accent); color: var(--cb-accent); }
 
 .bd-btn-login {
     font-family: var(--cb-sans); font-size: 14px; font-weight: 600;
@@ -604,10 +595,6 @@ html, body {
 
         {{-- Title block --}}
         <div>
-            @if($book->categories->isNotEmpty())
-                <div class="bd-eyebrow">{{ $book->categories->first()->name }}</div>
-            @endif
-
             <h1 class="bd-title">{{ $book->title }}</h1>
 
             <p class="bd-authors">
@@ -675,14 +662,6 @@ html, body {
                             Thêm vào giỏ hàng
                         </button>
                     </form>
-
-                    <a href="{{ route('cart.index') }}" class="bd-btn-outline">
-                        <svg width="14" height="14" fill="none" stroke="currentColor"
-                             stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                        Xem giỏ hàng
-                    </a>
                 @else
                     <a href="{{ route('login') }}" class="bd-btn-login">
                         Đăng nhập để mua

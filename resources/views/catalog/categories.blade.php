@@ -695,7 +695,10 @@
             @if($childSlug)  <input type="hidden" name="child"  value="{{ $childSlug }}">  @endif
             <input type="search" name="q" value="{{ $keyword }}"
                    placeholder="Tìm sách, tác giả, ISBN..."
-                   autocomplete="off">
+                   autocomplete="off"
+                   required
+                   oninvalid="this.setCustomValidity('Vui lòng nhập từ khóa tìm kiếm')"
+                   oninput="this.setCustomValidity('')">
             <button type="submit">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="display: block;">
                     <circle cx="11" cy="11" r="8"/>
@@ -862,7 +865,6 @@
                         <input type="hidden" name="stock"     value="{{ $stockFilter ?? '' }}">
                         <select name="sort" class="cat-sort" onchange="this.form.submit()">
                             <option value="newest"     {{ $sortBy==='newest'     ? 'selected':'' }}>Mới nhất</option>
-                            <option value="popular"    {{ $sortBy==='popular'    ? 'selected':'' }}>Phổ biến</option>
                             <option value="price_asc"  {{ $sortBy==='price_asc'  ? 'selected':'' }}>Giá tăng dần</option>
                             <option value="price_desc" {{ $sortBy==='price_desc' ? 'selected':'' }}>Giá giảm dần</option>
                             <option value="title_asc"  {{ $sortBy==='title_asc'  ? 'selected':'' }}>Tên A–Z</option>
@@ -896,8 +898,6 @@
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     <h3>Không tìm thấy sách phù hợp</h3>
-                    <p>Thử thay đổi bộ lọc hoặc dùng từ khoá khác.</p>
-                    <a href="{{ $clearUrl }}" class="cat-empty-btn">Xoá bộ lọc</a>
                 </div>
 
             @elseif($viewMode === 'list')

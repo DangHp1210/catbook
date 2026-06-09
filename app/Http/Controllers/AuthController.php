@@ -182,6 +182,9 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'email.unique' => 'Địa chỉ email đã được sử dụng.',
+            'password.confirmed' => 'Xác nhận trường mật khẩu không khớp.',
         ]);
 
         $user = User::create([

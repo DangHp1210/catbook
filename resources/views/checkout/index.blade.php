@@ -516,7 +516,7 @@ html, body {
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
-                Đặt hàng ngay
+                Đặt hàng
             </button>
             <a href="{{ route('cart.index') }}" class="ck-btn-back">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

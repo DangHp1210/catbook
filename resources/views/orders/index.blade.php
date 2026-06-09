@@ -188,7 +188,7 @@ html, body {
 
 @php
     $statusLabels = [
-        'pending'   => 'Đang chờ',
+        'pending'   => 'Đang xử lý',
         'confirmed' => 'Đã xác nhận',
         'shipping'  => 'Đang giao',
         'completed' => 'Hoàn thành',

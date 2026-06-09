@@ -287,7 +287,10 @@ html,body {
         <form method="GET" action="{{ route('catalog.categories') }}" class="cb-search-form">
             <input name="q" type="search" value="{{ request('q') }}"
                    placeholder="Tìm sách, tác giả hoặc ISBN..."
-                   class="cb-search-input" />
+                   class="cb-search-input"
+                   required
+                   oninvalid="this.setCustomValidity('Vui lòng nhập từ khóa tìm kiếm')"
+                   oninput="this.setCustomValidity('')" />
             <button type="submit" class="cb-search-btn">Tìm kiếm</button>
         </form>
     </div>

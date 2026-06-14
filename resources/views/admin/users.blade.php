@@ -192,7 +192,6 @@ html, body {
                         $statusLabel = match($user->status) {
                             'active'  => 'Hoạt động',
                             'blocked' => 'Bị khoá',
-                            'pending' => 'Chờ duyệt',
                             default   => $user->status,
                         };
                     @endphp
@@ -233,14 +232,19 @@ html, body {
                         {{-- Inline edit form --}}
                         <td>
                             <form method="POST"
-                                  action="{{ route('admin.users.update', $user) }}"
-                                  class="us-edit-form">
+                                action="{{ route('admin.users.update', $user) }}"
+                                class="us-edit-form">
                                 @csrf
                                 @method('PATCH')
 
-                                <select name="role" class="us-select">
+                                {{-- Dropdown Vai trò --}}
+                                <select name="role" class="us-select" 
+                                        {{ $user->id === auth()->id() ? 'title="Bạn không thể tự hạ quyền của chính mình"' : '' }}>
                                     @foreach(['customer','staff','admin'] as $role)
-                                        <option value="{{ $role }}" @selected($user->role === $role)>
+                                        <option value="{{ $role }}" 
+                                            @selected($user->role === $role)
+                                            {{-- Chặn không cho tự đổi quyền thành nhân viên/khách hàng --}}
+                                            @disabled($user->id === auth()->id() && $role !== 'admin')>
                                             {{ match($role) {
                                                 'customer' => 'Khách hàng',
                                                 'staff'    => 'Nhân viên',
@@ -251,13 +255,17 @@ html, body {
                                     @endforeach
                                 </select>
 
-                                <select name="status" class="us-select">
-                                    @foreach(['active','blocked','pending'] as $status)
-                                        <option value="{{ $status }}" @selected($user->status === $status)>
+                                {{-- Dropdown Trạng thái --}}
+                                <select name="status" class="us-select"
+                                        {{ $user->id === auth()->id() ? 'title="Bạn không thể tự khoá tài khoản của chính mình"' : '' }}>
+                                    @foreach(['active','blocked'] as $status)
+                                        <option value="{{ $status }}" 
+                                            @selected($user->status === $status)
+                                            {{-- Chặn chọn mục "Bị khoá" nếu đây là tài khoản đang đăng nhập --}}
+                                            @disabled($user->id === auth()->id() && $status === 'blocked')>
                                             {{ match($status) {
                                                 'active'  => 'Hoạt động',
                                                 'blocked' => 'Bị khoá',
-                                                'pending' => 'Chờ duyệt',
                                                 default   => $status,
                                             } }}
                                         </option>

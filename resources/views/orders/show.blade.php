@@ -519,30 +519,29 @@ html, body {
                             <span class="os-star-pick" data-val="{{ $s }}">★</span>
                         @endfor
                     </div>
-                    {{-- Hidden select keeps the backend logic unchanged --}}
-                    <select name="rating" id="review-modal-rating"
-                            class="os-modal-select" style="margin-top:8px">
-                        @for($rating = 5; $rating >= 1; $rating--)
-                            <option value="{{ $rating }}">{{ $rating }} sao</option>
-                        @endfor
-                    </select>
+                    {{-- Hidden input keeps the backend logic unchanged; visual stars replace dropdown --}}
+                    <input type="hidden" name="rating" id="review-modal-rating" value="5">
                 </div>
 
                 <div class="os-modal-field">
                     <label class="os-modal-label">Nhận xét</label>
                     <textarea name="comment" id="review-modal-comment"
                               class="os-modal-textarea"
+                              maxlength="400"
                               placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..."></textarea>
+                    <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                        <small id="review-modal-charcount" style="color:var(--cb-muted);font-size:12px">0/400</small>
+                    </div>
                 </div>
             </div>
 
-            <div class="os-modal-foot">
+                <div class="os-modal-foot">
                 <button type="button" id="review-modal-cancel" class="os-modal-cancel">Huỷ</button>
                 <button type="submit" class="os-modal-submit">
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    Lưu đánh giá
+                    <span id="review-modal-submit-label">Gửi đánh giá</span>
                 </button>
             </div>
         </form>
@@ -563,6 +562,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const titleEl     = document.getElementById('review-modal-title');
     const ratingSelect= document.getElementById('review-modal-rating');
     const commentField= document.getElementById('review-modal-comment');
+    const submitLabel = document.getElementById('review-modal-submit-label');
 
     /* ── Open / close ── */
     const openModal  = () => modal.classList.add('is-open');
@@ -581,6 +581,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ratingSelect.value    = existingRating || '5';
         commentField.value    = existingComment || '';
         paintStars(parseInt(ratingSelect.value, 10));
+        if (submitLabel) submitLabel.textContent = existingRating ? 'Lưu thay đổi' : 'Gửi đánh giá';
         openModal();
     }
 
@@ -608,10 +609,33 @@ document.addEventListener('DOMContentLoaded', function () {
         s.addEventListener('click', () => {
             ratingSelect.value = s.dataset.val;
             paintStars(parseInt(s.dataset.val));
+            ratingSelect.dispatchEvent(new Event('change'));
         });
     });
 
     ratingSelect.addEventListener('change', () => paintStars(parseInt(ratingSelect.value)));
+
+    /* ── Character counter and client-side limit (400 chars) ── */
+    const charCountEl = document.getElementById('review-modal-charcount');
+    function updateCharCount() {
+        if (!charCountEl) return;
+        const len = commentField.value.length;
+        charCountEl.textContent = `${len}/400`;
+    }
+    updateCharCount();
+
+    commentField.addEventListener('input', () => {
+        if (commentField.value.length > 400) {
+            commentField.value = commentField.value.slice(0, 400);
+        }
+        updateCharCount();
+    });
+
+    form.addEventListener('submit', () => {
+        if (commentField.value.length > 400) {
+            commentField.value = commentField.value.slice(0, 400);
+        }
+    });
 });
 </script>
 @endsection

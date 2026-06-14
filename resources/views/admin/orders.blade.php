@@ -284,6 +284,33 @@ html, body {
 @endsection
 
 @section('content')
+@if(session('error'))
+    <div style="max-width:1300px;margin:0 auto 12px;padding:12px 18px;
+                background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;
+                font-family:var(--cb-sans);font-size:13px;color:#dc2626;
+                display:flex;align-items:center;gap:8px">
+        <svg width="14" height="14" fill="none" stroke="currentColor"
+             stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ session('error') }}
+    </div>
+@endif
+
+@if(session('success'))
+    <div style="max-width:1300px;margin:0 auto 12px;padding:12px 18px;
+                background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;
+                font-family:var(--cb-sans);font-size:13px;color:#166534;
+                display:flex;align-items:center;gap:8px">
+        <svg width="14" height="14" fill="none" stroke="currentColor"
+             stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        {{ session('success') }}
+    </div>
+@endif
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="or-header">
     <div>
@@ -395,23 +422,54 @@ html, body {
                                 @csrf
                                 @method('PATCH')
 
-                                <select name="order_status" class="or-select">
+                                @php
+                                    // 1. Quy tắc chuyển trạng thái Đơn hàng
+                                    $allowedOrderTransitions = match($order->order_status) {
+                                        'pending'   => ['pending', 'confirmed', 'cancelled'],
+                                        'confirmed' => ['confirmed', 'shipping', 'cancelled'],
+                                        'shipping'  => ['shipping', 'completed', 'cancelled'],
+                                        'completed' => ['completed'], // Trạng thái cuối
+                                        'cancelled' => ['cancelled'], // Trạng thái cuối
+                                        default     => [$order->order_status]
+                                    };
+
+                                    // 2. Quy tắc chuyển trạng thái Thanh toán
+                                    $allowedPaymentTransitions = match($order->payment_status) {
+                                        'unpaid'   => ['unpaid', 'paid', 'refunded'],
+                                        'paid'     => ['paid', 'refunded'],
+                                        'refunded' => ['refunded'],
+                                        default    => [$order->payment_status]
+                                    };
+
+                                    // 3. Khóa nút lưu nếu cả hai đều ở trạng thái cuối
+                                    $isTerminal = in_array($order->order_status, ['completed', 'cancelled']) && 
+                                                  in_array($order->payment_status, ['unpaid', 'paid', 'refunded']);
+                                @endphp
+
+                                <select name="order_status" class="or-select"
+                                        {{ in_array($order->order_status, ['completed', 'cancelled']) ? 'style=background-color:#f9fafb;cursor:not-allowed;' : '' }}>
                                     @foreach(['pending','confirmed','shipping','completed','cancelled'] as $status)
-                                        <option value="{{ $status }}" @selected($order->order_status === $status)>
+                                        <option value="{{ $status }}" 
+                                            @selected($order->order_status === $status)
+                                            @disabled(!in_array($status, $allowedOrderTransitions))>
                                             {{ $orderStatusLabels[$status] ?? $status }}
                                         </option>
                                     @endforeach
                                 </select>
 
-                                <select name="payment_status" class="or-select">
+                                <select name="payment_status" class="or-select"
+                                        {{ $order->payment_status === 'refunded' ? 'style=background-color:#f9fafb;cursor:not-allowed;' : '' }}>
                                     @foreach(['unpaid','paid','refunded'] as $status)
-                                        <option value="{{ $status }}" @selected($order->payment_status === $status)>
+                                        <option value="{{ $status }}" 
+                                            @selected($order->payment_status === $status)
+                                            @disabled(!in_array($status, $allowedPaymentTransitions))>
                                             {{ $paymentStatusLabels[$status] ?? $status }}
                                         </option>
                                     @endforeach
                                 </select>
 
-                                <button type="submit" class="or-save-btn">
+                                <button type="submit" class="or-save-btn"
+                                        {{ $isTerminal ? 'disabled style=opacity:0.5;cursor:not-allowed;' : '' }}>
                                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                                         <polyline points="20 6 9 17 4 12"/>
                                     </svg>

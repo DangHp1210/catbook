@@ -22,16 +22,38 @@ use Illuminate\Validation\Rule;
 
 class DashboardController extends Controller
 {
+    // ── [NEW] Nhãn hiển thị trạng thái ──────────────────────
+    private const ORDER_STATUS_LABELS = [
+        'pending'   => 'Chờ xử lý',
+        'confirmed' => 'Đã xác nhận',
+        'shipping'  => 'Đang giao',
+        'completed' => 'Hoàn tất',
+        'cancelled' => 'Đã huỷ',
+    ];
+
+    // ── [NEW] Ràng buộc chuyển trạng thái hợp lệ ────────────
+    // Key = trạng thái hiện tại → Value = danh sách trạng thái được phép chuyển sang
+    private const ALLOWED_TRANSITIONS = [
+        'pending'   => ['confirmed', 'cancelled'],
+        'confirmed' => ['shipping',  'cancelled'],
+        'shipping'  => ['completed'],
+        'completed' => [],   // trạng thái cuối — không thể thay đổi
+        'cancelled' => [],   // trạng thái cuối — không thể thay đổi
+    ];
+
+    // ── [NEW] Trạng thái cuối — khoá toàn bộ chỉnh sửa ─────
+    private const FINAL_STATUSES = ['completed', 'cancelled'];
+
     public function dashboard(): View
     {
         $stats = [
-            'users' => User::query()->count(),
-            'books' => Book::query()->count(),
-            'authors' => Author::query()->count(),
+            'users'      => User::query()->count(),
+            'books'      => Book::query()->count(),
+            'authors'    => Author::query()->count(),
             'categories' => Category::query()->count(),
             'publishers' => Publisher::query()->count(),
-            'orders' => Order::query()->count(),
-            'revenue' => (float) Order::query()
+            'orders'     => Order::query()->count(),
+            'revenue'    => (float) Order::query()
                 ->whereIn('order_status', ['confirmed', 'shipping', 'completed'])
                 ->sum('total_amount'),
         ];
@@ -43,7 +65,7 @@ class DashboardController extends Controller
             ->get();
 
         return view('admin.dashboard', [
-            'stats' => $stats,
+            'stats'        => $stats,
             'recentOrders' => $recentOrders,
         ]);
     }
@@ -67,14 +89,14 @@ class DashboardController extends Controller
 
         return view('admin.users', [
             'users' => $users,
-            'q' => $q,
+            'q'     => $q,
         ]);
     }
 
     public function updateUser(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
-            'role' => ['required', Rule::in(['customer', 'staff', 'admin'])],
+            'role'   => ['required', Rule::in(['customer', 'staff', 'admin'])],
             'status' => ['required', Rule::in(['active', 'blocked', 'pending'])],
         ]);
 
@@ -102,14 +124,14 @@ class DashboardController extends Controller
 
         $publishers = Publisher::query()->orderBy('name')->get(['id', 'name']);
         $categories = Category::query()->orderBy('name')->get(['id', 'name']);
-        $authors = Author::query()->orderBy('name')->get(['id', 'name']);
+        $authors    = Author::query()->orderBy('name')->get(['id', 'name']);
 
         return view('admin.books', [
-            'books' => $books,
+            'books'      => $books,
             'publishers' => $publishers,
             'categories' => $categories,
-            'authors' => $authors,
-            'q' => $q,
+            'authors'    => $authors,
+            'q'          => $q,
         ]);
     }
 
@@ -133,76 +155,73 @@ class DashboardController extends Controller
         }
 
         return response()->json([
-            'data' => $authors->map(fn (Author $author) => [
-                'id' => $author->id,
+            'data'       => $authors->map(fn (Author $author) => [
+                'id'   => $author->id,
                 'name' => $author->name,
             ]),
             'can_create' => $q !== '' && ! $exactMatch,
-            'query' => $q,
+            'query'      => $q,
         ]);
     }
 
     public function storeBook(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'isbn' => ['nullable', 'string', 'max:50', Rule::unique('books', 'isbn')],
-            'description' => ['nullable', 'string'],
-            'cover_image_file' => ['nullable', 'image', 'max:3072'],
-            'format' => ['nullable', 'string', 'max:255'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'discount_price' => ['nullable', 'numeric', 'min:0', 'lte:price'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
-            'page_count' => ['nullable', 'integer', 'min:1'],
-            'language' => ['nullable', 'string', 'max:100'],
-            'publication_year' => ['nullable', 'integer', 'min:1900', 'max:' . (now()->year + 1)],
-            'status' => ['required', Rule::in(['available', 'hidden', 'out_of_stock'])],
-            'publisher_id' => ['nullable', 'integer', Rule::exists('publishers', 'id')],
-            'category_ids' => ['nullable', 'array'],
-            'category_ids.*' => ['integer', Rule::exists('categories', 'id')],
-            'author_ids' => ['nullable', 'array'],
-            'author_ids.*' => ['integer', Rule::exists('authors', 'id')],
-            'author_names' => ['nullable', 'array'],
-            'author_names.*' => ['nullable', 'string', 'max:255'],
+            'title'             => ['required', 'string', 'max:255'],
+            'isbn'              => ['nullable', 'string', 'max:50', Rule::unique('books', 'isbn')],
+            'description'       => ['nullable', 'string'],
+            'cover_image_file'  => ['nullable', 'image', 'max:3072'],
+            'format'            => ['nullable', 'string', 'max:255'],
+            'purchase_price'    => ['nullable', 'numeric', 'min:0'],
+            'price'             => ['required', 'numeric', 'min:0'],
+            'discount_price'    => ['nullable', 'numeric', 'min:0', 'lte:price'],
+            'stock_quantity'    => ['required', 'integer', 'min:0'],
+            'page_count'        => ['nullable', 'integer', 'min:1'],
+            'language'          => ['nullable', 'string', 'max:100'],
+            'publication_year'  => ['nullable', 'integer', 'min:1900', 'max:' . (now()->year + 1)],
+            'status'            => ['required', Rule::in(['available', 'hidden', 'out_of_stock'])],
+            'publisher_id'      => ['nullable', 'integer', Rule::exists('publishers', 'id')],
+            'category_ids'      => ['nullable', 'array'],
+            'category_ids.*'    => ['integer', Rule::exists('categories', 'id')],
+            'author_ids'        => ['nullable', 'array'],
+            'author_ids.*'      => ['integer', Rule::exists('authors', 'id')],
+            'author_names'      => ['nullable', 'array'],
+            'author_names.*'    => ['nullable', 'string', 'max:255'],
         ]);
 
         if (isset($data['purchase_price'])) {
             if ((float) $data['purchase_price'] >= (float) $data['price']) {
-                return back()
-                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá bán.'])
-                    ->withInput();
+                return back()->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá bán.'])->withInput();
             }
 
-            if (isset($data['discount_price']) && (float) $data['discount_price'] > 0 && (float) $data['purchase_price'] >= (float) $data['discount_price']) {
-                return back()
-                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá khuyến mãi.'])
-                    ->withInput();
+            if (isset($data['discount_price']) && (float) $data['discount_price'] > 0
+                && (float) $data['purchase_price'] >= (float) $data['discount_price']) {
+                return back()->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá khuyến mãi.'])->withInput();
             }
         }
 
-        $title = trim((string) $data['title']);
-        $isbnInput = trim((string) ($data['isbn'] ?? ''));
+        $title          = trim((string) $data['title']);
+        $isbnInput      = trim((string) ($data['isbn'] ?? ''));
         $coverImagePath = $request->hasFile('cover_image_file')
             ? $request->file('cover_image_file')->store('book-covers', 'public')
             : null;
 
         $book = Book::query()->create([
-            'title' => $title,
-            'slug' => Str::slug($title) . '-' . Str::lower(Str::random(5)),
-            'isbn' => $isbnInput !== '' ? $isbnInput : null,
-            'description' => $data['description'] ?? null,
-            'cover_image' => $coverImagePath,
-            'format' => trim((string) ($data['format'] ?? '')) ?: null,
-            'purchase_price' => $data['purchase_price'] ?? null,
-            'price' => $data['price'],
-            'discount_price' => $data['discount_price'] ?? null,
-            'stock_quantity' => $data['stock_quantity'],
-            'page_count' => $data['page_count'] ?? null,
-            'language' => $data['language'] ?? null,
+            'title'            => $title,
+            'slug'             => Str::slug($title) . '-' . Str::lower(Str::random(5)),
+            'isbn'             => $isbnInput !== '' ? $isbnInput : null,
+            'description'      => $data['description'] ?? null,
+            'cover_image'      => $coverImagePath,
+            'format'           => trim((string) ($data['format'] ?? '')) ?: null,
+            'purchase_price'   => $data['purchase_price'] ?? null,
+            'price'            => $data['price'],
+            'discount_price'   => $data['discount_price'] ?? null,
+            'stock_quantity'   => $data['stock_quantity'],
+            'page_count'       => $data['page_count'] ?? null,
+            'language'         => $data['language'] ?? null,
             'publication_year' => $data['publication_year'] ?? null,
-            'status' => $data['status'],
-            'publisher_id' => $data['publisher_id'] ?? null,
+            'status'           => $data['status'],
+            'publisher_id'     => $data['publisher_id'] ?? null,
         ]);
 
         $book->categories()->sync($data['category_ids'] ?? []);
@@ -214,51 +233,47 @@ class DashboardController extends Controller
     public function updateBook(Request $request, Book $book): RedirectResponse
     {
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('books', 'slug')->ignore($book->id)],
-            'isbn' => ['nullable', 'string', 'max:50', Rule::unique('books', 'isbn')->ignore($book->id)],
-            'description' => ['nullable', 'string'],
+            'title'            => ['required', 'string', 'max:255'],
+            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('books', 'slug')->ignore($book->id)],
+            'isbn'             => ['nullable', 'string', 'max:50', Rule::unique('books', 'isbn')->ignore($book->id)],
+            'description'      => ['nullable', 'string'],
             'cover_image_file' => ['nullable', 'image', 'max:3072'],
-            'format' => ['nullable', 'string', 'max:255'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'discount_price' => ['nullable', 'numeric', 'min:0', 'lte:price'],
-            'stock_quantity' => ['required', 'integer', 'min:0'],
-            'page_count' => ['nullable', 'integer', 'min:1'],
-            'language' => ['nullable', 'string', 'max:100'],
+            'format'           => ['nullable', 'string', 'max:255'],
+            'purchase_price'   => ['nullable', 'numeric', 'min:0'],
+            'price'            => ['required', 'numeric', 'min:0'],
+            'discount_price'   => ['nullable', 'numeric', 'min:0', 'lte:price'],
+            'stock_quantity'   => ['required', 'integer', 'min:0'],
+            'page_count'       => ['nullable', 'integer', 'min:1'],
+            'language'         => ['nullable', 'string', 'max:100'],
             'publication_year' => ['nullable', 'integer', 'min:1900', 'max:' . (now()->year + 1)],
-            'status' => ['required', Rule::in(['available', 'hidden', 'out_of_stock'])],
-            'publisher_id' => ['nullable', 'integer', Rule::exists('publishers', 'id')],
-            'category_ids' => ['nullable', 'array'],
-            'category_ids.*' => ['integer', Rule::exists('categories', 'id')],
-            'author_ids' => ['nullable', 'array'],
-            'author_ids.*' => ['integer', Rule::exists('authors', 'id')],
-            'author_names' => ['nullable', 'array'],
-            'author_names.*' => ['nullable', 'string', 'max:255'],
+            'status'           => ['required', Rule::in(['available', 'hidden', 'out_of_stock'])],
+            'publisher_id'     => ['nullable', 'integer', Rule::exists('publishers', 'id')],
+            'category_ids'     => ['nullable', 'array'],
+            'category_ids.*'   => ['integer', Rule::exists('categories', 'id')],
+            'author_ids'       => ['nullable', 'array'],
+            'author_ids.*'     => ['integer', Rule::exists('authors', 'id')],
+            'author_names'     => ['nullable', 'array'],
+            'author_names.*'   => ['nullable', 'string', 'max:255'],
         ]);
 
         if (isset($data['purchase_price'])) {
             if ((float) $data['purchase_price'] >= (float) $data['price']) {
-                return back()
-                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá bán.'])
-                    ->withInput();
+                return back()->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá bán.'])->withInput();
             }
 
-            if (isset($data['discount_price']) && (float) $data['discount_price'] > 0 && (float) $data['purchase_price'] >= (float) $data['discount_price']) {
-                return back()
-                    ->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá khuyến mãi.'])
-                    ->withInput();
+            if (isset($data['discount_price']) && (float) $data['discount_price'] > 0
+                && (float) $data['purchase_price'] >= (float) $data['discount_price']) {
+                return back()->withErrors(['purchase_price' => 'Giá nhập phải nhỏ hơn giá khuyến mãi.'])->withInput();
             }
         }
 
-        $title = trim((string) $data['title']);
-        $slugInput = trim((string) ($data['slug'] ?? ''));
-        $isbnInput = trim((string) ($data['isbn'] ?? ''));
+        $title          = trim((string) $data['title']);
+        $slugInput      = trim((string) ($data['slug'] ?? ''));
+        $isbnInput      = trim((string) ($data['isbn'] ?? ''));
         $coverImagePath = $book->cover_image;
 
         if ($request->hasFile('cover_image_file')) {
-            if (
-                $coverImagePath
+            if ($coverImagePath
                 && ! str_starts_with($coverImagePath, 'http://')
                 && ! str_starts_with($coverImagePath, 'https://')
                 && Storage::disk('public')->exists($coverImagePath)
@@ -270,21 +285,21 @@ class DashboardController extends Controller
         }
 
         $book->update([
-            'title' => $title,
-            'slug' => $slugInput !== '' ? Str::slug($slugInput) : Str::slug($title),
-            'isbn' => $isbnInput !== '' ? $isbnInput : null,
-            'description' => $data['description'] ?? null,
-            'format' => trim((string) ($data['format'] ?? '')) ?: null,
-            'purchase_price' => $data['purchase_price'] ?? null,
-            'cover_image' => $coverImagePath,
-            'price' => $data['price'],
-            'discount_price' => $data['discount_price'] ?? null,
-            'stock_quantity' => $data['stock_quantity'],
-            'page_count' => $data['page_count'] ?? null,
-            'language' => $data['language'] ?? null,
+            'title'            => $title,
+            'slug'             => $slugInput !== '' ? Str::slug($slugInput) : Str::slug($title),
+            'isbn'             => $isbnInput !== '' ? $isbnInput : null,
+            'description'      => $data['description'] ?? null,
+            'format'           => trim((string) ($data['format'] ?? '')) ?: null,
+            'purchase_price'   => $data['purchase_price'] ?? null,
+            'cover_image'      => $coverImagePath,
+            'price'            => $data['price'],
+            'discount_price'   => $data['discount_price'] ?? null,
+            'stock_quantity'   => $data['stock_quantity'],
+            'page_count'       => $data['page_count'] ?? null,
+            'language'         => $data['language'] ?? null,
             'publication_year' => $data['publication_year'] ?? null,
-            'status' => $data['status'],
-            'publisher_id' => $data['publisher_id'] ?? null,
+            'status'           => $data['status'],
+            'publisher_id'     => $data['publisher_id'] ?? null,
         ]);
 
         $book->categories()->sync($data['category_ids'] ?? []);
@@ -331,18 +346,18 @@ class DashboardController extends Controller
             ->get(['id', 'name', 'parent_id']);
 
         return view('admin.categories', [
-            'categories' => $categories,
-            'allCategories' => $allCategories,
+            'categories'      => $categories,
+            'allCategories'   => $allCategories,
             'categoryOptions' => $categoryOptions,
-            'q' => $q,
+            'q'               => $q,
         ]);
     }
 
     public function storeCategory(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('categories', 'slug')],
+            'name'      => ['required', 'string', 'max:255'],
+            'slug'      => ['nullable', 'string', 'max:255', Rule::unique('categories', 'slug')],
             'parent_id' => ['nullable', 'integer', Rule::exists('categories', 'id')],
         ]);
 
@@ -350,8 +365,8 @@ class DashboardController extends Controller
         $slug = trim((string) ($data['slug'] ?? ''));
 
         Category::query()->create([
-            'name' => $name,
-            'slug' => $slug !== '' ? $slug : Str::slug($name) . '-' . Str::lower(Str::random(5)),
+            'name'      => $name,
+            'slug'      => $slug !== '' ? $slug : Str::slug($name) . '-' . Str::lower(Str::random(5)),
             'parent_id' => $data['parent_id'] ?? null,
         ]);
 
@@ -361,8 +376,8 @@ class DashboardController extends Controller
     public function updateCategory(Request $request, Category $category): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('categories', 'slug')->ignore($category->id)],
+            'name'      => ['required', 'string', 'max:255'],
+            'slug'      => ['nullable', 'string', 'max:255', Rule::unique('categories', 'slug')->ignore($category->id)],
             'parent_id' => ['nullable', 'integer', Rule::exists('categories', 'id'), 'not_in:' . $category->id],
         ]);
 
@@ -370,8 +385,8 @@ class DashboardController extends Controller
         $slug = trim((string) ($data['slug'] ?? ''));
 
         $category->update([
-            'name' => $name,
-            'slug' => $slug !== '' ? $slug : Str::slug($name),
+            'name'      => $name,
+            'slug'      => $slug !== '' ? $slug : Str::slug($name),
             'parent_id' => $data['parent_id'] ?? null,
         ]);
 
@@ -410,17 +425,17 @@ class DashboardController extends Controller
 
         return view('admin.publishers', [
             'publishers' => $publishers,
-            'q' => $q,
+            'q'          => $q,
         ]);
     }
 
     public function storePublisher(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'    => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
             'website' => ['nullable', 'url', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone'   => ['nullable', 'string', 'max:20'],
         ]);
 
         Publisher::query()->create($data);
@@ -431,10 +446,10 @@ class DashboardController extends Controller
     public function updatePublisher(Request $request, Publisher $publisher): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'    => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
             'website' => ['nullable', 'url', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone'   => ['nullable', 'string', 'max:20'],
         ]);
 
         $publisher->update($data);
@@ -469,15 +484,15 @@ class DashboardController extends Controller
 
         return view('admin.authors', [
             'authors' => $authors,
-            'q' => $q,
+            'q'       => $q,
         ]);
     }
 
     public function storeAuthor(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'bio' => ['nullable', 'string'],
+            'name'        => ['required', 'string', 'max:255'],
+            'bio'         => ['nullable', 'string'],
             'avatar_file' => ['nullable', 'image', 'max:3072'],
         ]);
 
@@ -486,8 +501,8 @@ class DashboardController extends Controller
             : null;
 
         Author::query()->create([
-            'name' => $data['name'],
-            'bio' => $data['bio'] ?? null,
+            'name'       => $data['name'],
+            'bio'        => $data['bio'] ?? null,
             'avatar_url' => $avatarPath,
         ]);
 
@@ -497,16 +512,15 @@ class DashboardController extends Controller
     public function updateAuthor(Request $request, Author $author): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'bio' => ['nullable', 'string'],
+            'name'        => ['required', 'string', 'max:255'],
+            'bio'         => ['nullable', 'string'],
             'avatar_file' => ['nullable', 'image', 'max:3072'],
         ]);
 
         $avatarPath = $author->avatar_url;
 
         if ($request->hasFile('avatar_file')) {
-            if (
-                $avatarPath
+            if ($avatarPath
                 && ! str_starts_with($avatarPath, 'http://')
                 && ! str_starts_with($avatarPath, 'https://')
                 && ! str_starts_with($avatarPath, '/')
@@ -519,8 +533,8 @@ class DashboardController extends Controller
         }
 
         $author->update([
-            'name' => $data['name'],
-            'bio' => $data['bio'] ?? null,
+            'name'       => $data['name'],
+            'bio'        => $data['bio'] ?? null,
             'avatar_url' => $avatarPath,
         ]);
 
@@ -536,6 +550,159 @@ class DashboardController extends Controller
         $author->delete();
 
         return back()->with('success', 'Đã xóa tác giả.');
+    }
+
+    public function orders(Request $request): View
+    {
+        $q        = trim((string) $request->query('q', ''));
+        $openCode = trim((string) $request->query('open', ''));
+
+        $orders = Order::query()
+            ->with('user')
+            ->withCount('items')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('order_code', 'like', "%{$q}%")
+                        ->orWhere('recipient_name', 'like', "%{$q}%")
+                        ->orWhere('recipient_phone', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        $selectedOrder = null;
+        if ($openCode !== '') {
+            $selectedOrder = Order::query()
+                ->with(['user', 'items.book.authors'])
+                ->where('order_code', $openCode)
+                ->first();
+        }
+
+        return view('admin.orders', [
+            'orders'        => $orders,
+            'q'             => $q,
+            'openCode'      => $openCode,
+            'selectedOrder' => $selectedOrder,
+        ]);
+    }
+
+    // ── [UPDATED] updateOrder — thêm validate ràng buộc trạng thái ──
+    public function updateOrder(Request $request, Order $order): RedirectResponse
+    {
+        $data = $request->validate([
+            'order_status'   => ['required', Rule::in(['pending', 'confirmed', 'shipping', 'completed', 'cancelled'])],
+            'payment_status' => ['required', Rule::in(['unpaid', 'paid', 'refunded'])],
+        ]);
+
+        $newOrderStatus   = $data['order_status'];
+        $newPaymentStatus = $data['payment_status'];
+        $currentStatus    = $order->order_status;
+
+        // ── [Validate 1] Đơn ở trạng thái cuối — khoá toàn bộ ──
+        if (in_array($currentStatus, self::FINAL_STATUSES)) {
+            $label = self::ORDER_STATUS_LABELS[$currentStatus] ?? $currentStatus;
+
+            return back()->with('error',
+                "Đơn hàng {$order->order_code} đang ở trạng thái \"{$label}\" — không thể thay đổi."
+            );
+        }
+
+        // ── [Validate 2] Kiểm tra chuyển trạng thái đơn hợp lệ ──
+        if ($newOrderStatus !== $currentStatus) {
+            $allowed = self::ALLOWED_TRANSITIONS[$currentStatus] ?? [];
+
+            if (! in_array($newOrderStatus, $allowed)) {
+                $fromLabel = self::ORDER_STATUS_LABELS[$currentStatus]  ?? $currentStatus;
+                $toLabel   = self::ORDER_STATUS_LABELS[$newOrderStatus] ?? $newOrderStatus;
+
+                return back()->with('error',
+                    "Không thể chuyển đơn {$order->order_code} từ \"{$fromLabel}\" sang \"{$toLabel}\"."
+                );
+            }
+        }
+
+        // ── [Validate 3] Đơn huỷ không được đánh dấu đã thanh toán ──
+        if ($newOrderStatus === 'cancelled' && $newPaymentStatus === 'paid') {
+            return back()->with('error',
+                "Đơn hàng đã huỷ không thể đánh dấu là \"Đã thanh toán\"."
+            );
+        }
+
+        $oldStatus = $order->order_status;
+
+        $order->update([
+            'order_status'   => $newOrderStatus,
+            'payment_status' => $newPaymentStatus,
+        ]);
+
+        // Gửi thông báo cho khách hàng khi trạng thái đơn thay đổi
+        if ($newOrderStatus !== $oldStatus) {
+            $order->refresh();
+            try {
+                if ($order->user) {
+                    $order->user->notify(
+                        new \App\Notifications\OrderStatusUpdatedNotification($order, $oldStatus)
+                    );
+                }
+            } catch (\Throwable $e) {
+                logger()->error('Failed to send order status notification: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Đã cập nhật đơn hàng {$order->order_code} thành công.");
+    }
+
+    public function revenue(Request $request): View
+    {
+        $year  = (int) $request->query('year', now()->year);
+        $month = $request->query('month');
+
+        $baseQuery = Order::query()
+            ->whereIn('order_status', ['confirmed', 'shipping', 'completed'])
+            ->whereYear('created_at', $year);
+
+        if ($month !== null && $month !== '') {
+            $baseQuery->whereMonth('created_at', (int) $month);
+        }
+
+        $totalRevenue      = (float) (clone $baseQuery)->sum('total_amount');
+        $orderCount        = (int)   (clone $baseQuery)->count();
+        $averageOrderValue = $orderCount > 0 ? $totalRevenue / $orderCount : 0;
+
+        $totalProfit = (float) OrderItem::query()
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('books', 'order_items.book_id', '=', 'books.id')
+            ->whereIn('orders.order_status', ['confirmed', 'shipping', 'completed'])
+            ->whereYear('orders.created_at', $year)
+            ->when($month !== null && $month !== '', fn ($q) => $q->whereMonth('orders.created_at', (int) $month))
+            ->selectRaw('SUM((order_items.unit_price - COALESCE(books.purchase_price, 0)) * order_items.quantity) as profit')
+            ->value('profit') ?? 0;
+
+        $revenueByPaymentMethod = (clone $baseQuery)
+            ->select('payment_method', DB::raw('SUM(total_amount) as revenue'))
+            ->groupBy('payment_method')
+            ->orderByDesc('revenue')
+            ->get();
+
+        $revenueByMonth = Order::query()
+            ->whereIn('order_status', ['confirmed', 'shipping', 'completed'])
+            ->whereYear('created_at', $year)
+            ->selectRaw('MONTH(created_at) as month, SUM(total_amount) as revenue')
+            ->groupByRaw('MONTH(created_at)')
+            ->orderByRaw('MONTH(created_at)')
+            ->get();
+
+        return view('admin.revenue', [
+            'year'                   => $year,
+            'month'                  => $month,
+            'totalRevenue'           => $totalRevenue,
+            'orderCount'             => $orderCount,
+            'averageOrderValue'      => $averageOrderValue,
+            'totalProfit'            => $totalProfit,
+            'revenueByPaymentMethod' => $revenueByPaymentMethod,
+            'revenueByMonth'         => $revenueByMonth,
+        ]);
     }
 
     /**
@@ -585,7 +752,7 @@ class DashboardController extends Controller
             $rows = collect();
 
             foreach (($grouped->get($parentKey) ?? collect())->sortBy('name') as $category) {
-                $category->depth = $depth;
+                $category->depth        = $depth;
                 $category->has_children = ($grouped->get((string) $category->id) ?? collect())->isNotEmpty();
                 $rows->push($category);
                 $rows = $rows->merge($walk((string) $category->id, $depth + 1));
@@ -595,120 +762,5 @@ class DashboardController extends Controller
         };
 
         return $walk('__root__', 0);
-    }
-
-    public function orders(Request $request): View
-    {
-        $q = trim((string) $request->query('q', ''));
-        $openCode = trim((string) $request->query('open', ''));
-
-        $orders = Order::query()
-            ->with('user')
-            ->withCount('items')
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($sub) use ($q) {
-                    $sub->where('order_code', 'like', "%{$q}%")
-                        ->orWhere('recipient_name', 'like', "%{$q}%")
-                        ->orWhere('recipient_phone', 'like', "%{$q}%");
-                });
-            })
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
-
-        $selectedOrder = null;
-        if ($openCode !== '') {
-            $selectedOrder = Order::query()
-                ->with(['user', 'items.book.authors'])
-                ->where('order_code', $openCode)
-                ->first();
-        }
-
-        return view('admin.orders', [
-            'orders' => $orders,
-            'q' => $q,
-            'openCode' => $openCode,
-            'selectedOrder' => $selectedOrder,
-        ]);
-    }
-
-    public function updateOrder(Request $request, Order $order): RedirectResponse
-    {
-        $data = $request->validate([
-            'order_status' => ['required', Rule::in(['pending', 'confirmed', 'shipping', 'completed', 'cancelled'])],
-            'payment_status' => ['required', Rule::in(['unpaid', 'paid', 'refunded'])],
-        ]);
-
-        $oldStatus = $order->order_status;
-
-        $order->update($data);
-
-        // If order status changed, notify the customer
-        if (isset($data['order_status']) && $data['order_status'] !== $oldStatus) {
-            $order->refresh();
-            try {
-                if ($order->user) {
-                    $order->user->notify(new \App\Notifications\OrderStatusUpdatedNotification($order, $oldStatus));
-                }
-            } catch (\Throwable $e) {
-                // Avoid breaking admin flow if notification fails; log quietly
-                 logger()->error('Failed to send order status notification: ' . $e->getMessage());
-            }
-        }
-
-        return back()->with('success', 'Đã cập nhật đơn hàng.');
-    }
-
-    public function revenue(Request $request): View
-    {
-        $year = (int) $request->query('year', now()->year);
-        $month = $request->query('month');
-
-        $baseQuery = Order::query()
-            ->whereIn('order_status', ['confirmed', 'shipping', 'completed'])
-            ->whereYear('created_at', $year);
-
-        if ($month !== null && $month !== '') {
-            $baseQuery->whereMonth('created_at', (int) $month);
-        }
-
-        $totalRevenue = (float) (clone $baseQuery)->sum('total_amount');
-        $orderCount = (int) (clone $baseQuery)->count();
-        $averageOrderValue = $orderCount > 0 ? $totalRevenue / $orderCount : 0;
-
-        // Calculate total profit: SUM((order_item.unit_price - book.purchase_price) * quantity)
-        $totalProfit = (float) OrderItem::query()
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->join('books', 'order_items.book_id', '=', 'books.id')
-            ->whereIn('orders.order_status', ['confirmed', 'shipping', 'completed'])
-            ->whereYear('orders.created_at', $year)
-            ->when($month !== null && $month !== '', fn ($q) => $q->whereMonth('orders.created_at', (int) $month))
-            ->selectRaw('SUM((order_items.unit_price - COALESCE(books.purchase_price, 0)) * order_items.quantity) as profit')
-            ->value('profit') ?? 0;
-
-        $revenueByPaymentMethod = (clone $baseQuery)
-            ->select('payment_method', DB::raw('SUM(total_amount) as revenue'))
-            ->groupBy('payment_method')
-            ->orderByDesc('revenue')
-            ->get();
-
-        $revenueByMonth = Order::query()
-            ->whereIn('order_status', ['confirmed', 'shipping', 'completed'])
-            ->whereYear('created_at', $year)
-            ->selectRaw('MONTH(created_at) as month, SUM(total_amount) as revenue')
-            ->groupByRaw('MONTH(created_at)')
-            ->orderByRaw('MONTH(created_at)')
-            ->get();
-
-        return view('admin.revenue', [
-            'year' => $year,
-            'month' => $month,
-            'totalRevenue' => $totalRevenue,
-            'orderCount' => $orderCount,
-            'averageOrderValue' => $averageOrderValue,
-            'totalProfit' => $totalProfit,
-            'revenueByPaymentMethod' => $revenueByPaymentMethod,
-            'revenueByMonth' => $revenueByMonth,
-        ]);
     }
 }

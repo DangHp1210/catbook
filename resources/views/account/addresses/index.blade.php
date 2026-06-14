@@ -411,7 +411,11 @@ html, body {
                         <label class="ad-label">Số điện thoại <span class="ad-req">*</span></label>
                         <input name="receiver_phone" type="tel" required
                                value="{{ old('receiver_phone') }}"
-                               placeholder="0xxxxxxxxx" class="ad-input">
+                               placeholder="0xxxxxxxxx" class="ad-input"
+                               inputmode="numeric"
+                               pattern="^[0-9]+$"
+                               oninvalid="this.setCustomValidity('Số điện thoại không hợp lệ')"
+                               oninput="this.setCustomValidity('')">
                     </div>
                     <div class="ad-col-2 ad-field">
                         <label class="ad-label">Địa chỉ cụ thể <span class="ad-req">*</span></label>

@@ -247,6 +247,15 @@ html, body {
     padding: 0 26px 22px;
     display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
 }
+/* ─── Flash Messages ──────────────────────────────────── */
+.ac-alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 14px 18px; border-radius: 12px; border: 1px solid;
+    font-family: var(--cb-sans); font-size: 13px; font-weight: 500;
+    margin-bottom: 20px;
+}
+.ac-alert svg { flex-shrink: 0; margin-top: 1px; }
+.ac-alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
 </style>
 @endsection
 
@@ -263,7 +272,15 @@ html, body {
 
 @section('content')
 <div class="ac-wrap ac-page-gap">
-
+{{-- ── Thông báo trạng thái (Flash messages) ── --}}
+    @if(session('success'))
+        <div class="ac-alert ac-alert-success" data-flash>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {{ session('success') }}
+        </div>
+    @endif
     {{-- ── 1. Profile hero card ──────────────────────────── --}}
     <div class="ac-card ac-hero">
         <div class="ac-hero-body">
@@ -355,10 +372,13 @@ html, body {
 
                 <div class="ac-form-group">
                     <label for="phone" class="ac-label">Số điện thoại</label>
-                    <input id="phone" name="phone" type="tel"
-                           value="{{ $user->phone ?? '' }}"
-                           placeholder="Nhập số điện thoại"
-                           class="ac-input">
+                        <input id="phone" name="phone" type="tel"
+                        value="{{ $user->phone ?? '' }}"
+                        placeholder="Nhập số điện thoại"
+                        class="ac-input"
+                        pattern="^[0-9]+$"
+                        oninvalid="this.setCustomValidity('Vui lòng chỉ nhập số')"
+                        oninput="this.setCustomValidity('')">
                     @error('phone')
                         <p class="ac-error">{{ $message }}</p>
                     @enderror
@@ -402,7 +422,9 @@ html, body {
 {{-- ════════════════════════════════════════════════
      Password change modal (logic giữ nguyên)
 ════════════════════════════════════════════════ --}}
-<div id="password-modal" class="ac-modal-wrap hidden">
+<div id="password-modal" 
+     class="ac-modal-wrap hidden"
+     data-has-errors="{{ ($errors->has('current_password') || $errors->has('new_password') || $errors->has('new_password_confirmation')) ? '1' : '0' }}">
     <div id="password-overlay" class="ac-modal-overlay"></div>
 
     <div class="ac-modal">
@@ -428,6 +450,8 @@ html, body {
                            type="password"
                            class="ac-input"
                            placeholder="••••••••"
+                           oninput="this.setCustomValidity('')"
+                           minlength="8"
                            required>
                     @error('current_password')
                         <p class="ac-error">{{ $message }}</p>
@@ -441,6 +465,9 @@ html, body {
                            type="password"
                            class="ac-input"
                            placeholder="Tối thiểu 8 ký tự"
+                           minlength="8"
+                           oninvalid="this.setCustomValidity('Cần ít nhất 8 ký tự')"
+                           oninput="this.setCustomValidity(''); document.getElementById('modal_new_password_confirmation').dispatchEvent(new Event('input'));"
                            required>
                     @error('new_password')
                         <p class="ac-error">{{ $message }}</p>
@@ -454,6 +481,8 @@ html, body {
                            type="password"
                            class="ac-input"
                            placeholder="Nhập lại mật khẩu mới"
+                           oninvalid="if(this.value.length < 8) { this.setCustomValidity('Cần ít nhất 8 ký tự'); } else { this.setCustomValidity('Xác nhận mật khẩu không khớp'); }"
+                           oninput="this.setCustomValidity(''); if(this.value !== '' && this.value !== document.getElementById('modal_new_password').value) this.setCustomValidity('Xác nhận mật khẩu không khớp');"
                            required>
                     @error('new_password_confirmation')
                         <p class="ac-error">{{ $message }}</p>
@@ -482,29 +511,42 @@ html, body {
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
     /* Avatar auto-submit */
     const avatarInput = document.getElementById('avatar_file');
     const avatarForm  = document.getElementById('avatar-form');
+    const MAX_SIZE_MB = 2;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
     if (avatarInput && avatarForm) {
         avatarInput.addEventListener('change', function () {
-            if (this.files.length > 0) avatarForm.submit();
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                if (file.size > MAX_SIZE_BYTES) {
+                    alert(`Dung lượng hình ảnh không vượt quá ${MAX_SIZE_MB}MB.`);
+                    this.value = '';
+                    return;
+                }
+                avatarForm.submit();
+            }
         });
     }
 
     /* Password modal */
-    const modal   = document.getElementById('password-modal');
+    const modal    = document.getElementById('password-modal');
     const closeBtn = document.getElementById('close-password-modal');
     const overlay  = document.getElementById('password-overlay');
+
+    if (modal?.dataset.hasErrors === '1') {
+        modal.classList.remove('hidden');
+    }
 
     const closeModal = () => modal?.classList.add('hidden');
     closeBtn?.addEventListener('click', closeModal);
     overlay?.addEventListener('click', closeModal);
 
-    /* ESC key */
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') closeModal();
     });
 });
 </script>
-
 @endsection

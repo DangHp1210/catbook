@@ -331,11 +331,11 @@ html, body {
     <div class="bk-header-right">
         <form method="GET" action="{{ route($routePrefix.'books.index') }}">
             <div class="bk-search-wrap">
-                <span class="bk-search-icon">
+                <button type="submit" class="bk-search-icon" aria-label="Tìm kiếm">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
-                </span>
+                </button>
                 <input name="q" value="{{ $q }}"
                        placeholder="Tìm tên sách hoặc ISBN..."
                        class="bk-search-input">

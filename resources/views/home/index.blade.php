@@ -392,7 +392,7 @@ html,body {
     </div>
 
     <div class="cb-books-grid">
-        @forelse(collect($discountBooks ?? [])->take(8) as $book)
+        @forelse(collect($discountBooks ?? [])->take(4) as $book)
             @php
                 $cover = null;
                 if (!empty($book->cover_image)) {

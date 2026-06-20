@@ -329,7 +329,7 @@ html, body {
             <span class="ad-card-badge">{{ number_format($stats['publishers']) }}</span>
         </div>
         <div>
-            <p class="ad-card-name">Nhà xuất bản</p>
+            <p class="ad-card-name">Quản lý nhà xuất bản</p>
             <p class="ad-card-desc">Quản lý thông tin liên hệ và hệ thống đối tác.</p>
         </div>
         <div class="ad-card-cta">

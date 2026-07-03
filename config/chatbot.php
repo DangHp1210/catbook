@@ -19,8 +19,8 @@ PROMPT,
 
     // provider specific defaults
     'gemini' => [
-        'max_output_tokens' => 500,
-        'temperature' => 0.6,
+        'max_output_tokens' => 2048,
+        'temperature' => 0.25,
     ],
 
 ];

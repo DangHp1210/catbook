@@ -91,7 +91,8 @@ class ChatBotService
             $modelName = 'fallback-rule-engine';
         }
 
-        $reply['text'] = $this->sanitizeReplyText($reply['text'] ?? '');
+        $reply['intent'] = $reply['intent'] ?? ($context['intent'] ?? 'general');
+        $reply['text']   = $this->sanitizeReplyText($reply['text'] ?? '', (string) $reply['intent']);
 
         $assistantMessage = $this->storeMessage(
             $session,
@@ -127,21 +128,55 @@ class ChatBotService
     private function resolveSession(?User $user, ?string $sessionToken, ?string $firstMessage = null): ChatSession
     {
         $token = trim((string) $sessionToken);
+
+        if ($user) {
+            if ($token !== '') {
+                $ownedSession = ChatSession::query()
+                    ->where('session_token', $token)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($ownedSession) {
+                    if (! $ownedSession->title && $firstMessage) {
+                        $ownedSession->forceFill(['title' => Str::limit($firstMessage, 48)])->save();
+                    }
+
+                    return $ownedSession;
+                }
+
+                // Token exists but belongs to another account (or guest session),
+                // isolate chat by issuing a fresh token for this user.
+                $token = (string) Str::uuid();
+            }
+
+            if ($token === '') {
+                $token = (string) Str::uuid();
+            }
+
+            return ChatSession::query()->firstOrCreate(
+                [
+                    'session_token' => $token,
+                    'user_id'       => $user->id,
+                ],
+                [
+                    'title' => $firstMessage ? Str::limit($firstMessage, 48) : null,
+                ]
+            );
+        }
+
         if ($token === '') {
             $token = (string) Str::uuid();
         }
 
         $session = ChatSession::query()->firstOrCreate(
-            ['session_token' => $token],
             [
-                'user_id' => $user?->id,
+                'session_token' => $token,
+                'user_id'       => null,
+            ],
+            [
                 'title'   => $firstMessage ? Str::limit($firstMessage, 48) : null,
             ]
         );
-
-        if ($user && $session->user_id !== $user->id) {
-            $session->forceFill(['user_id' => $user->id])->save();
-        }
 
         if (! $session->title && $firstMessage) {
             $session->forceFill(['title' => Str::limit($firstMessage, 48)])->save();
@@ -221,11 +256,42 @@ class ChatBotService
         $intent     = $this->detectIntent($message);
         $category   = $this->detectCategory($message);
         $author     = $this->detectAuthor($message);
+        $book       = $this->detectBook($message);
         $priceRange = $this->extractPriceFilter($message);
 
         $books           = $this->searchBooks($message, $category, $author, $priceRange);
+
+        if ($book) {
+            $exactBook = Book::query()
+                ->with(['authors:id,name', 'categories:id,name'])
+                ->whereKey($book->id)
+                ->first();
+
+            if ($exactBook) {
+                $books = new EloquentCollection(
+                    $books
+                        ->reject(fn (Book $b): bool => $b->id === $exactBook->id)
+                        ->prepend($exactBook)
+                        ->take(6)
+                        ->values()
+                        ->all()
+                );
+            }
+        }
+
         $recommendations = $books->take(4)->values();
         $order           = $orderCode ? $this->findOrder($user, $orderCode) : null;
+
+        // Prefer deterministic rule-engine responses for explicit filters.
+        if ($intent === 'catalog_search') {
+            if ($priceRange !== null) {
+                $intent = 'price_lookup';
+            } elseif ($category) {
+                $intent = 'category_lookup';
+            } elseif ($author) {
+                $intent = 'author_lookup';
+            }
+        }
 
         // Auto-upgrade intent when author detected
         if ($author && $intent === 'catalog_search') {
@@ -267,6 +333,10 @@ class ChatBotService
     private function detectIntent(string $message): string
     {
         $lower = Str::lower($message);
+
+        if ($this->isGreetingOnlyMessage($message)) {
+            return 'greeting';
+        }
 
         if (preg_match('/\bCB\d{17}\b/', $message)) {
             return 'order_lookup';
@@ -464,6 +534,33 @@ class ChatBotService
         return null;
     }
 
+    private function detectBook(string $message): ?Book
+    {
+        $normalized = $this->normalizeText($message);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $books = Book::query()->select(['id', 'title', 'slug'])->get()
+            ->sortByDesc(fn (Book $b): int => mb_strlen($this->normalizeText($b->title)))
+            ->values();
+
+        foreach ($books as $book) {
+            $title = $this->normalizeText($book->title);
+            $slug  = $this->normalizeText($book->slug);
+
+            if ($title !== '' && $this->containsWholePhrase($normalized, $title)) {
+                return $book;
+            }
+
+            if ($slug !== '' && $this->containsWholePhrase($normalized, $slug)) {
+                return $book;
+            }
+        }
+
+        return null;
+    }
+
     private function extractPriceFilter(string $message): ?array
     {
         $normalized = $this->normalizeText($message);
@@ -536,6 +633,7 @@ class ChatBotService
     private function isRuleEngineIntent(string $intent): bool
     {
         return in_array($intent, [
+            'greeting',
             'order_lookup',
             'stock_lookup',
             'price_lookup',
@@ -607,12 +705,21 @@ class ChatBotService
         $order           = $context['order'];
         $books           = $context['books'];
 
+        if ($intent === 'greeting') {
+            return [
+                'text'        => 'Xin chào! Mình là CatBook AI. Mình có thể hỗ trợ tìm sách, gợi ý sách phù hợp, hoặc tra cứu đơn hàng khi bạn cần.',
+                'model_name'  => 'fallback-rule-engine',
+                'intent'      => $intent,
+                'suggestions' => [],
+            ];
+        }
+
         // If the user only sent a short greeting / chit-chat and provider failed,
         // return a friendly greeting instead of listing top books (avoids irrelevant replies).
         $normalizedMsg = $this->normalizeText($message);
         if ($intent === 'catalog_search' && preg_match('/\b(xin chao|xin chào|chao|chào|hello|hi)\b/u', $normalizedMsg)) {
             return [
-                'text'       => 'Xin chào! Mình là CatBook AI — Mình có thể tìm sách, gợi ý sách theo nhu cầu, hoặc tra cứu đơn hàng. Bạn muốn tìm gì hôm nay?',
+                'text'       => 'Xin chào! Mình là CatBook AI. Mình có thể hỗ trợ tìm sách, gợi ý sách phù hợp, hoặc tra cứu đơn hàng khi bạn cần.',
                 'model_name' => 'fallback-rule-engine',
                 'intent'     => $intent,
                 'suggestions'=> $this->buildSuggestions($context),
@@ -642,7 +749,7 @@ class ChatBotService
                     'text'       => "Đơn {$order->order_code} — trạng thái: {$statusLabel}, thanh toán: {$paymentLabel}, tổng: " . number_format((float) $order->total_amount, 0, ',', '.') . "đ.",
                     'model_name' => 'fallback-rule-engine',
                     'intent'     => $intent,
-                    'suggestions'=> $this->buildSuggestions($context),
+                    'suggestions'=> [],
                 ];
             }
 
@@ -650,7 +757,7 @@ class ChatBotService
                 'text'       => 'Chưa tìm thấy đơn hàng đó. Hãy gửi mã đơn bắt đầu bằng CB (ví dụ: CB20260528123456789).',
                 'model_name' => 'fallback-rule-engine',
                 'intent'     => $intent,
-                'suggestions'=> $this->buildSuggestions($context),
+                'suggestions'=> [],
             ];
         }
 
@@ -699,7 +806,7 @@ class ChatBotService
         ))->implode("\n");
 
         return [
-            'text'       => "Mình có thể tìm sách. Chưa tìm thấy sách khớp. Một vài sách mới trong kho:\n{$fallbackLines}",
+            'text'       => "Chưa tìm thấy sách khớp tiêu chí trong kho CatBook. Một vài sách gần nhất:\n{$fallbackLines}",
             'model_name' => 'fallback-rule-engine',
             'intent'     => 'recommendation',
             'suggestions'=> $this->buildSuggestions(['recommendations' => $defaultBooks, 'books' => $defaultBooks]),
@@ -769,7 +876,12 @@ Người dùng: {$this->userLabel($user)}
 === CÂU HỎI ===
 {$message}
 
-Hãy trả lời theo system prompt. Gợi ý 2–4 sách phù hợp nhất, không kèm link trong nội dung.
+=== QUY TẮC BẮT BUỘC TRẢ LỜI ===
+- Trả lời đúng trọng tâm câu hỏi hiện tại, không lan man, không thêm thông tin ngoài yêu cầu.
+- Không mở đầu xã giao dài dòng (không dùng các câu như "Chào bạn ..., dưới đây là...") trừ khi user chỉ chào.
+- Không kết thúc bằng câu hỏi ngược hoặc câu mời lọc thêm.
+- Tối đa 3 câu ngắn hoặc 4 gạch đầu dòng ngắn.
+- Không kèm link trong nội dung trả lời.
 PROMPT);
     }
 
@@ -785,8 +897,11 @@ PROMPT);
        HELPERS
     ══════════════════════════════════════════════════════ */
 
-    private function sanitizeReplyText(string $text): string
+    private function sanitizeReplyText(string $text, string $intent = 'general'): string
     {
+        // Remove lightweight markdown markers from provider output for cleaner UI text bubbles.
+        $text = preg_replace('/\*\*(.*?)\*\*/u', '$1', $text) ?? $text;
+        $text = preg_replace('/__(.*?)__/u', '$1', $text) ?? $text;
         $text = preg_replace('~\s*[-–—]?\s*/catalog/book/[^\s<>"]+~iu', '', $text) ?? $text;
         $text = preg_replace_callback('/\b(?:Tồn kho|tồn kho|Kho|kho)\s*:\s*(\d+)\b/u', function (array $m): string {
             return 'Tình trạng: ' . $this->stockStatusLabel((int) $m[1]);
@@ -796,6 +911,13 @@ PROMPT);
         }, $text) ?? $text;
         $text = preg_replace('/[ \t]+$/mu', '', $text) ?? $text;
         $text = preg_replace('/\n{3,}/u', "\n\n", $text) ?? $text;
+        $text = trim($text);
+
+        if ($intent !== 'greeting') {
+            $text = preg_replace('/\n?\s*(Ban|Bạn)\s+mu[oố]n[^\n\r?]*\?\s*$/iu', '', $text) ?? $text;
+            $text = preg_replace('/\n?\s*(C[ầa]n|Mu[oố]n)\s+m[iì]nh[^\n\r?]*\?\s*$/iu', '', $text) ?? $text;
+            $text = preg_replace('/\s+$/u', '', $text) ?? $text;
+        }
 
         return trim($text);
     }
@@ -857,6 +979,20 @@ PROMPT);
             return false;
         }
         return preg_match('/(^|\s)' . preg_quote($needle, '/') . '($|\s)/u', $haystack) === 1;
+    }
+
+    private function isGreetingOnlyMessage(string $message): bool
+    {
+        $normalized = $this->normalizeText($message);
+
+        if ($normalized === '') {
+            return false;
+        }
+
+        return preg_match(
+            '/^(xin chao|chao|hello|hi|alo|hey|good morning|good afternoon|good evening)( ban| shop| catbook)?$/u',
+            $normalized
+        ) === 1;
     }
 
     private function geminiCooldownCacheKey(): string

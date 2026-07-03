@@ -273,7 +273,8 @@
      data-chatbot
      data-chatbot-session-url="{{ $chatbotSessionUrl }}"
     data-chatbot-message-url="{{ $chatbotMessageUrl }}"
-    data-chatbot-clear-url="{{ $chatbotClearUrl }}">
+    data-chatbot-clear-url="{{ $chatbotClearUrl }}"
+    data-chatbot-user-id="{{ auth()->id() ?? 'guest' }}">
 
     {{-- ── Chat panel ──────────────────────────────────── --}}
     <div class="cb-chatbot-panel" data-chatbot-panel
@@ -329,7 +330,6 @@
             <div class="cb-chatbot-input-row">
                 <textarea class="cb-chatbot-input"
                           data-chatbot-input rows="1"
-                          placeholder="Ví dụ: gợi ý sách tâm lý dưới 200k..."
                           aria-label="Nhập tin nhắn"></textarea>
                 <button type="submit" class="cb-chatbot-send"
                         data-chatbot-send aria-label="Gửi tin nhắn">
@@ -362,6 +362,7 @@
     const sessionUrl = root.dataset.chatbotSessionUrl;
     const messageUrl = root.dataset.chatbotMessageUrl;
     const clearUrl   = root.dataset.chatbotClearUrl;
+    const userScope  = String(root.dataset.chatbotUserId || 'guest');
     const panel      = root.querySelector('[data-chatbot-panel]');
     const toggle     = root.querySelector('[data-chatbot-toggle]');
     const closeBtn   = root.querySelector('[data-chatbot-close]');
@@ -371,7 +372,7 @@
     const form       = root.querySelector('[data-chatbot-form]');
     const input      = root.querySelector('[data-chatbot-input]');
     const sendBtn    = root.querySelector('[data-chatbot-send]');
-    const storageKey = 'catbook.chatbot.sessionToken';
+    const storageKey = `catbook.chatbot.sessionToken.${userScope}`;
     let busy = false;
     let lastUserMessage = null;
 
@@ -528,6 +529,9 @@
             });
             if (!res.ok) return;
             const data = await res.json();
+            if (data?.session_token) {
+                localStorage.setItem(storageKey, data.session_token);
+            }
             if (Array.isArray(data.messages) && data.messages.length) {
                 messagesEl.innerHTML = '';
                 emptyEl = null;

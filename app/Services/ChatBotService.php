@@ -91,6 +91,8 @@ class ChatBotService
             $modelName = 'fallback-rule-engine';
         }
 
+        $reply = $this->enforceCatalogTruth($reply, $context);
+
         $reply['intent'] = $reply['intent'] ?? ($context['intent'] ?? 'general');
         $reply['text']   = $this->sanitizeReplyText($reply['text'] ?? '', (string) $reply['intent']);
 
@@ -258,6 +260,7 @@ class ChatBotService
         $author     = $this->detectAuthor($message);
         $book       = $this->detectBook($message);
         $priceRange = $this->extractPriceFilter($message);
+        $exactBook  = null;
 
         $books           = $this->searchBooks($message, $category, $author, $priceRange);
 
@@ -280,6 +283,11 @@ class ChatBotService
         }
 
         $recommendations = $books->take(4)->values();
+
+        if ($exactBook && $intent === 'summary') {
+            $recommendations = new EloquentCollection([$exactBook]);
+        }
+
         $order           = $orderCode ? $this->findOrder($user, $orderCode) : null;
 
         // Prefer deterministic rule-engine responses for explicit filters.
@@ -304,6 +312,7 @@ class ChatBotService
             'category'        => $category,
             'author'          => $author,
             'price_range'     => $priceRange,
+            'matched_book'    => $exactBook,
             'books'           => $books,
             'recommendations' => $recommendations,
             'order'           => $order,
@@ -920,6 +929,55 @@ PROMPT);
         }
 
         return trim($text);
+    }
+
+    private function enforceCatalogTruth(array $reply, array $context): array
+    {
+        $matchedBook = $context['matched_book'] ?? null;
+        if (! $matchedBook instanceof Book) {
+            return $reply;
+        }
+
+        $rawText = (string) ($reply['text'] ?? '');
+        $normalized = $this->normalizeText($rawText);
+
+        $denialPhrases = [
+            'khong co trong kho',
+            'khong co trong kho du lieu',
+            'chua tim thay sach',
+            'khong tim thay sach',
+            'khong co san',
+        ];
+
+        $hasDenial = false;
+        foreach ($denialPhrases as $phrase) {
+            if (str_contains($normalized, $phrase)) {
+                $hasDenial = true;
+                break;
+            }
+        }
+
+        if (! $hasDenial) {
+            return $reply;
+        }
+
+        $title       = $matchedBook->title;
+        $authors     = $matchedBook->authors->pluck('name')->filter()->implode(', ') ?: 'Đang cập nhật';
+        $price       = number_format((float) ($matchedBook->discount_price ?? $matchedBook->price), 0, ',', '.') . 'đ';
+        $stockStatus = $this->stockStatusLabel((int) $matchedBook->stock_quantity);
+        $summary     = trim((string) Str::limit(strip_tags((string) $matchedBook->description), 260));
+
+        $reply['text'] = $summary !== ''
+            ? "CatBook có sẵn \"{$title}\" của {$authors}. Giá: {$price}, tình trạng: {$stockStatus}. Tóm tắt ngắn: {$summary}"
+            : "CatBook có sẵn \"{$title}\" của {$authors}. Giá: {$price}, tình trạng: {$stockStatus}.";
+
+        $reply['related_book_id'] = $matchedBook->id;
+        $reply['suggestions'] = $this->buildSuggestions([
+            'recommendations' => new EloquentCollection([$matchedBook]),
+            'books' => new EloquentCollection([$matchedBook]),
+        ]);
+
+        return $reply;
     }
 
     private function stockStatusLabel(int $stockQuantity): string

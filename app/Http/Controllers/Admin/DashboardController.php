@@ -556,15 +556,25 @@ class DashboardController extends Controller
     {
         $q        = trim((string) $request->query('q', ''));
         $openCode = trim((string) $request->query('open', ''));
+        $qDate    = $this->resolveOrderDateFromQuery($q);
+        $qPrefix  = $qDate ? 'CB' . $qDate->format('Ymd') : null;
 
         $orders = Order::query()
             ->with('user')
             ->withCount('items')
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($sub) use ($q) {
+            ->when($q !== '', function ($query) use ($q, $qDate, $qPrefix) {
+                $query->where(function ($sub) use ($q, $qDate, $qPrefix) {
                     $sub->where('order_code', 'like', "%{$q}%")
                         ->orWhere('recipient_name', 'like', "%{$q}%")
                         ->orWhere('recipient_phone', 'like', "%{$q}%");
+
+                    if ($qDate !== null) {
+                        $sub->orWhereDate('created_at', $qDate->format('Y-m-d'));
+
+                        if ($qPrefix !== null) {
+                            $sub->orWhere('order_code', 'like', $qPrefix . '%');
+                        }
+                    }
                 });
             })
             ->latest()
@@ -585,6 +595,31 @@ class DashboardController extends Controller
             'openCode'      => $openCode,
             'selectedOrder' => $selectedOrder,
         ]);
+    }
+
+    private function resolveOrderDateFromQuery(string $query): ?\DateTimeImmutable
+    {
+        $normalized = strtoupper(preg_replace('/[^A-Z0-9]/', '', $query) ?? '');
+        if (! preg_match('/^CB(\d{8})$/', $normalized, $m)) {
+            return null;
+        }
+
+        $digits = $m[1];
+
+        $ymd = \DateTimeImmutable::createFromFormat('!Ymd', $digits);
+        if ($ymd && $ymd->format('Ymd') === $digits) {
+            return $ymd;
+        }
+
+        $year  = (int) substr($digits, 0, 4);
+        $day   = (int) substr($digits, 4, 2);
+        $month = (int) substr($digits, 6, 2);
+
+        if (! checkdate($month, $day, $year)) {
+            return null;
+        }
+
+        return \DateTimeImmutable::createFromFormat('!Y-m-d', sprintf('%04d-%02d-%02d', $year, $month, $day)) ?: null;
     }
 
     // ── [UPDATED] updateOrder — thêm validate ràng buộc trạng thái ──

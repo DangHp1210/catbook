@@ -284,33 +284,6 @@ html, body {
 @endsection
 
 @section('content')
-@if(session('error'))
-    <div style="max-width:1300px;margin:0 auto 12px;padding:12px 18px;
-                background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;
-                font-family:var(--cb-sans);font-size:13px;color:#dc2626;
-                display:flex;align-items:center;gap:8px">
-        <svg width="14" height="14" fill="none" stroke="currentColor"
-             stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        {{ session('error') }}
-    </div>
-@endif
-
-@if(session('success'))
-    <div style="max-width:1300px;margin:0 auto 12px;padding:12px 18px;
-                background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;
-                font-family:var(--cb-sans);font-size:13px;color:#166534;
-                display:flex;align-items:center;gap:8px">
-        <svg width="14" height="14" fill="none" stroke="currentColor"
-             stroke-width="2" viewBox="0 0 24 24">
-            <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        {{ session('success') }}
-    </div>
-@endif
 {{-- ── Page header ──────────────────────────────────────── --}}
 <div class="or-header">
     <div>

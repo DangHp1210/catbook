@@ -83,9 +83,24 @@ html, body {
 .rv-stat-avg::before      { background: #8b5cf6; }
 
 .rv-stat-lbl {
-    font-family: var(--cb-sans); font-size: 11px; font-weight: 600;
-    letter-spacing: 1px; text-transform: uppercase; color: #b0a898; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 6px;
+    font-family: var(--cb-sans); 
+    font-size: 11px; 
+    font-weight: 600;
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    color: #494949;
+    margin-bottom: 8px;
+    display: flex; 
+    align-items: center; 
+    gap: 6px;
+}
+.rv-stat-period {
+    font-family: var(--cb-sans);
+    font-size: 11px;
+    font-weight: 500;
+    color: #8f8e8e;
+    margin: 2px 0 3px;
+    letter-spacing: 0.3px;
 }
 .rv-stat-val {
     font-family: var(--cb-serif); font-size: 24px; font-weight: 900;
@@ -203,6 +218,9 @@ html, body {
         'vnpay'         => 'VNPay',
     ];
     $maxMonthRevenue = $revenueByMonth->max('revenue') ?: 1;
+    $periodLabel = ($month !== null && $month !== '')
+        ? '— ' . (int) $month . '/' . $year
+        : 'Năm ' . $year;
 @endphp
 
 <div class="rv-stats">
@@ -212,6 +230,7 @@ html, body {
                 <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
             </svg>
             Tổng doanh thu
+            <span class="rv-stat-period">{{ $periodLabel }}</span>
         </p>
         <p class="rv-stat-val">{{ number_format($totalRevenue, 0, ',', '.') }}đ</p>
     </div>
@@ -221,6 +240,7 @@ html, body {
                 <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
             </svg>
             Tiền lãi
+            <span class="rv-stat-period">{{ $periodLabel }}</span>
         </p>
         <p class="rv-stat-val">{{ number_format($totalProfit, 0, ',', '.') }}đ</p>
     </div>
@@ -231,6 +251,7 @@ html, body {
                 <rect x="9" y="3" width="6" height="4" rx="1"/>
             </svg>
             Số đơn hàng
+            <span class="rv-stat-period">{{ $periodLabel }}</span>
         </p>
         <p class="rv-stat-val">{{ number_format($orderCount) }}</p>
     </div>
@@ -241,6 +262,7 @@ html, body {
                 <line x1="8" y1="12" x2="16" y2="12"/>
             </svg>
             Trung bình / đơn
+            <span class="rv-stat-period">{{ $periodLabel }}</span>
         </p>
         <p class="rv-stat-val">{{ number_format($averageOrderValue, 0, ',', '.') }}đ</p>
     </div>

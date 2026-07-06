@@ -755,7 +755,7 @@ class ChatBotService
                 };
 
                 return [
-                    'text'       => "Đơn {$order->order_code} — trạng thái: {$statusLabel}, thanh toán: {$paymentLabel}, tổng: " . number_format((float) $order->total_amount, 0, ',', '.') . "đ.",
+                    'text'       => "Đơn {$order->order_code} — trạng thái: {$statusLabel}, thanh toán: {$paymentLabel}.",
                     'model_name' => 'fallback-rule-engine',
                     'intent'     => $intent,
                     'suggestions'=> [],
